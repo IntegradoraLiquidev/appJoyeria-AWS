@@ -19,7 +19,7 @@ const MultaForm = ({ clienteId, onMultaAdded }) => {
 
             const fechaActual = new Date().toISOString().split('T')[0]; // Fecha actual en formato YYYY-MM-DD
 
-            const response = await axios.post(`http://192.168.1.13:3000/clientes/${clienteId}/multas`, { fecha: fechaActual }, {
+            const response = await axios.post(`http://172.20.104.17:3000/clientes/${clienteId}/multas`, { fecha: fechaActual }, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

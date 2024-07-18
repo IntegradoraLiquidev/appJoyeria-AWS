@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, Alert } from 'react-native';
+import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [hidePass, setHidePass] = useState(true);
 
     const decodeJWT = (token) => {
         try {
@@ -25,7 +27,7 @@ const LoginScreen = ({ navigation }) => {
     const handleLogin = async () => {
         try {
             console.log('Iniciando sesión con:', { email, password });
-            const response = await axios.post('http://192.168.1.13:3000/login', { email, password });
+            const response = await axios.post('http://172.20.104.17:3000/login', { email, password });
             const { token } = response.data;
             console.log('Token recibido:', token);
 
@@ -52,15 +54,124 @@ const LoginScreen = ({ navigation }) => {
     };
 
     return (
-        <View>
-            <Text>Email:</Text>
-            <TextInput value={email} onChangeText={setEmail} />
-            <Text>Password:</Text>
-            <TextInput value={password} onChangeText={setPassword} secureTextEntry />
-            <Button title="Login" onPress={handleLogin} />
+        <View style={styles.container}>
+            <View style={styles.headerContainer}>
+                <Text style={styles.headerText}>PRESTAMOS DIARIOS</Text>
+            </View>
+            <View style={styles.formContainer}>
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Correo electrónico:"
+                        onChangeText={(text) => setEmail(text)}
+                        value={email}
+                        placeholderTextColor="#ccc"
+                    />
+                </View>
+                <View style={styles.inputContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Contraseña:"
+                        secureTextEntry={hidePass}
+                        onChangeText={(text) => setPassword(text)}
+                        value={password}
+                        placeholderTextColor="#ccc"
+                    />
+                    <TouchableOpacity
+                        style={styles.icon}
+                        onPress={() => setHidePass(!hidePass)}
+                    >
+                        <Ionicons name={hidePass ? "eye-off" : "eye"} size={20} color="gray" />
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+                        <Text style={styles.loginButtonText}>Iniciar sesión</Text>
+                    </TouchableOpacity>
+                </View>
+                <View style={styles.forgotpwdContainer}>
+                    <Text style={styles.forgotpwdText}>¿Olvidaste tu contraseña?</Text>
+                </View>
+                <View style={styles.registerContainer}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                        <Text style={styles.registerText}>Registro</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
         </View>
     );
 };
 
-export default LoginScreen;
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#1a1a1a',
+    },
+    headerContainer: {
+        position: 'absolute',
+        top: 0,
+        width: '100%',
+        backgroundColor: '#2e5c74',
+        padding: 20,
+        alignItems: 'center',
+    },
+    headerText: {
+        fontSize: 30,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    formContainer: {
+        alignItems: 'center',
+        width: '100%',
+        marginTop: 100,
+    },
+    inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderColor: '#2e5c74',
+        borderWidth: 1,
+        borderRadius: 8,
+        marginTop: 10,
+        width: '80%',
+        backgroundColor: '#333',
+    },
+    input: {
+        flex: 1,
+        height: 60,
+        paddingLeft: 8,
+        color: '#fff',
+    },
+    icon: {
+        padding: 10,
+    },
+    buttonContainer: {
+        marginTop: 40,
+        width: '80%',
+    },
+    loginButton: {
+        backgroundColor: '#2e5c74',
+        paddingVertical: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    loginButtonText: {
+        color: '#fff',
+        fontSize: 16,
+    },
+    forgotpwdContainer: {
+        marginTop: 50,
+    },
+    forgotpwdText: {
+        color: '#2e5c74',
+    },
+    registerContainer: {
+        marginTop: 20,
+    },
+    registerText: {
+        color: '#2e5c74',
+    },
+});
 
+export default LoginScreen;

@@ -3,9 +3,9 @@ import { View, FlatList, Text, TextInput, StyleSheet, ScrollView } from 'react-n
 import axios from 'axios';
 import ClienteCard from '../components/ClienteCard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import EditarClientes from '../components/EditarClientes'; // Importa el componente EditarClientes
+import EditarClientes from '../components/EditarClientes';
 
-const TrabajadorClientes = ({ route }) => {
+const TrabajadorClientes = ({ route, navigation }) => {
     const { id, clienteActualizado, isFromEdit } = route.params || {};
     const [clientes, setClientes] = useState([]);
     const [searchText, setSearchText] = useState('');
@@ -36,7 +36,7 @@ const TrabajadorClientes = ({ route }) => {
                 const decodedToken = decodeToken(token);
                 setIsAdmin(decodedToken.role === 'admin');
 
-                const response = await axios.get(`http://192.168.1.13:3000/trabajadores/${id}/clientes`, {
+                const response = await axios.get(`http://172.20.104.17:3000/trabajadores/${id}/clientes`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -123,10 +123,12 @@ const styles = StyleSheet.create({
     container: {
         flexGrow: 1,
         padding: 20,
+        backgroundColor: '#1c1c1e', // Fondo oscuro
     },
     title: {
         fontSize: 24,
         fontWeight: 'bold',
+        color: '#fff',
         marginBottom: 20,
     },
     searchInput: {
@@ -135,6 +137,8 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         marginBottom: 20,
         paddingHorizontal: 10,
+        backgroundColor: '#444', // Fondo de entrada
+        color: '#fff', // Color de texto
     },
 });
 

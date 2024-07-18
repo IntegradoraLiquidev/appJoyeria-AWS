@@ -17,7 +17,7 @@ const EstadisticasScreen = () => {
                     throw new Error('No token found');
                 }
 
-                const response = await axios.get('http://192.168.1.13:3000/estadisticas', {
+                const response = await axios.get('http://172.20.104.17:3000/estadisticas', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

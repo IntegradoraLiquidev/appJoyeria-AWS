@@ -31,17 +31,19 @@ function WorkerTabs() {
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
+                tabBarActiveTintColor: '#2e5c74',
+                tabBarInactiveTintColor: '#ccc',
+                tabBarStyle: {
+                    backgroundColor: '#1c1c1e',
+                },
             })}
-            tabBarOptions={{
-                activeTintColor: 'tomato',
-                inactiveTintColor: 'gray',
-            }}
         >
             <Tab.Screen name="Inicio" component={WorkerDashboard} />
             <Tab.Screen name="Agregar Cliente" component={NuevoCliente} />
         </Tab.Navigator>
     );
 }
+
 function AdminTabs() {
     return (
         <Tab.Navigator
@@ -57,11 +59,12 @@ function AdminTabs() {
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
+                tabBarActiveTintColor: '#2e5c74',
+                tabBarInactiveTintColor: '#ccc',
+                tabBarStyle: {
+                    backgroundColor: '#1c1c1e',
+                },
             })}
-            tabBarOptions={{
-                activeTintColor: 'tomato',
-                inactiveTintColor: 'gray',
-            }}
         >
             <Tab.Screen name="Inicio" component={AdminDashboard} />
             <Tab.Screen name="Agregar Trabajador" component={NuevoTrabajador} />
@@ -74,14 +77,46 @@ export default function App() {
     return (
         <NavigationContainer>
             <Stack.Navigator initialRouteName="Login">
-                <Stack.Screen name="Login" component={LoginScreen} />
-                <Stack.Screen name="AdminDashboard" component={AdminTabs} options={{ headerShown: false }} />
-                <Stack.Screen name="WorkerDashboard" component={WorkerTabs} options={{ headerShown: false }} />
-                <Stack.Screen name="ClienteDetails" component={ClienteDetails} />
-                <Stack.Screen name="TrabajadorClientes" component={TrabajadoresDetails} />
-                <Stack.Screen name="EditarTrabajador" component={EditarTrabajador} />
-                <Stack.Screen name="EliminarTrabajador" component={EliminarTrabajador} />
-                <Stack.Screen name="EditarClientes" component={EditarClientes} />
+                <Stack.Screen 
+                    name="Login" 
+                    component={LoginScreen} 
+                    options={{ headerShown: false }} 
+                />
+                <Stack.Screen 
+                    name="AdminDashboard" 
+                    component={AdminTabs} 
+                    options={{ headerShown: false }} 
+                />
+                <Stack.Screen 
+                    name="WorkerDashboard" 
+                    component={WorkerTabs} 
+                    options={{ headerShown: false }} 
+                />
+                <Stack.Screen 
+                    name="ClienteDetails" 
+                    component={ClienteDetails} 
+                    options={{ headerShown: true }} 
+                />
+                <Stack.Screen 
+                    name="TrabajadorClientes" 
+                    component={TrabajadoresDetails} 
+                    options={{ headerShown: true }} 
+                />
+                <Stack.Screen 
+                    name="EditarTrabajador" 
+                    component={EditarTrabajador} 
+                    options={{ headerShown: true }} 
+                />
+                <Stack.Screen 
+                    name="EliminarTrabajador" 
+                    component={EliminarTrabajador} 
+                    options={{ headerShown: true }} 
+                />
+                <Stack.Screen 
+                    name="EditarClientes" 
+                    component={EditarClientes} 
+                    options={{ headerShown: true }} 
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );

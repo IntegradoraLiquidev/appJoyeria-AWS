@@ -1,4 +1,3 @@
-// screens/NuevoCliente.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
@@ -29,18 +28,8 @@ const NuevoCliente = ({ navigation }) => {
             return;
         }
 
-        console.log('Datos del cliente a agregar:', {
-            nombre,
-            ocupacion,
-            direccion,
-            telefono,
-            fecha_inicio: fechaInicio,
-            fecha_termino: fechaTermino,
-            monto_inicial: montoInicial
-        });
-
         try {
-            const response = await axios.post('http://192.168.1.13:3000/clientes', {
+            const response = await axios.post('http://172.20.104.17:3000/clientes', {
                 nombre,
                 ocupacion,
                 direccion,
@@ -53,8 +42,6 @@ const NuevoCliente = ({ navigation }) => {
                     Authorization: `Bearer ${token}`
                 }
             });
-            console.log('Respuesta del servidor:', response.data);
-            // Restablecer los campos de entrada después de agregar el cliente
             setNombre('');
             setOcupacion('');
             setDireccion('');
@@ -62,7 +49,6 @@ const NuevoCliente = ({ navigation }) => {
             setFechaInicio('');
             setFechaTermino('');
             setMontoInicial('');
-            // Mostrar alerta de éxito
             Alert.alert('Éxito', 'Cliente agregado exitosamente');
         } catch (error) {
             console.error('Error al agregar cliente:', error);
@@ -86,7 +72,9 @@ const NuevoCliente = ({ navigation }) => {
             <TextInput style={styles.input} value={fechaTermino} onChangeText={setFechaTermino} />
             <Text style={styles.label}>Monto Inicial:</Text>
             <TextInput style={styles.input} value={montoInicial} onChangeText={setMontoInicial} keyboardType="numeric" />
-            <Button title="Agregar Cliente" onPress={handleAddCliente} />
+            <View style={styles.buttonContainer}>
+                <Button title="Agregar Cliente" onPress={handleAddCliente} color="#2e5c74" />
+            </View>
         </View>
     );
 };
@@ -95,12 +83,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#fff'
+        backgroundColor: '#1c1c1e', // Fondo oscuro
     },
     label: {
         fontSize: 16,
         marginBottom: 4,
-        color: '#333'
+        color: '#fff', // Color de texto blanco
     },
     input: {
         height: 40,
@@ -108,8 +96,13 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         marginBottom: 12,
         paddingHorizontal: 8,
-        borderRadius: 4
-    }
+        borderRadius: 4,
+        backgroundColor: '#444', // Fondo de input
+        color: '#fff', // Color de texto
+    },
+    buttonContainer: {
+        marginTop: 12,
+    },
 });
 
 export default NuevoCliente;

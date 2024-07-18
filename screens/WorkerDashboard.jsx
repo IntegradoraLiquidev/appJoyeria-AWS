@@ -1,6 +1,5 @@
-// screens/WorkerDashboard.js
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, FlatList, Button, StyleSheet, TextInput,Text } from 'react-native';
+import { View, FlatList, Button, StyleSheet, TextInput, Text, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
@@ -21,7 +20,7 @@ const WorkerDashboard = ({ navigation }) => {
                     return;
                 }
 
-                const response = await axios.get('http://192.168.1.13:3000/clientes', {
+                const response = await axios.get('http://172.20.104.17:3000/clientes', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -67,7 +66,7 @@ const WorkerDashboard = ({ navigation }) => {
                 <Button
                     onPress={handleLogout}
                     title="Cerrar sesión"
-                    color="#000"
+                    color="#2e5c74"
                 />
             ),
         });
@@ -81,6 +80,7 @@ const WorkerDashboard = ({ navigation }) => {
                 placeholder="Buscar cliente por nombre"
                 value={searchText}
                 onChangeText={setSearchText}
+                placeholderTextColor="#aaa"
             />
             <FlatList
                 data={filteredClientes}
@@ -102,21 +102,24 @@ const WorkerDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#f0f0f0',
+        backgroundColor: '#1c1c1e', // Fondo oscuro
         padding: 10,
     },
     title: {
         fontSize: 20,
         fontWeight: 'bold',
+        color: '#fff', // Texto blanco
         marginBottom: 10,
     },
     searchInput: {
         height: 40,
-        borderColor: '#ccc',
+        borderColor: '#555', // Borde gris oscuro
         borderWidth: 1,
         paddingHorizontal: 8,
         borderRadius: 4,
+        color: '#fff', // Texto blanco
         marginBottom: 10,
+        backgroundColor: '#2c2c2e', // Fondo del input gris oscuro
     },
 });
 

@@ -9,20 +9,19 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
     const [isDeleting, setIsDeleting] = useState(false);
 
     const handleSave = async (updatedWorker) => {
-        const token = localStorage.getItem('token'); // Obtener el token desde localStorage
+        const token = localStorage.getItem('token');
 
         try {
             const response = await fetch(`http://localhost:3000/trabajadores/${trabajador.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Asegúrate de tener el token JWT
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(updatedWorker),
             });
 
             if (response.ok) {
-                // Actualizar el trabajador en la UI, si es necesario
                 setIsEditing(false);
             } else {
                 console.error('Error actualizando trabajador:', response.statusText);
@@ -33,20 +32,20 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
     };
 
     const eliminarTrabajador = async () => {
-        const token = localStorage.getItem('token'); // Obtener el token desde localStorage
+        const token = localStorage.getItem('token');
 
         try {
             const response = await fetch(`http://localhost:3000/trabajadores/${trabajador.id}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}` // Asegúrate de tener el token JWT
+                    'Authorization': `Bearer ${token}`
                 },
             });
 
             if (response.ok) {
                 Alert.alert('Trabajador eliminado correctamente');
                 setIsDeleting(false);
-                if (onDelete) onDelete(trabajador.id); // Llamar al callback onDelete para actualizar la lista de trabajadores en la UI
+                if (onDelete) onDelete(trabajador.id);
             } else {
                 console.error('Error eliminando trabajador:', response.statusText);
                 Alert.alert('Error', 'No se pudo eliminar el trabajador');
@@ -65,6 +64,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
             <Button
                 title="Ver clientes"
                 onPress={() => navigation.navigate('TrabajadorClientes', { id: trabajador.id })}
+                color="#2e5c74"
             />
             {showClientes && (
                 <View style={styles.clientesContainer}>
@@ -75,13 +75,13 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
             )}
             <View style={styles.iconContainer}>
                 <TouchableOpacity style={styles.editButton} onPress={() => setIsEditing(true)}>
-                    <Icon name="pencil" size={20} color="#000" />
+                    <Icon name="pencil" size={20} color="#fff" />
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.deleteButton}
                     onPress={() => setIsDeleting(true)}
                 >
-                    <Icon name="trash" size={20} color="#000" />
+                    <Icon name="trash" size={20} color="#fff" />
                 </TouchableOpacity>
             </View>
             <Modal visible={isEditing} animationType="slide">
@@ -110,15 +110,15 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#fff',
-        borderRadius: 5,
-        padding: 10,
+        backgroundColor: '#444', // Fondo oscuro
+        borderRadius: 8,
+        padding: 15,
         marginBottom: 10,
         elevation: 3,
-        position: 'relative',
     },
     cardText: {
         fontSize: 16,
+        color: '#fff', // Texto blanco
         marginBottom: 5,
     },
     clientesContainer: {
@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContainer: {
-        backgroundColor: '#fff',
+        backgroundColor: '#333', // Fondo modal oscuro
         padding: 20,
         borderRadius: 10,
         width: '80%',
@@ -151,6 +151,7 @@ const styles = StyleSheet.create({
     },
     message: {
         fontSize: 18,
+        color: '#fff', // Texto blanco en el modal
         marginBottom: 20,
         textAlign: 'center',
     },

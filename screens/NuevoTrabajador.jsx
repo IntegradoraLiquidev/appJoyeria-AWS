@@ -1,6 +1,5 @@
-// NuevoTrabajador.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Picker } from '@react-native-picker/picker';
@@ -28,7 +27,7 @@ const NuevoTrabajador = ({ navigation }) => {
         }
 
         try {
-            const response = await axios.post('http://192.168.1.13:3000/trabajadores', {
+            const response = await axios.post('http://172.20.104.17:3000/trabajadores', {
                 nombre,
                 email,
                 password,
@@ -47,18 +46,47 @@ const NuevoTrabajador = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Nombre:</Text>
-            <TextInput style={styles.input} value={nombre} onChangeText={setNombre} />
-            <Text style={styles.label}>Email:</Text>
-            <TextInput style={styles.input} value={email} onChangeText={setEmail} />
-            <Text style={styles.label}>Contraseña:</Text>
-            <TextInput style={styles.input} value={password} onChangeText={setPassword} secureTextEntry />
-            <Text style={styles.label}>Rol:</Text>
-            <Picker selectedValue={role} onValueChange={(itemValue) => setRole(itemValue)} style={styles.picker}>
-                <Picker.Item label="Trabajador" value="trabajador" />
-                <Picker.Item label="Admin" value="admin" />
-            </Picker>
-            <Button title="Agregar Trabajador" onPress={handleAddTrabajador} />
+            <Text style={styles.header}>Agregar Nuevo Trabajador</Text>
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Nombre:</Text>
+                <TextInput 
+                    style={styles.input} 
+                    value={nombre} 
+                    onChangeText={setNombre} 
+                />
+            </View>
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email:</Text>
+                <TextInput 
+                    style={styles.input} 
+                    value={email} 
+                    onChangeText={setEmail} 
+                    keyboardType="email-address"
+                />
+            </View>
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Contraseña:</Text>
+                <TextInput 
+                    style={styles.input} 
+                    value={password} 
+                    onChangeText={setPassword} 
+                    secureTextEntry 
+                />
+            </View>
+            <View style={styles.inputContainer}>
+                <Text style={styles.label}>Rol:</Text>
+                <Picker 
+                    selectedValue={role} 
+                    onValueChange={(itemValue) => setRole(itemValue)} 
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Trabajador" value="trabajador" />
+                    <Picker.Item label="Admin" value="admin" />
+                </Picker>
+            </View>
+            <TouchableOpacity style={styles.addButton} onPress={handleAddTrabajador}>
+                <Text style={styles.addButtonText}>Agregar Trabajador</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -66,27 +94,52 @@ const NuevoTrabajador = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#fff'
+        padding: 20,
+        backgroundColor: '#1c1c1e',
+        borderRadius: 10,
+        justifyContent: 'center',
+    },
+    header: {
+        fontSize: 24,
+        color: '#fff',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    inputContainer: {
+        marginBottom: 15,
     },
     label: {
         fontSize: 16,
-        marginBottom: 4,
-        color: '#333'
+        marginBottom: 5,
+        color: '#fff',
     },
     input: {
         height: 40,
         borderColor: '#ccc',
         borderWidth: 1,
         marginBottom: 12,
-        paddingHorizontal: 8,
-        borderRadius: 4
+        paddingHorizontal: 10,
+        borderRadius: 5,
+        backgroundColor: '#444',
+        color: '#fff',
     },
     picker: {
         height: 50,
         width: '100%',
         marginBottom: 12,
-    }
+        backgroundColor: '#444',
+        color: '#fff',
+    },
+    addButton: {
+        backgroundColor: '#2e5c74',
+        padding: 15,
+        borderRadius: 5,
+        alignItems: 'center',
+    },
+    addButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
 });
 
 export default NuevoTrabajador;

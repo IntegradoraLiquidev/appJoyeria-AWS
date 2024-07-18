@@ -1,6 +1,5 @@
-// AdminDashboard.js
 import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, Button } from 'react-native';
+import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import TrabajadorCard from '../components/TrabajadorClientes';
@@ -17,7 +16,7 @@ const AdminDashboard = ({ navigation }) => {
                 throw new Error('Token no encontrado');
             }
 
-            const response = await axios.get('http://192.168.1.13:3000/trabajadores', {
+            const response = await axios.get('http://172.20.104.17:3000/trabajadores', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -46,11 +45,9 @@ const AdminDashboard = ({ navigation }) => {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
-                <Button
-                    onPress={handleLogout}
-                    title="Cerrar sesión"
-                    color="#000"
-                />
+                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                    <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
+                </TouchableOpacity>
             ),
         });
     }, [navigation]);
@@ -90,22 +87,35 @@ const AdminDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 10,
-        backgroundColor: '#f0f0f0',
+        padding: 20,
+        backgroundColor: '#1c1c1e', // Fondo oscuro
     },
     title: {
-        fontSize: 20,
+        fontSize: 24,
         fontWeight: 'bold',
-        marginBottom: 10,
+        color: '#fff',
+        marginBottom: 20,
     },
     searchInput: {
         height: 40,
         borderColor: '#ccc',
         borderWidth: 1,
         borderRadius: 5,
-        marginBottom: 10,
+        marginBottom: 20,
         paddingHorizontal: 10,
-        backgroundColor: '#fff',
+        backgroundColor: '#444', // Fondo de entrada
+        color: '#fff', // Color de texto
+    },
+    logoutButton: {
+        marginRight: 15,
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        backgroundColor: '#2e5c74', // Color de fondo
+        borderRadius: 5,
+    },
+    logoutButtonText: {
+        color: '#fff', // Color del texto
+        fontWeight: 'bold',
     },
 });
 

@@ -1,43 +1,61 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
-const ClienteCard = ({ cliente, onPress, isAdmin, onEdit }) => {
+const ClienteCard = ({ cliente, onPress }) => {
     return (
         <View style={[styles.card, cliente.total_multas >= 9 && styles.cardWarning]}>
-            <Text style={styles.cardText}>Nombre: {cliente.nombre}</Text>
-            <Text style={styles.cardText}>Monto Actual: {cliente.monto_actual}</Text>
-            <Text style={styles.cardText}>Total de Multas: {cliente.total_multas}</Text>
-            <Button title="Ver Detalles" onPress={onPress} />
-            {isAdmin && (
-                <TouchableOpacity onPress={onEdit} style={styles.editButton}>
-                    <Icon name="edit" size={24} color="black" />
+            <View style={styles.cardContent}>
+                <View style={styles.cardTextContent}>
+                    <Text style={styles.cardTitle}>{cliente.nombre}</Text>
+                    <Text style={styles.cardText}>Monto Actual: {cliente.monto_actual}</Text>
+                    <Text style={styles.cardText}>Total de Multas: {cliente.total_multas}</Text>
+                </View>
+                <TouchableOpacity onPress={onPress} style={styles.detailsButton}>
+                    <Text style={styles.detailsButtonText}>Ver Detalles</Text>
                 </TouchableOpacity>
-            )}
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#fff',
-        borderRadius: 5,
-        padding: 10,
-        marginBottom: 10,
-        elevation: 3,
-        position: 'relative',
+        backgroundColor: '#333',
+        borderColor: '#2e5c74',
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 15,
+        marginVertical: 8,
+        width: '100%',
     },
-    cardWarning: {
-        backgroundColor: '#ffcccc', // Rojo pastel
+    cardContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
-    cardText: {
-        fontSize: 16,
+    cardTextContent: {
+        flex: 1,
+    },
+    cardTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#fff',
         marginBottom: 5,
     },
-    editButton: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
+    cardText: {
+        fontSize: 14,
+        color: '#fff',
+        marginBottom: 5,
+    },
+    detailsButton: {
+        backgroundColor: '#2e5c74',
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 4,
+    },
+    detailsButtonText: {
+        color: '#fff',
+        fontSize: 12,
     },
 });
 
