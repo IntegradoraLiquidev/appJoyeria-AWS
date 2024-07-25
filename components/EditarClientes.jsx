@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Modal, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DropDownPicker from 'react-native-dropdown-picker';
 
@@ -50,7 +50,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
         try {
             const token = await AsyncStorage.getItem('token');
 
-            const response = await fetch(`http://172.20.104.17:3000/clientes/${cliente.id}`, {
+            const response = await fetch(`http://192.168.1.67:3000/clientes/${cliente.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,11 +77,11 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
             visible={visible}
             onRequestClose={onClose}
         >
-            <View style={styles.modalContainer}>
-                <View style={styles.modalView}>
+            <View style={styles.container}>
+                <View style={styles.formContainer}>
                     <Text style={styles.header}>Editar Cliente</Text>
                     <View style={styles.inputContainer}>
-                        <Text>Nombre:</Text>
+                        <Text style={styles.label}>Nombre:</Text>
                         <TextInput
                             style={styles.input}
                             value={nombre}
@@ -89,7 +89,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                         />
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text>Ocupación:</Text>
+                        <Text style={styles.label}>Ocupación:</Text>
                         <TextInput
                             style={styles.input}
                             value={ocupacion}
@@ -97,7 +97,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                         />
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text>Dirección:</Text>
+                        <Text style={styles.label}>Dirección:</Text>
                         <TextInput
                             style={styles.input}
                             value={direccion}
@@ -105,7 +105,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                         />
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text>Teléfono:</Text>
+                        <Text style={styles.label}>Teléfono:</Text>
                         <TextInput
                             style={styles.input}
                             value={telefono}
@@ -113,7 +113,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                         />
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text>Fecha Inicio:</Text>
+                        <Text style={styles.label}>Fecha Inicio:</Text>
                         <TextInput
                             style={styles.input}
                             value={fechaInicio}
@@ -122,7 +122,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                         />
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text>Fecha Término:</Text>
+                        <Text style={styles.label}>Fecha Término:</Text>
                         <TextInput
                             style={styles.input}
                             value={fechaTermino}
@@ -131,7 +131,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                         />
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text>Monto Inicial:</Text>
+                        <Text style={styles.label}>Monto Inicial:</Text>
                         <TextInput
                             style={styles.input}
                             value={montoInicial}
@@ -140,7 +140,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                         />
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text>Monto Actual:</Text>
+                        <Text style={styles.label}>Monto Actual:</Text>
                         <TextInput
                             style={styles.input}
                             value={montoActual}
@@ -149,7 +149,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                         />
                     </View>
                     <View style={styles.inputContainer}>
-                        <Text>Estado:</Text>
+                        <Text style={styles.label}>Estado:</Text>
                         <DropDownPicker
                             open={open}
                             value={estado}
@@ -157,15 +157,15 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
                             setOpen={setOpen}
                             setValue={setEstado}
                             setItems={setItems}
-                            style={styles.input}
+                            style={styles.dropdown}
+                            dropDownContainerStyle={styles.dropdownContainer}
                         />
                     </View>
-                    <Button title="Guardar Cambios" onPress={handleGuardar} />
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={onClose}
-                    >
-                        <Text style={styles.closeButtonText}>Cerrar</Text>
+                    <TouchableOpacity style={styles.saveButton} onPress={handleGuardar}>
+                        <Text style={styles.saveButtonText}>Guardar</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                        <Text style={styles.cancelButtonText}>Cerrar</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -174,50 +174,73 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
 };
 
 const styles = StyleSheet.create({
-    modalContainer: {
+    container: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
+        backgroundColor: 'rgba(0,0,0,0.5)', // Fondo oscuro
     },
-    modalView: {
+    formContainer: {
         width: '90%',
-        backgroundColor: 'white',
-        borderRadius: 10,
         padding: 20,
-        alignItems: 'center',
+        backgroundColor: '#2c2c2e', // Fondo del formulario
+        borderRadius: 10,
         shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
         elevation: 5,
     },
     header: {
         fontSize: 24,
         marginBottom: 20,
+        color: '#fff', // Color de texto
+        textAlign: 'center',
     },
     inputContainer: {
         marginBottom: 15,
-        width: '100%',
+    },
+    label: {
+        color: '#fff', // Color de texto
+        marginBottom: 5,
     },
     input: {
         borderWidth: 1,
         borderColor: '#ccc',
         padding: 10,
         borderRadius: 5,
-        width: '100%',
+        backgroundColor: '#444', // Fondo de entrada
+        color: '#fff', // Color de texto
     },
-    closeButton: {
-        marginTop: 20,
-        backgroundColor: '#2196F3',
+    dropdown: {
+        backgroundColor: '#444', // Fondo del dropdown
+        borderColor: '#ccc',
+        color: '#fff',
+    },
+    dropdownContainer: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+    },
+    saveButton: {
+        backgroundColor: '#ff4757', // Color de fondo del botón
         padding: 10,
         borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 20,
     },
-    closeButtonText: {
-        color: 'white',
+    saveButtonText: {
+        color: '#fff', // Color del texto del botón
+        fontWeight: 'bold',
+    },
+    cancelButton: {
+        backgroundColor: '#ccc', // Color de fondo del botón de cerrar
+        padding: 10,
+        borderRadius: 5,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    cancelButtonText: {
+        color: '#000', // Color del texto del botón de cerrar
+        fontWeight: 'bold',
     },
 });
 

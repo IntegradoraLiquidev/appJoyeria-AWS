@@ -27,7 +27,7 @@ const LoginScreen = ({ navigation }) => {
     const handleLogin = async () => {
         try {
             console.log('Iniciando sesión con:', { email, password });
-            const response = await axios.post('http://172.20.104.17:3000/login', { email, password });
+            const response = await axios.post('http://192.168.1.67:3000/login', { email, password });
             const { token } = response.data;
             console.log('Token recibido:', token);
 
@@ -139,32 +139,32 @@ const styles = StyleSheet.create({
     },
     input: {
         flex: 1,
-        height: 60,
-        paddingLeft: 8,
+        height: 40,
+        paddingHorizontal: 10,
         color: '#fff',
     },
     icon: {
         padding: 10,
     },
     buttonContainer: {
-        marginTop: 40,
         width: '80%',
+        marginTop: 20,
     },
     loginButton: {
         backgroundColor: '#2e5c74',
-        paddingVertical: 15,
+        padding: 10,
         borderRadius: 8,
         alignItems: 'center',
     },
     loginButtonText: {
         color: '#fff',
-        fontSize: 16,
+        fontWeight: 'bold',
     },
     forgotpwdContainer: {
-        marginTop: 50,
+        marginTop: 10,
     },
     forgotpwdText: {
-        color: '#2e5c74',
+        color: '#fff',
     },
     registerContainer: {
         marginTop: 20,

@@ -1,61 +1,56 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
-const ClienteCard = ({ cliente, onPress }) => {
+const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) => {
     return (
         <View style={[styles.card, cliente.total_multas >= 9 && styles.cardWarning]}>
-            <View style={styles.cardContent}>
-                <View style={styles.cardTextContent}>
-                    <Text style={styles.cardTitle}>{cliente.nombre}</Text>
-                    <Text style={styles.cardText}>Monto Actual: {cliente.monto_actual}</Text>
-                    <Text style={styles.cardText}>Total de Multas: {cliente.total_multas}</Text>
+            <Text style={styles.cardText}>Nombre: {cliente.nombre}</Text>
+            <Text style={styles.cardText}>Monto Actual: {cliente.monto_actual}</Text>
+            <Text style={styles.cardText}>Total de Multas: {cliente.total_multas}</Text>
+            <Button title="Ver Detalles" onPress={onPress} color="#2e5c74" />
+            {isAdmin && (
+                <View style={styles.actionsContainer}>
+                    <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
+                        <Icon name="edit" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => onDelete(cliente)} style={styles.actionButton}>
+                        <Icon name="delete" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => onExport(cliente)} style={styles.actionButton}>
+                        <Icon name="file-download" size={24} color="#fff" />
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity onPress={onPress} style={styles.detailsButton}>
-                    <Text style={styles.detailsButtonText}>Ver Detalles</Text>
-                </TouchableOpacity>
-            </View>
+            )}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#333',
-        borderColor: '#2e5c74',
-        borderWidth: 1,
+        backgroundColor: '#444', // Fondo oscuro
         borderRadius: 8,
         padding: 15,
-        marginVertical: 8,
-        width: '100%',
+        marginBottom: 10,
+        elevation: 3,
+        position: 'relative',
     },
-    cardContent: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    cardTextContent: {
-        flex: 1,
-    },
-    cardTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#fff',
-        marginBottom: 5,
+    cardWarning: {
+        backgroundColor: '#b22222', // Rojo más oscuro
     },
     cardText: {
-        fontSize: 14,
-        color: '#fff',
+        fontSize: 16,
+        color: '#fff', // Texto blanco
         marginBottom: 5,
     },
-    detailsButton: {
-        backgroundColor: '#2e5c74',
-        paddingVertical: 5,
-        paddingHorizontal: 10,
-        borderRadius: 4,
+    actionsContainer: {
+        flexDirection: 'row',
+        position: 'absolute',
+        top: 10,
+        right: 10,
     },
-    detailsButtonText: {
-        color: '#fff',
-        fontSize: 12,
+    actionButton: {
+        marginLeft: 10,
     },
 });
 

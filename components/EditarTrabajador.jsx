@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 
-const EditarTrabajador = ({ worker, onSave }) => {
+const EditarTrabajador = ({ worker, onSave, onClose }) => {
     const [name, setName] = useState(worker.nombre);
     const [role, setRole] = useState(worker.role);
     const [email, setEmail] = useState(worker.email);
@@ -21,6 +21,7 @@ const EditarTrabajador = ({ worker, onSave }) => {
             email,
         };
         onSave(updatedWorker);
+        onClose();
     };
 
     return (
@@ -59,7 +60,7 @@ const EditarTrabajador = ({ worker, onSave }) => {
                 <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
                     <Text style={styles.saveButtonText}>Guardar</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => {/* handle cancel logic */}}>
+                <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                     <Text style={styles.cancelButtonText}>Cerrar</Text>
                 </TouchableOpacity>
             </View>
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#1c1c1e', // Fondo oscuro
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo oscuro y transparente
     },
     formContainer: {
         width: '90%',

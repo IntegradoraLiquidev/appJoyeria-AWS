@@ -2,7 +2,7 @@ import React, { useState, useEffect, useLayoutEffect } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import TrabajadorCard from '../components/TrabajadorClientes';
+import TrabajadorCard from '../components/TrabajadorCard';
 
 const AdminDashboard = ({ navigation }) => {
     const [trabajadores, setTrabajadores] = useState([]);
@@ -16,7 +16,7 @@ const AdminDashboard = ({ navigation }) => {
                 throw new Error('Token no encontrado');
             }
 
-            const response = await axios.get('http://172.20.104.17:3000/trabajadores', {
+            const response = await axios.get('http://192.168.1.67:3000/trabajadores', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

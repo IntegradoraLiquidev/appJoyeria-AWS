@@ -2,16 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 const NuevoCliente = ({ navigation }) => {
     const [nombre, setNombre] = useState('');
     const [ocupacion, setOcupacion] = useState('');
     const [direccion, setDireccion] = useState('');
     const [telefono, setTelefono] = useState('');
-    const [fechaInicio, setFechaInicio] = useState('');
     const [fechaTermino, setFechaTermino] = useState('');
     const [montoInicial, setMontoInicial] = useState('');
     const [token, setToken] = useState(null);
+    const [open, setOpen] = useState(false);
+    const [items, setItems] = useState([
+        { label: 'Seleccionar fecha', value: '' },
+        { label: '15 días', value: '15 días' },
+        { label: '20 días', value: '20 días' },
+    ]);
 
     useEffect(() => {
         const getToken = async () => {
@@ -28,15 +34,17 @@ const NuevoCliente = ({ navigation }) => {
             return;
         }
 
+        const fechaInicio = new Date();
+        const fechaTerminoSeleccionada = fechaTermino === '15 días' ? new Date(fechaInicio.getTime() + 15 * 24 * 60 * 60 * 1000) : new Date(fechaInicio.getTime() + 20 * 24 * 60 * 60 * 1000);
+
         try {
-            const response = await axios.post('http://172.20.104.17:3000/clientes', {
+            const response = await axios.post('http://192.168.1.67:3000/clientes', {
                 nombre,
                 ocupacion,
                 direccion,
                 telefono,
-                fecha_inicio: fechaInicio,
-                fecha_termino: fechaTermino,
-                monto_inicial: montoInicial
+                fecha_termino: fechaTerminoSeleccionada.toISOString().split('T')[0],
+                monto_inicial: parseFloat(montoInicial)
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`
@@ -46,7 +54,6 @@ const NuevoCliente = ({ navigation }) => {
             setOcupacion('');
             setDireccion('');
             setTelefono('');
-            setFechaInicio('');
             setFechaTermino('');
             setMontoInicial('');
             Alert.alert('Éxito', 'Cliente agregado exitosamente');
@@ -66,10 +73,20 @@ const NuevoCliente = ({ navigation }) => {
             <TextInput style={styles.input} value={direccion} onChangeText={setDireccion} />
             <Text style={styles.label}>Teléfono:</Text>
             <TextInput style={styles.input} value={telefono} onChangeText={setTelefono} />
-            <Text style={styles.label}>Fecha de Inicio:</Text>
-            <TextInput style={styles.input} value={fechaInicio} onChangeText={setFechaInicio} />
             <Text style={styles.label}>Fecha de Término:</Text>
-            <TextInput style={styles.input} value={fechaTermino} onChangeText={setFechaTermino} />
+            <DropDownPicker
+                open={open}
+                value={fechaTermino}
+                items={items}
+                setOpen={setOpen}
+                setValue={setFechaTermino}
+                setItems={setItems}
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
+                placeholder="Seleccionar fecha"
+                zIndex={1000}
+                zIndexInverse={3000}
+            />
             <Text style={styles.label}>Monto Inicial:</Text>
             <TextInput style={styles.input} value={montoInicial} onChangeText={setMontoInicial} keyboardType="numeric" />
             <View style={styles.buttonContainer}>
@@ -83,12 +100,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#1c1c1e', // Fondo oscuro
+        backgroundColor: '#1c1c1e',
     },
     label: {
         fontSize: 16,
         marginBottom: 4,
-        color: '#fff', // Color de texto blanco
+        color: '#fff',
     },
     input: {
         height: 40,
@@ -97,12 +114,21 @@ const styles = StyleSheet.create({
         marginBottom: 12,
         paddingHorizontal: 8,
         borderRadius: 4,
-        backgroundColor: '#444', // Fondo de input
-        color: '#fff', // Color de texto
+        backgroundColor: '#444',
+        color: '#fff',
     },
     buttonContainer: {
         marginTop: 12,
     },
+    dropdown: {
+        backgroundColor: '#444',
+        borderColor: '#ccc',
+        marginBottom: 12,
+    },
+    dropdownContainer: {
+        backgroundColor: '#444',
+        borderColor: '#ccc',
+    }
 });
 
 export default NuevoCliente;

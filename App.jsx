@@ -14,6 +14,8 @@ import NuevoTrabajador from './screens/NuevoTrabajador';
 import EditarTrabajador from './components/EditarTrabajador';
 import EliminarTrabajador from './components/EliminarTrabajador';
 import EditarClientes from './components/EditarClientes';
+import EstadisticasGraficas from './components/EstadisticasGraficas';
+import EstadisticasTablas from './components/EstadisticasTablas';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -117,6 +119,8 @@ export default function App() {
                     component={EditarClientes} 
                     options={{ headerShown: true }} 
                 />
+                <Stack.Screen name="EstadisticasTablas" component={EstadisticasTablas} options={{ title: 'Estadísticas en Tablas' }} />
+                <Stack.Screen name="EstadisticasGraficas" component={EstadisticasGraficas} options={{ title: 'Estadísticas en Gráficas' }} />
             </Stack.Navigator>
         </NavigationContainer>
     );
