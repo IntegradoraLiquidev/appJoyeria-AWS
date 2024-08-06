@@ -8,6 +8,8 @@ const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [hidePass, setHidePass] = useState(true);
+    const [alertMessage, setAlertMessage] = useState(null);
+    const [alertType, setAlertType] = useState(''); // 'success' or 'error'
 
     const decodeJWT = (token) => {
         try {
@@ -27,7 +29,7 @@ const LoginScreen = ({ navigation }) => {
     const handleLogin = async () => {
         try {
             console.log('Iniciando sesión con:', { email, password });
-            const response = await axios.post('http://192.168.1.67:3000/login', { email, password });
+            const response = await axios.post('http://192.168.1.74:3000/login', { email, password });
             const { token } = response.data;
             console.log('Token recibido:', token);
 
@@ -36,20 +38,28 @@ const LoginScreen = ({ navigation }) => {
             const decoded = decodeJWT(token);
             console.log('Token decodificado:', decoded);
 
-            if (decoded && decoded.role === 'admin') {
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'AdminDashboard' }],
-                });
-            } else {
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: 'WorkerDashboard' }],
-                });
-            }
+            setAlertMessage('Inicio de sesión exitoso');
+            setAlertType('success');
+
+            setTimeout(() => {
+                setAlertMessage(null);
+                if (decoded && decoded.role === 'admin') {
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'AdminDashboard' }],
+                    });
+                } else {
+                    navigation.reset({
+                        index: 0,
+                        routes: [{ name: 'WorkerDashboard' }],
+                    });
+                }
+            }, 2000);
         } catch (error) {
             console.error('Error al iniciar sesión:', error);
-            Alert.alert('Error', 'Error al iniciar sesión');
+            setAlertMessage('Error al iniciar sesión');
+            setAlertType('error');
+            setTimeout(() => setAlertMessage(null), 3000);
         }
     };
 
@@ -59,6 +69,11 @@ const LoginScreen = ({ navigation }) => {
                 <Text style={styles.headerText}>PRESTAMOS DIARIOS</Text>
             </View>
             <View style={styles.formContainer}>
+                {alertMessage && (
+                    <View style={alertType === 'success' ? styles.successAlert : styles.errorAlert}>
+                        <Text style={styles.alertText}>{alertMessage}</Text>
+                    </View>
+                )}
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -92,11 +107,6 @@ const LoginScreen = ({ navigation }) => {
                 <View style={styles.forgotpwdContainer}>
                     <Text style={styles.forgotpwdText}>¿Olvidaste tu contraseña?</Text>
                 </View>
-                <View style={styles.registerContainer}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                        <Text style={styles.registerText}>Registro</Text>
-                    </TouchableOpacity>
-                </View>
             </View>
         </View>
     );
@@ -105,17 +115,15 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: '#1a1a1a',
     },
     headerContainer: {
-        position: 'absolute',
-        top: 0,
-        width: '100%',
         backgroundColor: '#2e5c74',
-        padding: 20,
+        width: '100%',
         alignItems: 'center',
+        paddingVertical: 15,
+        marginBottom: 50,
     },
     headerText: {
         fontSize: 30,
@@ -124,8 +132,9 @@ const styles = StyleSheet.create({
     },
     formContainer: {
         alignItems: 'center',
-        width: '100%',
-        marginTop: 100,
+        width: '90%',
+        justifyContent: 'center', // Centra el contenido verticalmente
+        flex: 1,
     },
     inputContainer: {
         flexDirection: 'row',
@@ -134,7 +143,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         marginTop: 10,
-        width: '80%',
+        width: '100%',
         backgroundColor: '#333',
     },
     input: {
@@ -147,7 +156,7 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     buttonContainer: {
-        width: '80%',
+        width: '100%',
         marginTop: 20,
     },
     loginButton: {
@@ -161,16 +170,30 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     forgotpwdContainer: {
-        marginTop: 10,
+        marginTop: 20,
     },
     forgotpwdText: {
         color: '#fff',
     },
-    registerContainer: {
-        marginTop: 20,
+    successAlert: {
+        backgroundColor: '#4caf50',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 20,
+        width: '100%',
+        alignItems: 'center',
     },
-    registerText: {
-        color: '#2e5c74',
+    errorAlert: {
+        backgroundColor: '#f44336',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 20,
+        width: '100%',
+        alignItems: 'center',
+    },
+    alertText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
 });
 

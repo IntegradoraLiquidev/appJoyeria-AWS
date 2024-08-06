@@ -20,7 +20,7 @@ const WorkerDashboard = ({ navigation }) => {
                     return;
                 }
 
-                const response = await axios.get('http://192.168.1.67:3000/clientes', {
+                const response = await axios.get('http://192.168.1.74:3000/clientes', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

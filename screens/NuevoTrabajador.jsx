@@ -27,7 +27,7 @@ const NuevoTrabajador = ({ navigation }) => {
         }
 
         try {
-            const response = await axios.post('http://192.168.1.67:3000/trabajadores', {
+            const response = await axios.post('http://192.168.1.74:3000/trabajadores', {
                 nombre,
                 email,
                 password,

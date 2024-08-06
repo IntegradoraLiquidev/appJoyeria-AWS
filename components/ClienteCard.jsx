@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     cardWarning: {
-        backgroundColor: '#b22222', // Rojo más oscuro
+        backgroundColor: '#b22222', // Fondo rojo oscuro para advertencia
     },
     cardText: {
         fontSize: 16,

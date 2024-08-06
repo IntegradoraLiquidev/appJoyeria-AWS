@@ -19,7 +19,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
         const token = await AsyncStorage.getItem('token');
 
         try {
-            const response = await fetch(`http://192.168.1.67:3000/trabajadores/${trabajador.id}`, {
+            const response = await fetch(`http://192.168.1.74:3000/trabajadores/${trabajador.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -42,7 +42,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
         const token = await AsyncStorage.getItem('token');
 
         try {
-            const response = await fetch(`http://192.168.1.67:3000/trabajadores/${trabajador.id}`, {
+            const response = await fetch(`http://192.168.1.74:3000/trabajadores/${trabajador.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -66,7 +66,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
     const handleDownload = async () => {
         const token = await AsyncStorage.getItem('token');
         try {
-            const response = await fetch(`http://192.168.1.67:3000/estadisticas/trabajador/${trabajador.id}`, {
+            const response = await fetch(`http://192.168.1.74:3000/estadisticas/trabajador/${trabajador.id}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`

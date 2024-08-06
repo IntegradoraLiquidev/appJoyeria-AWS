@@ -41,7 +41,7 @@ const TrabajadorClientes = ({ route, navigation }) => {
                 const decodedToken = decodeToken(token);
                 setIsAdmin(decodedToken.role === 'admin');
 
-                const response = await axios.get(`http://192.168.1.67:3000/trabajadores/${id}/clientes`, {
+                const response = await axios.get(`http://192.168.1.74:3000/trabajadores/${id}/clientes`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -100,7 +100,7 @@ const TrabajadorClientes = ({ route, navigation }) => {
                 throw new Error('No se encontró el token');
             }
 
-            await axios.delete(`http://192.168.1.67:3000/clientes/${clienteId}`, {
+            await axios.delete(`http://192.168.1.74:3000/clientes/${clienteId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

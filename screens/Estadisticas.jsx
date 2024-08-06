@@ -16,7 +16,7 @@ const EstadisticasScreen = () => {
             const token = await AsyncStorage.getItem('token');
             if (!token) throw new Error('No token found');
             
-            const response = await axios.get('http://192.168.1.67:3000/estadisticas/general', {
+            const response = await axios.get('http://192.168.1.74:3000/estadisticas/general', {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -61,14 +61,14 @@ const EstadisticasScreen = () => {
                 <Text style={styles.cardTitle}>Total Préstamos Completados</Text>
                 <Text style={styles.cardValue}>{totalPrestamosCompletados}</Text>
             </View>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EstadisticasTablas')}>
-                <Image source={require('../assets/chart_icon.png')} style={styles.icon} />
-                <Text style={styles.buttonText}>Ver Estadísticas en Tablas</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EstadisticasGraficas', { estadisticas })}>
-                <Image source={require('../assets/chart_icon.png')} style={styles.icon} />
-                <Text style={styles.buttonText}>Ver Estadísticas en Gráficas</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EstadisticasTablas')}>
+                    <Image source={require('../assets/table_icon.png')} style={styles.icon} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EstadisticasGraficas', { estadisticas })}>
+                    <Image source={require('../assets/chart_icon.png')} style={styles.icon} />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 };
@@ -79,9 +79,9 @@ const styles = StyleSheet.create({
     card: { backgroundColor: '#f8f9fa', borderRadius: 8, padding: 16, marginVertical: 8 },
     cardTitle: { fontSize: 18, fontWeight: 'bold' },
     cardValue: { fontSize: 16 },
-    button: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#007BFF', borderRadius: 8, padding: 16, marginVertical: 8 },
-    icon: { width: 24, height: 24, marginRight: 8 },
-    buttonText: { color: '#fff', fontSize: 16 }
+    buttonContainer: { flexDirection: 'row', justifyContent: 'space-around', marginTop: 16 },
+    button: { width: 150, height: 150, justifyContent: 'center', alignItems: 'center', borderRadius: 8, backgroundColor: '#007BFF', padding: 16 },
+    icon: { width: '100%', height: '100%', resizeMode: 'contain' }
 });
 
 export default EstadisticasScreen;

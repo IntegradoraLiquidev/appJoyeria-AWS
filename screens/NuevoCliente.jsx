@@ -31,31 +31,38 @@ const NuevoCliente = ({ navigation }) => {
     const handleAddCliente = async () => {
         if (!token) {
             console.error('No token found');
+            Alert.alert('Error', 'No se encontró un token de autenticación');
             return;
         }
 
         const fechaInicio = new Date();
-        const fechaTerminoSeleccionada = fechaTermino === '15 días' ? new Date(fechaInicio.getTime() + 15 * 24 * 60 * 60 * 1000) : new Date(fechaInicio.getTime() + 20 * 24 * 60 * 60 * 1000);
+        const fechaTerminoSeleccionada = fechaTermino === '15 días'
+            ? new Date(fechaInicio.getTime() + 15 * 24 * 60 * 60 * 1000)
+            : new Date(fechaInicio.getTime() + 20 * 24 * 60 * 60 * 1000);
 
         try {
-            const response = await axios.post('http://192.168.1.67:3000/clientes', {
+            await axios.post('http://192.168.1.74:3000/clientes', {
                 nombre,
                 ocupacion,
                 direccion,
                 telefono,
                 fecha_termino: fechaTerminoSeleccionada.toISOString().split('T')[0],
-                monto_inicial: parseFloat(montoInicial)
+                monto_inicial: parseFloat(montoInicial),
             }, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
+
+            // Limpiar los campos después de agregar el cliente
             setNombre('');
             setOcupacion('');
             setDireccion('');
             setTelefono('');
             setFechaTermino('');
             setMontoInicial('');
+
+            // Mostrar alerta de éxito
             Alert.alert('Éxito', 'Cliente agregado exitosamente');
         } catch (error) {
             console.error('Error al agregar cliente:', error);
@@ -66,13 +73,38 @@ const NuevoCliente = ({ navigation }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.label}>Nombre:</Text>
-            <TextInput style={styles.input} value={nombre} onChangeText={setNombre} />
+            <TextInput
+                style={styles.input}
+                value={nombre}
+                onChangeText={setNombre}
+                placeholder="Ingrese el nombre"
+                placeholderTextColor="#888"
+            />
             <Text style={styles.label}>Ocupación:</Text>
-            <TextInput style={styles.input} value={ocupacion} onChangeText={setOcupacion} />
+            <TextInput
+                style={styles.input}
+                value={ocupacion}
+                onChangeText={setOcupacion}
+                placeholder="Ingrese la ocupación"
+                placeholderTextColor="#888"
+            />
             <Text style={styles.label}>Dirección:</Text>
-            <TextInput style={styles.input} value={direccion} onChangeText={setDireccion} />
+            <TextInput
+                style={styles.input}
+                value={direccion}
+                onChangeText={setDireccion}
+                placeholder="Ingrese la dirección"
+                placeholderTextColor="#888"
+            />
             <Text style={styles.label}>Teléfono:</Text>
-            <TextInput style={styles.input} value={telefono} onChangeText={setTelefono} />
+            <TextInput
+                style={styles.input}
+                value={telefono}
+                onChangeText={setTelefono}
+                placeholder="Ingrese el teléfono"
+                placeholderTextColor="#888"
+                keyboardType="phone-pad"
+            />
             <Text style={styles.label}>Fecha de Término:</Text>
             <DropDownPicker
                 open={open}
@@ -88,9 +120,20 @@ const NuevoCliente = ({ navigation }) => {
                 zIndexInverse={3000}
             />
             <Text style={styles.label}>Monto Inicial:</Text>
-            <TextInput style={styles.input} value={montoInicial} onChangeText={setMontoInicial} keyboardType="numeric" />
+            <TextInput
+                style={styles.input}
+                value={montoInicial}
+                onChangeText={setMontoInicial}
+                placeholder="Ingrese el monto inicial"
+                placeholderTextColor="#888"
+                keyboardType="numeric"
+            />
             <View style={styles.buttonContainer}>
-                <Button title="Agregar Cliente" onPress={handleAddCliente} color="#2e5c74" />
+                <Button
+                    title="Agregar Cliente"
+                    onPress={handleAddCliente}
+                    color="#2e5c74"
+                />
             </View>
         </View>
     );

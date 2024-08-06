@@ -20,13 +20,13 @@ const EstadisticasGraficas = () => {
                     throw new Error('No token found');
                 }
 
-                const response = await axios.get('http://192.168.1.67:3000/estadisticas/general', {
+                const response = await axios.get('http://192.168.1.74:3000/estadisticas/general', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
 
-                const trabajadorResponse = await axios.get('http://192.168.1.67:3000/estadisticas/trabajadores', {
+                const trabajadorResponse = await axios.get('http://192.168.1.74:3000/estadisticas/trabajadores', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

@@ -19,7 +19,8 @@ const ClienteDetails = ({ route }) => {
     const [paidDaysVisible, setPaidDaysVisible] = useState(true);
     const rotateAnim = useRef(new Animated.Value(0)).current;
     const rotatePaidAnim = useRef(new Animated.Value(0)).current;
-    const navigation = useNavigation(); // Obtén la navegación
+    const navigation = useNavigation();
+
     useEffect(() => {
         fetchDetails();
         loadPendingDays();
@@ -42,7 +43,7 @@ const ClienteDetails = ({ route }) => {
                 [
                     {
                         text: "Aceptar",
-                        onPress: () => navigation.navigate('WorkerDashboard') // Redirigir a otra pantalla
+                        onPress: () => navigation.navigate('WorkerDashboard')
                     }
                 ]
             );
@@ -57,21 +58,21 @@ const ClienteDetails = ({ route }) => {
                 return;
             }
 
-            const clienteResponse = await axios.get(`http://192.168.1.67:3000/clientes/${id}`, {
+            const clienteResponse = await axios.get(`http://192.168.1.74:3000/clientes/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
             setCliente(clienteResponse.data);
 
-            const abonosResponse = await axios.get(`http://192.168.1.67:3000/clientes/${id}/abonos`, {
+            const abonosResponse = await axios.get(`http://192.168.1.74:3000/clientes/${id}/abonos`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
             setAbonos(abonosResponse.data);
 
-            const multasResponse = await axios.get(`http://192.168.1.67:3000/clientes/${id}/multas`, {
+            const multasResponse = await axios.get(`http://192.168.1.74:3000/clientes/${id}/multas`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -128,7 +129,7 @@ const ClienteDetails = ({ route }) => {
 
         fetchDetails();
         setFormData({ day: null, type: null });
-        
+        Alert.alert('Pago agregado con éxito', 'El pago se ha agregado correctamente.');
     };
 
     const handleAddMulta = async () => {
@@ -136,18 +137,19 @@ const ClienteDetails = ({ route }) => {
         const lastActionDate = await AsyncStorage.getItem(`lastActionDate_${id}_multa`);
 
         if (lastActionDate === today) {
-            alert('Solo puedes agregar una multa por día');
+            Alert.alert('Acción no permitida', 'Solo puedes agregar una multa por día.');
             return;
         }
 
         await AsyncStorage.setItem(`lastActionDate_${id}_multa`, today);
         fetchDetails();
         setFormData({ day: null, type: null });
-        alert('Multa agregada correctamente');
+        Alert.alert('Multa agregada con éxito', 'La multa se ha agregado correctamente.');
     };
 
     const markAsPending = (dayStr) => {
         setPendingDays((prevPendingDays) => [...prevPendingDays, dayStr]);
+        Alert.alert('Día Pendiente', 'El día queda pendiente para pago y multa.');
     };
 
     const markAsPaid = (dayStr) => {
@@ -215,7 +217,7 @@ const ClienteDetails = ({ route }) => {
                             markAsPaid(dayStr);
                         }} />
                     )}
-                     {formData.day === dayStr && formData.type === 'multa' && (
+                    {formData.day === dayStr && formData.type === 'multa' && (
                         <MultaForm clienteId={id} selectedDay={dayStr} onMultaAdded={() => {
                             handleAddMulta();
                             markAsPending(dayStr);
@@ -232,7 +234,7 @@ const ClienteDetails = ({ route }) => {
     const handleCardPress = () => {
         setDaysVisible(!daysVisible);
         Animated.timing(rotateAnim, {
-            toValue: daysVisible ? 1 : 0,
+            toValue: daysVisible ?
             duration: 300,
             useNativeDriver: true,
         }).start();
@@ -241,11 +243,12 @@ const ClienteDetails = ({ route }) => {
     const handlePaidCardPress = () => {
         setPaidDaysVisible(!paidDaysVisible);
         Animated.timing(rotatePaidAnim, {
-            toValue: paidDaysVisible ? 1 : 0,
+            toValue: paidDaysVisible ?
             duration: 300,
             useNativeDriver: true,
         }).start();
     };
+
 
     const renderCardHeader = () => {
         const spin = rotateAnim.interpolate({
@@ -274,13 +277,12 @@ const ClienteDetails = ({ route }) => {
             </TouchableOpacity>
         );
     };
-
     return (
         <ScrollView contentContainerStyle={styles.container}>
             {cliente && (
                 <>
                     <View style={styles.card}>
-                        <Text style={styles.title}>Detalles del Cliente</Text>
+                    <Text style={styles.title}>Detalles del Cliente</Text>
                         <Text style={styles.cardText}>Nombre: {cliente.nombre}</Text>
                         <Text style={styles.cardText}>Monto Diario: {cliente.monto_diario}</Text>
                         <Text style={styles.cardText}>Fecha de Inicio: {formatDateToMexican(cliente.fecha_inicio)}</Text>
@@ -289,10 +291,10 @@ const ClienteDetails = ({ route }) => {
                         <Text style={styles.cardText}>Monto inicial: {cliente.monto_inicial}</Text>
                         <Text style={styles.cardText}>Monto actual: {cliente.monto_actual}</Text>
                     </View>
+    
                     {renderCardHeader()}
                     {daysVisible && renderDaysCards()}
-
-                    <Text style={styles.subtitle}>Días Pagados:</Text>
+    
                     {renderPaidCardHeader()}
                     {paidDaysVisible && (
                         <FlatList
@@ -307,9 +309,9 @@ const ClienteDetails = ({ route }) => {
                             )}
                         />
                     )}
-
-                    <TouchableOpacity onPress={() => setMultasVisible(!multasVisible)} style={styles.button}>
-                        <Text style={styles.buttonText}>{multasVisible ? 'Ocultar Multas' : 'Mostrar Multas'}</Text>
+    
+                    <TouchableOpacity onPress={() => setMultasVisible(!multasVisible)} style={styles.showMultasButton}>
+                        <Text style={styles.showMultasButtonText}>{multasVisible ? 'Ocultar Multas' : 'Mostrar Multas'}</Text>
                     </TouchableOpacity>
                     {multasVisible && (
                         <FlatList
@@ -317,17 +319,20 @@ const ClienteDetails = ({ route }) => {
                             keyExtractor={item => item.id.toString()}
                             renderItem={({ item }) => (
                                 <View style={styles.item}>
-                                    <Text style={styles.cardText}>Monto: {item.monto}</Text>
-                                    <Text style={styles.cardText}>Fecha: {formatDateToMexican(item.fecha)}</Text>
+                                   <Text style={styles.cardText}>
+                                        Fecha: {formatDateToMexican(item.fecha)} - Monto: {item.monto}
+                                    </Text>
                                 </View>
                             )}
                         />
                     )}
-
+    
                 </>
             )}
         </ScrollView>
     );
+    
+   
 };
 
 const styles = StyleSheet.create({
@@ -427,11 +432,25 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
     item: {
+        
         backgroundColor: '#2c2c2c', // Dark item background
         padding: 10,
         borderRadius: 5,
         marginVertical: 5,
     },
+    showMultasButton: {
+        backgroundColor: '#ccc', // Color similar al fondo del cardHeader
+        padding: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginVertical: 10,
+    },
+    showMultasButtonText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#000', // Color del texto similar al cardHeader
+    },
+
 });
 
 export default ClienteDetails;
