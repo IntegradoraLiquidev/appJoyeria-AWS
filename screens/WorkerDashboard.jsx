@@ -20,7 +20,7 @@ const WorkerDashboard = ({ navigation }) => {
                     return;
                 }
 
-                const response = await axios.get('http://192.168.1.74:3000/clientes', {
+                const response = await axios.get('http://192.168.1.17:3000/clientes', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -47,7 +47,7 @@ const WorkerDashboard = ({ navigation }) => {
 
     useEffect(() => {
         const filtered = clientes.filter(cliente =>
-            cliente.estado !== 'completado' && 
+            (cliente.estado !== 'completado' || cliente.monto_actual === 0) &&
             cliente.nombre.toLowerCase().includes(searchText.toLowerCase())
         );
         setFilteredClientes(filtered);
@@ -64,11 +64,14 @@ const WorkerDashboard = ({ navigation }) => {
     useLayoutEffect(() => {
         navigation.setOptions({
             headerRight: () => (
-                <Button
-                    onPress={handleLogout}
-                    title="Cerrar sesión"
-                    color="#2e5c74"
-                />
+                <View style={styles.buttonContainer}>
+                    <Button
+                        onPress={handleLogout}
+                        title="Cerrar sesión"
+                        color="red"
+                        
+                    />
+                </View>
             ),
         });
     }, [navigation]);
@@ -107,10 +110,17 @@ const styles = StyleSheet.create({
         padding: 10,
     },
     title: {
-        fontSize: 20,
+        fontSize: 30,
         fontWeight: 'bold',
         color: '#fff',
         marginBottom: 10,
+    },
+    buttonContainer: {
+        width: 125,
+        height: 38,
+        margin: 'end',
+        marginRight: 10,
+        marginTop: 10,
     },
     searchInput: {
         height: 40,
@@ -120,7 +130,7 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         color: '#fff',
         marginBottom: 10,
-        backgroundColor: '#2c2c2e',
+        backgroundColor: '#fff',
     },
 });
 

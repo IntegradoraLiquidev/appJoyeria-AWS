@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,7 +29,7 @@ const LoginScreen = ({ navigation }) => {
     const handleLogin = async () => {
         try {
             console.log('Iniciando sesión con:', { email, password });
-            const response = await axios.post('http://192.168.1.74:3000/login', { email, password });
+            const response = await axios.post('http://192.168.1.17:3000/login', { email, password });
             const { token } = response.data;
             console.log('Token recibido:', token);
 
@@ -65,6 +65,7 @@ const LoginScreen = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
+            <StatusBar barStyle="light-content" />
             <View style={styles.headerContainer}>
                 <Text style={styles.headerText}>PRESTAMOS DIARIOS</Text>
             </View>
@@ -74,6 +75,7 @@ const LoginScreen = ({ navigation }) => {
                         <Text style={styles.alertText}>{alertMessage}</Text>
                     </View>
                 )}
+                <Text style={styles.text}>Correo electrónico</Text>
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -83,6 +85,7 @@ const LoginScreen = ({ navigation }) => {
                         placeholderTextColor="#ccc"
                     />
                 </View>
+                <Text style={styles.text}>Contraseña</Text>
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -104,9 +107,6 @@ const LoginScreen = ({ navigation }) => {
                         <Text style={styles.loginButtonText}>Iniciar sesión</Text>
                     </TouchableOpacity>
                 </View>
-                <View style={styles.forgotpwdContainer}>
-                    <Text style={styles.forgotpwdText}>¿Olvidaste tu contraseña?</Text>
-                </View>
             </View>
         </View>
     );
@@ -115,7 +115,6 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        alignItems: 'center',
         backgroundColor: '#1a1a1a',
     },
     headerContainer: {
@@ -123,7 +122,7 @@ const styles = StyleSheet.create({
         width: '100%',
         alignItems: 'center',
         paddingVertical: 15,
-        marginBottom: 50,
+        marginTop: StatusBar.currentHeight || 20, // Agrega margen para evitar la barra de estado
     },
     headerText: {
         fontSize: 30,
@@ -131,10 +130,16 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     formContainer: {
-        alignItems: 'center',
-        width: '90%',
-        justifyContent: 'center', // Centra el contenido verticalmente
         flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: '90%',
+        alignSelf: 'center',
+    },
+    text: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     inputContainer: {
         flexDirection: 'row',
@@ -144,13 +149,14 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginTop: 10,
         width: '100%',
-        backgroundColor: '#333',
+        padding: 5,
+        backgroundColor: '#fff',
     },
     input: {
         flex: 1,
         height: 40,
         paddingHorizontal: 10,
-        color: '#fff',
+        color: '#000',
     },
     icon: {
         padding: 10,
@@ -168,12 +174,6 @@ const styles = StyleSheet.create({
     loginButtonText: {
         color: '#fff',
         fontWeight: 'bold',
-    },
-    forgotpwdContainer: {
-        marginTop: 20,
-    },
-    forgotpwdText: {
-        color: '#fff',
     },
     successAlert: {
         backgroundColor: '#4caf50',

@@ -33,10 +33,11 @@ function WorkerTabs() {
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: '#2e5c74',
+                tabBarActiveTintColor: 'yellow',
                 tabBarInactiveTintColor: '#ccc',
                 tabBarStyle: {
                     backgroundColor: '#1c1c1e',
+                    height: 60,
                 },
             })}
         >
@@ -61,10 +62,11 @@ function AdminTabs() {
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: '#2e5c74',
+                tabBarActiveTintColor: 'yellow',
                 tabBarInactiveTintColor: '#ccc',
                 tabBarStyle: {
                     backgroundColor: '#1c1c1e',
+                    height: 60,
                 },
             })}
         >

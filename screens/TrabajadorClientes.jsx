@@ -41,7 +41,7 @@ const TrabajadorClientes = ({ route, navigation }) => {
                 const decodedToken = decodeToken(token);
                 setIsAdmin(decodedToken.role === 'admin');
 
-                const response = await axios.get(`http://192.168.1.74:3000/trabajadores/${id}/clientes`, {
+                const response = await axios.get(`http://192.168.1.17:3000/trabajadores/${id}/clientes`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
 
@@ -100,7 +100,7 @@ const TrabajadorClientes = ({ route, navigation }) => {
                 throw new Error('No se encontró el token');
             }
 
-            await axios.delete(`http://192.168.1.74:3000/clientes/${clienteId}`, {
+            await axios.delete(`http://192.168.1.17:3000/clientes/${clienteId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -131,7 +131,7 @@ const TrabajadorClientes = ({ route, navigation }) => {
             }
     
             // Obtener datos del cliente
-            const response = await axios.get(`http://192.168.1.71:3000/estadisticas/cliente/${cliente.id}`, {
+            const response = await axios.get(`http://192.168.1.17:3000/estadisticas/cliente/${cliente.id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
     
@@ -139,10 +139,12 @@ const TrabajadorClientes = ({ route, navigation }) => {
     
             // Formatear los datos para el archivo Excel
             const formattedData = [{
-                'Nombre cliente': data.nombre,
+                'No.': 1,  // Si es un solo cliente, el número es fijo.
+                'Nombre': data.nombre,
+                'Direccion': data.direccion,
                 'Telefono': data.telefono,
-                'Monto inicial': data.monto_inicial,
-                'Esquema de Dias-%': `${data.dias_prestamo || 'Desconocido'} Dias $${data.cobro_diario ? Math.round(data.cobro_diario) : '0'} *$1000`,
+                'Monto': data.monto_inicial,
+                'Esquema de Dias-%': `${data.dias_prestamo === 15 ? `15 días $85x1000 30%` : data.dias_prestamo === 20 ? `20 días $65x1000 30%` : data.esquema_dias}`,
                 'Fecha de inicio del prestamo': new Date(data.fecha_inicio).toLocaleDateString('es-ES', {
                     day: '2-digit', month: 'long', year: 'numeric'
                 }),
@@ -192,6 +194,8 @@ const TrabajadorClientes = ({ route, navigation }) => {
             console.error('Error exportando estadísticas:', error);
         }
     };
+    
+    
     
 
     return (
@@ -250,8 +254,8 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     searchInput: {
-        backgroundColor: '#2c2c2e', // Fondo del input oscuro
-        color: '#fff', // Texto blanco
+        backgroundColor: '#fff', // Fondo del input oscuro
+        color: '#000', // Texto blanco
         padding: 10,
         borderRadius: 8,
         marginBottom: 20,

@@ -8,17 +8,19 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
             <Text style={styles.cardText}>Nombre: {cliente.nombre}</Text>
             <Text style={styles.cardText}>Monto Actual: {cliente.monto_actual}</Text>
             <Text style={styles.cardText}>Total de Multas: {cliente.total_multas}</Text>
-            <Button title="Ver Detalles" onPress={onPress} color="#2e5c74" />
+            <View style={styles.buttonContainer}>
+            <Button title="Ver Detalles" onPress={onPress} color="#007BFF" />
+            </View>
             {isAdmin && (
                 <View style={styles.actionsContainer}>
                     <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
-                        <Icon name="edit" size={24} color="#fff" />
+                        <Icon name="edit" size={35} color="#2e5c74" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => onDelete(cliente)} style={styles.actionButton}>
-                        <Icon name="delete" size={24} color="#fff" />
+                        <Icon name="delete" size={35} color="#e74c3c" />
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => onExport(cliente)} style={styles.actionButton}>
-                        <Icon name="file-download" size={24} color="#fff" />
+                        <Icon name="download" size={35} color="#3498db" />
                     </TouchableOpacity>
                 </View>
             )}
@@ -28,10 +30,11 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#444', // Fondo oscuro
+        backgroundColor: '#E8E8E8', 
         borderRadius: 8,
         padding: 15,
         marginBottom: 10,
+        marginTop: 10,
         elevation: 3,
         position: 'relative',
     },
@@ -40,10 +43,19 @@ const styles = StyleSheet.create({
     },
     cardText: {
         fontSize: 16,
-        color: '#fff', // Texto blanco
-        marginBottom: 5,
+        color: '#000', 
+        marginBottom: 10,
+        padding: 2,
+        
+    },
+    buttonContainer: {
+        width: 150,
+        marginTop: 10,
+        margin: 'auto',
+
     },
     actionsContainer: {
+        
         flexDirection: 'row',
         position: 'absolute',
         top: 10,

@@ -1,0 +1,12 @@
+version: '3'
+services:
+  react-native-expo:
+    build: .
+    ports:
+      - "3000:3000"  # Puerto para el servidor de desarrollo de Expo
+    volumes:
+      - .:/app  # Montar el directorio de la aplicación en el contenedor
+    environment:
+      - NODE_ENV=development
+    stdin_open: true
+    tty: true

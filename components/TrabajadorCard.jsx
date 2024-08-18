@@ -19,7 +19,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
         const token = await AsyncStorage.getItem('token');
 
         try {
-            const response = await fetch(`http://192.168.1.74:3000/trabajadores/${trabajador.id}`, {
+            const response = await fetch(`http://192.168.1.17:3000/trabajadores/${trabajador.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -42,7 +42,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
         const token = await AsyncStorage.getItem('token');
 
         try {
-            const response = await fetch(`http://192.168.1.74:3000/trabajadores/${trabajador.id}`, {
+            const response = await fetch(`http://192.168.1.17:3000/trabajadores/${trabajador.id}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -66,7 +66,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
     const handleDownload = async () => {
         const token = await AsyncStorage.getItem('token');
         try {
-            const response = await fetch(`http://192.168.1.74:3000/estadisticas/trabajador/${trabajador.id}`, {
+            const response = await fetch(`http://192.168.1.67:3000/estadisticas/trabajador/${trabajador.id}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -78,11 +78,13 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
             }
 
             const data = await response.json();
-            const formattedData = data.map(cliente => ({
+            const formattedData = data.map((cliente, index) => ({
+                'No.': index + 1,
                 'Nombre cliente': cliente.nombre,
+                'Direccion': cliente.direccion,
                 'Telefono': cliente.telefono,
                 'Monto inicial': cliente.monto_inicial,
-                'Esquema de Dias-%': `${cliente.dias_prestamo || 'Desconocido'} Dias $${cliente.cobro_diario ? Math.round(cliente.cobro_diario) : '0'} *$1000`,
+                'Esquema de Dias-%': `${cliente.dias_prestamo === 15 ? `15 días $85x1000 30%` : cliente.dias_prestamo === 20 ? `20 días $65x1000 30%` : cliente.esquema_dias}`,
                 'Fecha de inicio del prestamo': new Date(cliente.fecha_inicio).toLocaleDateString('es-ES', {
                     day: '2-digit', month: 'long', year: 'numeric'
                 }),
@@ -189,7 +191,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#ccc',
         borderRadius: 10,
-        backgroundColor: '#fff',
+        backgroundColor: '#E8E8E8',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.2,

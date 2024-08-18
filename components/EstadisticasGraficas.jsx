@@ -20,13 +20,13 @@ const EstadisticasGraficas = () => {
                     throw new Error('No token found');
                 }
 
-                const response = await axios.get('http://192.168.1.74:3000/estadisticas/general', {
+                const response = await axios.get('http://192.168.1.17:3000/estadisticas/general', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
 
-                const trabajadorResponse = await axios.get('http://192.168.1.74:3000/estadisticas/trabajadores', {
+                const trabajadorResponse = await axios.get('http://192.168.1.17:3000/estadisticas/trabajadores', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -44,18 +44,32 @@ const EstadisticasGraficas = () => {
         fetchEstadisticas();
     }, []);
 
+    if (!estadisticas || !trabajadorEstadisticas) {
+        return (
+            <View>
+                <Text>No se pudieron cargar las estadísticas</Text>
+            </View>
+        );
+    }
+    
+
     const totalPrestamosActivos = estadisticas ? estadisticas.filter(item => item.estado === 'pendiente').length : 0;
     const totalPrestamosCompletados = estadisticas ? estadisticas.filter(item => item.estado === 'completado').length : 0;
 
-    const barData = {
-        labels: estadisticas ? estadisticas.map(item => new Date(item.fecha_inicio).toLocaleDateString('es-ES', { month: 'short' })) : [],
+    const barData = estadisticas && estadisticas.length > 0 ? {
+        labels: estadisticas.map(item => new Date(item.fecha_inicio).toLocaleDateString('es-ES', { month: 'short' })),
         datasets: [
             {
-                data: estadisticas ? estadisticas.map(item => item.monto_inicial) : [],
+                data: estadisticas.map(item => Number(item.monto_inicial) || 0),
                 color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
             }
         ]
+    } : {
+        labels: [],
+        datasets: [{ data: [] }]
     };
+    
+    
 
     const pieData = [
         {
@@ -78,25 +92,17 @@ const EstadisticasGraficas = () => {
         labels: estadisticas ? estadisticas.map(item => new Date(item.fecha_inicio).toLocaleDateString('es-ES', { month: 'short' })) : [],
         datasets: [
             {
-                data: estadisticas ? estadisticas.map(item => item.monto_inicial).filter(value => !isNaN(value)) : [],
+                data: estadisticas ? estadisticas.map(item => {
+                    const monto = Number(item.monto_inicial);
+                    return isNaN(monto) ? 0 : monto;
+                }) : [],
                 color: (opacity = 1) => `rgba(134, 65, 244, ${opacity})`,
                 strokeWidth: 2,
             }
         ],
         legend: ['Monto Inicial'],
     };
-
-    if (loading) {
-        return <ActivityIndicator size="large" color="#0000ff" />;
-    }
-
-    if (error) {
-        return (
-            <View>
-                <Text>Error: {error.message}</Text>
-            </View>
-        );
-    }
+    
 
     return (
         <ScrollView style={styles.container}>

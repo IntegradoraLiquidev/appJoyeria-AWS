@@ -16,7 +16,7 @@ const AdminDashboard = ({ navigation }) => {
                 throw new Error('Token no encontrado');
             }
 
-            const response = await axios.get('http://192.168.1.74:3000/trabajadores', {
+            const response = await axios.get('http://192.168.1.17:3000/trabajadores', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -103,8 +103,8 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         marginBottom: 20,
         paddingHorizontal: 10,
-        backgroundColor: '#444', // Fondo de entrada
-        color: '#fff', // Color de texto
+        backgroundColor: '#fff', // Fondo de entrada
+        color: '#000', // Color de texto
     },
     logoutButton: {
         marginRight: 15,

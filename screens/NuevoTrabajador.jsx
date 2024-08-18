@@ -27,7 +27,7 @@ const NuevoTrabajador = ({ navigation }) => {
         }
 
         try {
-            const response = await axios.post('http://192.168.1.74:3000/trabajadores', {
+            const response = await axios.post('http://192.168.1.17:3000/trabajadores', {
                 nombre,
                 email,
                 password,
@@ -51,6 +51,7 @@ const NuevoTrabajador = ({ navigation }) => {
                 <Text style={styles.label}>Nombre:</Text>
                 <TextInput 
                     style={styles.input} 
+                    placeholder="Ingrese el nombre"
                     value={nombre} 
                     onChangeText={setNombre} 
                 />
@@ -59,6 +60,7 @@ const NuevoTrabajador = ({ navigation }) => {
                 <Text style={styles.label}>Email:</Text>
                 <TextInput 
                     style={styles.input} 
+                    placeholder="Ingrese el email"
                     value={email} 
                     onChangeText={setEmail} 
                     keyboardType="email-address"
@@ -68,6 +70,7 @@ const NuevoTrabajador = ({ navigation }) => {
                 <Text style={styles.label}>Contraseña:</Text>
                 <TextInput 
                     style={styles.input} 
+                    placeholder="Ingrese la contraseña"
                     value={password} 
                     onChangeText={setPassword} 
                     secureTextEntry 
@@ -96,7 +99,6 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         backgroundColor: '#1c1c1e',
-        borderRadius: 10,
         justifyContent: 'center',
     },
     header: {
@@ -115,24 +117,26 @@ const styles = StyleSheet.create({
     },
     input: {
         height: 40,
-        borderColor: '#ccc',
+        borderColor: '#fff',
         borderWidth: 1,
         marginBottom: 12,
         paddingHorizontal: 10,
         borderRadius: 5,
-        backgroundColor: '#444',
-        color: '#fff',
+        backgroundColor: '#fff',
+        color: '#000',
     },
     picker: {
         height: 50,
         width: '100%',
         marginBottom: 12,
-        backgroundColor: '#444',
-        color: '#fff',
+        backgroundColor: '#fff',
+        color: '#000',
     },
     addButton: {
-        backgroundColor: '#2e5c74',
+        backgroundColor: '#28A745',
         padding: 15,
+        width: 200,
+        margin: 'auto',
         borderRadius: 5,
         alignItems: 'center',
     },

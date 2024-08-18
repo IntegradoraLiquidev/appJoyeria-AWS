@@ -13,11 +13,7 @@ const NuevoCliente = ({ navigation }) => {
     const [montoInicial, setMontoInicial] = useState('');
     const [token, setToken] = useState(null);
     const [open, setOpen] = useState(false);
-    const [items, setItems] = useState([
-        { label: 'Seleccionar fecha', value: '' },
-        { label: '15 días', value: '15 días' },
-        { label: '20 días', value: '20 días' },
-    ]);
+    const [items, setItems] = useState([]);
 
     useEffect(() => {
         const getToken = async () => {
@@ -26,6 +22,16 @@ const NuevoCliente = ({ navigation }) => {
         };
 
         getToken();
+
+        // Set the array to start from the next day
+        const fechaInicio = new Date();
+        fechaInicio.setDate(fechaInicio.getDate());
+
+        setItems([
+            { label: 'Seleccionar fecha', value: '' },
+            { label: '15 días', value: '15 días' },
+            { label: '20 días', value: '20 días' },
+        ]);
     }, []);
 
     const handleAddCliente = async () => {
@@ -35,18 +41,32 @@ const NuevoCliente = ({ navigation }) => {
             return;
         }
 
+        // Nueva fecha de inicio
         const fechaInicio = new Date();
-        const fechaTerminoSeleccionada = fechaTermino === '15 días'
-            ? new Date(fechaInicio.getTime() + 15 * 24 * 60 * 60 * 1000)
-            : new Date(fechaInicio.getTime() + 20 * 24 * 60 * 60 * 1000);
+        fechaInicio.setHours(0, 0, 0, 0); // Establece a medianoche
 
+        let newFechaTermino;
+        if (fechaTermino === '15 días') {
+            newFechaTermino = new Date(fechaInicio);
+            newFechaTermino.setDate(newFechaTermino.getDate() + 15); // Agrega 15 días
+        } else if (fechaTermino === '20 días') {
+            newFechaTermino = new Date(fechaInicio);
+            newFechaTermino.setDate(newFechaTermino.getDate() + 20); // Agrega 20 días
+        }
+
+        // Verifica que el día de la nueva fecha no tenga horas adicionales
+        newFechaTermino.setHours(0, 0, 0, 0);
+
+        const formattedFechaInicio = fechaInicio.toISOString().split('T')[0];
+        const formattedFechaTermino = newFechaTermino.toISOString().split('T')[0];
         try {
-            await axios.post('http://192.168.1.74:3000/clientes', {
+            await axios.post('http://192.168.1.17:3000/clientes', {
                 nombre,
                 ocupacion,
                 direccion,
                 telefono,
-                fecha_termino: fechaTerminoSeleccionada.toISOString().split('T')[0],
+                fecha_inicio: formattedFechaInicio,
+                fecha_termino: formattedFechaTermino,
                 monto_inicial: parseFloat(montoInicial),
             }, {
                 headers: {
@@ -132,7 +152,7 @@ const NuevoCliente = ({ navigation }) => {
                 <Button
                     title="Agregar Cliente"
                     onPress={handleAddCliente}
-                    color="#2e5c74"
+                    color="#28A745"
                 />
             </View>
         </View>
@@ -151,25 +171,28 @@ const styles = StyleSheet.create({
         color: '#fff',
     },
     input: {
-        height: 40,
+        height: 50,
         borderColor: '#ccc',
         borderWidth: 1,
         marginBottom: 12,
         paddingHorizontal: 8,
         borderRadius: 4,
-        backgroundColor: '#444',
-        color: '#fff',
+        backgroundColor: '#fff',
+        color: '#000',
     },
     buttonContainer: {
+        width: 200,
         marginTop: 12,
+        margin: 'auto',
+
     },
     dropdown: {
-        backgroundColor: '#444',
+        backgroundColor: '#fff',
         borderColor: '#ccc',
         marginBottom: 12,
     },
     dropdownContainer: {
-        backgroundColor: '#444',
+        backgroundColor: '#fff',
         borderColor: '#ccc',
     }
 });

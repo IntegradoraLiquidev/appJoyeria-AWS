@@ -21,7 +21,7 @@
 
                 const fecha = new Date().toISOString().split('T')[0]; // Fecha actual en formato YYYY-MM-DD
 
-                const response = await axios.post(`http://192.168.1.74:3000/clientes/${clienteId}/abonos`, { monto: parseFloat(monto), fecha }, {
+                const response = await axios.post(`http://192.168.1.17:3000/clientes/${clienteId}/abonos`, { monto: parseFloat(monto), fecha }, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -43,14 +43,14 @@
 
         return (
             <View style={styles.container}>
-                <Text style={styles.label}>Monto:</Text>
+                <Text style={styles.label}>Agregar monto:</Text>
                 <TextInput
                     style={styles.input}
                     value={monto}
                     onChangeText={text => setMonto(text.replace(/[^0-9.]/g, ''))}  // Permitir solo números y punto decimal
                     keyboardType="numeric"
                 />
-                <Button title="Agregar Abono" onPress={handleAddAbono} disabled={loading} />
+                <Button title="Abonar" onPress={handleAddAbono} disabled={loading} />
             </View>
         );
     };
@@ -60,7 +60,9 @@
             marginBottom: 20,
         },
         label: {
-            marginBottom: 5,
+            fontSize: 16,
+            fontWeight: 'bold',
+            marginBottom: 16,
         },
         input: {
             height: 40,

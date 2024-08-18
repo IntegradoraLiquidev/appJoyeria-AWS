@@ -1,10 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ScrollView, Animated, Alert } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ScrollView, TextInput, Alert } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AbonoForm from '../components/AbonoForm';
 import MultaForm from '../components/MultaForm';
+import DropDownPicker from 'react-native-dropdown-picker';
+
+
+
 
 const ClienteDetails = ({ route }) => {
     const { id } = route.params;
@@ -17,8 +21,20 @@ const ClienteDetails = ({ route }) => {
     const [hiddenDays, setHiddenDays] = useState([]);
     const [daysVisible, setDaysVisible] = useState(true);
     const [paidDaysVisible, setPaidDaysVisible] = useState(true);
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-    const rotatePaidAnim = useRef(new Animated.Value(0)).current;
+    const [canRenew, setCanRenew] = useState(false); // Nuevo estado para controlar la opción de renovación
+    const [showRenewInput, setShowRenewInput] = useState(false);
+    const [renewAmount, setRenewAmount] = useState('');
+    const [amountValid, setAmountValid] = useState(false);
+    const [fechaTermino, setFechaTermino] = useState('');
+    const [open, setOpen] = useState(false);
+    const [newInitialAmount, setNewInitialAmount] = useState('');
+    const [items, setItems] = useState([
+        { label: 'Seleccionar fecha', value: '' },
+        { label: '15 días', value: '15 días' },
+        { label: '20 días', value: '20 días' },
+    ]);
+    const isFormValid = amountValid && renewAmount !== '' && fechaTermino !== null;
+
     const navigation = useNavigation();
 
     useEffect(() => {
@@ -34,6 +50,10 @@ const ClienteDetails = ({ route }) => {
     useEffect(() => {
         saveHiddenDays();
     }, [hiddenDays]);
+
+    useEffect(() => {
+        checkRenewalEligibility(); // Verificar si se puede renovar después de cargar los abonos
+    }, [abonos]);
 
     useEffect(() => {
         if (cliente?.estado === 'completado') {
@@ -58,21 +78,21 @@ const ClienteDetails = ({ route }) => {
                 return;
             }
 
-            const clienteResponse = await axios.get(`http://192.168.1.74:3000/clientes/${id}`, {
+            const clienteResponse = await axios.get(`http://192.168.1.17:3000/clientes/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
             setCliente(clienteResponse.data);
 
-            const abonosResponse = await axios.get(`http://192.168.1.74:3000/clientes/${id}/abonos`, {
+            const abonosResponse = await axios.get(`http://192.168.1.17:3000/clientes/${id}/abonos`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
             setAbonos(abonosResponse.data);
 
-            const multasResponse = await axios.get(`http://192.168.1.74:3000/clientes/${id}/multas`, {
+            const multasResponse = await axios.get(`http://192.168.1.17:3000/clientes/${id}/multas`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -147,6 +167,9 @@ const ClienteDetails = ({ route }) => {
         Alert.alert('Multa agregada con éxito', 'La multa se ha agregado correctamente.');
     };
 
+
+
+
     const markAsPending = (dayStr) => {
         setPendingDays((prevPendingDays) => [...prevPendingDays, dayStr]);
         Alert.alert('Día Pendiente', 'El día queda pendiente para pago y multa.');
@@ -155,6 +178,7 @@ const ClienteDetails = ({ route }) => {
     const markAsPaid = (dayStr) => {
         setPendingDays((prevPendingDays) => prevPendingDays.filter(day => day !== dayStr));
         setHiddenDays((prevHiddenDays) => [...prevHiddenDays, dayStr]);
+        checkRenewalEligibility();
     };
 
     const formatDateToMexican = (dateStr) => {
@@ -164,6 +188,119 @@ const ClienteDetails = ({ route }) => {
         const year = date.getFullYear();
         return `${day}/${month}/${year}`;
     };
+
+    const checkRenewalEligibility = () => {
+        if (abonos.length >= 5) {
+            setCanRenew(true);
+        } else {
+            setCanRenew(false);
+        }
+    };
+
+    const handleRenewLoan = () => {
+        setShowRenewInput(true);
+    };
+    const handleConfirmRenewal = async () => {
+        const remainingAmount = cliente.monto_actual;
+    
+        if (renewAmount === '') {
+            Alert.alert('Error', 'Por favor ingresa el monto para renovar el préstamo.');
+            return;
+        }
+    
+        const amountToRenew = parseFloat(renewAmount);
+        const tolerance = 0.01;
+        if (Math.abs(amountToRenew - remainingAmount) > tolerance) {
+            Alert.alert('Error', `La cantidad ingresada debe ser exactamente ${remainingAmount}.`);
+            return;
+        }
+    
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                console.error('No token found');
+                return;
+            }
+    
+            // Calcular el nuevo monto con el 30% de interés
+            const interestRate = 0.30;
+            const newAmountInitial = parseFloat(newInitialAmount);
+            const newAmountWithInterest = newAmountInitial * (1 + interestRate);
+    
+            // Nueva fecha de inicio
+            const fechaInicio = new Date(); // Crear una nueva instancia de Date
+            fechaInicio.setDate(fechaInicio.getDate() + 2); // Sumar 1 día a la fecha actual
+    
+            let newFechaTermino;
+            if (fechaTermino === '15 días') {
+                newFechaTermino = new Date(fechaInicio);
+                newFechaTermino.setDate(newFechaTermino.getDate() + 14); // Agrega 14 días (para completar 15 días)
+            } else if (fechaTermino === '20 días') {
+                newFechaTermino = new Date(fechaInicio);
+                newFechaTermino.setDate(newFechaTermino.getDate() + 19); // Agrega 19 días (para completar 20 días)
+            }
+    
+            // Formatear la fecha en un formato aceptable para la base de datos (ISO8601)
+            const formattedFechaInicio = fechaInicio.toISOString().split('T')[0];
+            const formattedFechaTermino = newFechaTermino.toISOString().split('T')[0];
+    
+            const updatedClient = {
+                nombre: cliente.nombre,           // Mantener nombre existente
+                ocupacion: cliente.ocupacion,     // Mantener ocupación existente
+                direccion: cliente.direccion,     // Mantener dirección existente
+                telefono: cliente.telefono,       // Mantener teléfono existente
+                estado: cliente.estado,           // Mantener estado existente
+                monto_inicial: newAmountInitial,  // Nuevo monto inicial
+                monto_actual: newAmountWithInterest, // Nuevo monto con interés
+                fecha_inicio: formattedFechaInicio, // Nueva fecha de inicio
+                fecha_termino: formattedFechaTermino // Nueva fecha de término
+            };
+    
+            await axios.put(`http://192.168.1.17:3000/clientes/${id}`, updatedClient, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+    
+            setCliente(prevCliente => ({
+                ...prevCliente,
+                ...updatedClient
+            }));
+    
+            // Reiniciar el array de días al primer día
+            setPendingDays([]);
+            setHiddenDays([]);
+    
+            setShowRenewInput(false);
+            Alert.alert('Renovación exitosa', 'El préstamo ha sido renovado correctamente.');
+        } catch (error) {
+            console.error('Error al renovar el préstamo:', error);
+            Alert.alert('Error', 'Hubo un problema al renovar el préstamo.');
+        }
+    };
+    
+
+
+
+    const handleAmountChange = (text) => {
+        setRenewAmount(text);
+        const amountToRenew = parseFloat(text);
+        const remainingAmount = cliente.monto_actual;
+        if (Math.abs(amountToRenew - remainingAmount) <= 0.01) {
+            setAmountValid(true);
+        } else {
+            setAmountValid(false);
+        }
+    };
+
+    const handleNewAmountInitialChange = (text) => {
+        setNewInitialAmount(text);
+    };
+
+    const handleRenewalDaysChange = (value) => {
+        setFechaTermino(value);
+    };
+
 
     const renderDaysCards = () => {
         if (!cliente) return null;
@@ -191,266 +328,355 @@ const ClienteDetails = ({ route }) => {
             daysArray.push(
                 <View key={currentDate.toISOString()} style={[styles.dayCard, isPaid ? styles.paidCard : isPending ? styles.pendingCard : styles.defaultCard]}>
                     <Text style={styles.cardText}>Día {dayCount}: {formatDateToMexican(currentDate)}</Text>
-                    {!abonoForDay && (
+                    <View style={styles.buttonsContainer}>
                         <TouchableOpacity
-                            onPress={() => markAsPending(dayStr)}
-                            style={[styles.smallButton, { backgroundColor: 'orange' }]}
+                            onPress={() => setFormData({ day: dayStr, type: 'abono' })}
+                            style={styles.abonoButton}
                         >
-                            <Text style={styles.buttonText}>Pendiente</Text>
+                            <Text style={styles.buttonText}>Pago</Text>
                         </TouchableOpacity>
-                    )}
-                    <TouchableOpacity
-                        onPress={() => setFormData({ day: dayStr, type: 'abono' })}
-                        style={styles.smallButton}
-                    >
-                        <Text style={styles.buttonText}>Agregar Pago</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => setFormData({ day: dayStr, type: 'multa' })}
-                        style={styles.smallButton}
-                    >
-                        <Text style={styles.buttonText}>Agregar Multa</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => setFormData({ day: dayStr, type: 'multa' })}
+                            style={styles.multaButton}
+                        >
+                            <Text style={styles.buttonText}>Multa</Text>
+                        </TouchableOpacity>
+                        {!abonoForDay && (
+                            <TouchableOpacity
+                                onPress={() => markAsPending(dayStr)}
+                                style={[styles.pendienteButton, { backgroundColor: 'orange' }]}
+                            >
+                                <Text style={styles.buttonText}>Pendiente</Text>
+                            </TouchableOpacity>
+                        )}
+                    </View>
+
                     {formData.day === dayStr && formData.type === 'abono' && (
-                        <AbonoForm clienteId={id} onAddAbono={() => {
-                            handleAddAbono();
-                            markAsPaid(dayStr);
-                        }} />
+                        <View style={styles.formContainer}>
+                            <AbonoForm clienteId={id} onAddAbono={() => {
+                                handleAddAbono();
+                                markAsPaid(dayStr);
+                            }} />
+                        </View>
                     )}
                     {formData.day === dayStr && formData.type === 'multa' && (
-                        <MultaForm clienteId={id} selectedDay={dayStr} onMultaAdded={() => {
-                            handleAddMulta();
-                            markAsPending(dayStr);
-                        }} />
+                        <View style={styles.formContainer}>
+                            <MultaForm clienteId={id} selectedDay={dayStr} onMultaAdded={() => {
+                                handleAddMulta();
+                                markAsPending(dayStr);
+                            }} />
+                        </View>
                     )}
                 </View>
             );
             currentDate.setDate(currentDate.getDate() + 1);
             dayCount++;
         }
-        return daysArray;
-    };
 
-    const handleCardPress = () => {
-        setDaysVisible(!daysVisible);
-        Animated.timing(rotateAnim, {
-            toValue: daysVisible ?
-            duration: 300,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const handlePaidCardPress = () => {
-        setPaidDaysVisible(!paidDaysVisible);
-        Animated.timing(rotatePaidAnim, {
-            toValue: paidDaysVisible ?
-            duration: 300,
-            useNativeDriver: true,
-        }).start();
-    };
-
-
-    const renderCardHeader = () => {
-        const spin = rotateAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '180deg'],
-        });
 
         return (
-            <TouchableOpacity onPress={handleCardPress} style={styles.cardHeader}>
-                <Text style={styles.cardHeaderText}>Días Activos</Text>
-                <Animated.Text style={[styles.arrow, { transform: [{ rotate: spin }] }]}>▼</Animated.Text>
-            </TouchableOpacity>
+            <ScrollView>
+                <FlatList
+                    data={daysArray}
+                    renderItem={({ item }) => item}
+                    keyExtractor={(item, index) => index.toString()}
+                />
+            </ScrollView>
         );
     };
 
-    const renderPaidCardHeader = () => {
-        const spin = rotatePaidAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: ['0deg', '180deg'],
-        });
+    const renderAbonosList = () => {
+        if (abonos.length === 0) {
+            return <Text style={styles.noAbonosText}>No hay pagos registrados.</Text>;
+        }
 
         return (
-            <TouchableOpacity onPress={handlePaidCardPress} style={styles.cardHeader}>
-                <Text style={styles.cardHeaderText}>Días Pagados</Text>
-                <Animated.Text style={[styles.arrow, { transform: [{ rotate: spin }] }]}>▼</Animated.Text>
-            </TouchableOpacity>
+            <FlatList
+                data={abonos}
+                renderItem={({ item }) => (
+                    <View style={styles.abonoCard}>
+                        <Text style={styles.abonoText}>Fecha: {formatDateToMexican(item.fecha)}</Text>
+                        <Text style={styles.abonoText}>Cantidad: ${item.monto}</Text>
+                    </View>
+                )}
+                keyExtractor={item => item.id.toString()}
+            />
         );
     };
+
+    const renderMultasList = () => {
+        if (multas.length === 0) {
+            return <Text style={styles.noAbonosText}>No hay multas registradas.</Text>;
+        }
+
+        return (
+            <FlatList
+                data={multas}
+                renderItem={({ item }) => (
+                    <View style={styles.multaCard}>
+                        <Text style={styles.abonoText}>Fecha: {formatDateToMexican(item.fecha)}</Text>
+                        <Text style={styles.abonoText}>Cantidad: ${item.monto}</Text>
+                    </View>
+                )}
+                keyExtractor={item => item.id.toString()}
+            />
+        );
+    };
+
     return (
         <ScrollView contentContainerStyle={styles.container}>
             {cliente && (
-                <>
-                    <View style={styles.card}>
-                    <Text style={styles.title}>Detalles del Cliente</Text>
-                        <Text style={styles.cardText}>Nombre: {cliente.nombre}</Text>
-                        <Text style={styles.cardText}>Monto Diario: {cliente.monto_diario}</Text>
-                        <Text style={styles.cardText}>Fecha de Inicio: {formatDateToMexican(cliente.fecha_inicio)}</Text>
-                        <Text style={styles.cardText}>Fecha de Término: {formatDateToMexican(cliente.fecha_termino)}</Text>
-                        <Text style={styles.cardText}>Estado: {cliente.estado}</Text>
-                        <Text style={styles.cardText}>Monto inicial: {cliente.monto_inicial}</Text>
-                        <Text style={styles.cardText}>Monto actual: {cliente.monto_actual}</Text>
+                <View>
+                    <View style={styles.detallesCliente}>
+                        <Text style={styles.title}>Detalles del cliente</Text>
+                        <Text style={styles.text}>Nombre: {cliente.nombre}</Text>
+                        <Text style={styles.text}>Fecha de Inicio: {formatDateToMexican(cliente.fecha_inicio)}</Text>
+                        <Text style={styles.text}>Fecha de Término: {formatDateToMexican(cliente.fecha_termino)}</Text>
+                        <Text style={styles.text}>Estado: {cliente.estado}</Text>
+                        <Text style={styles.text}>Monto inicial: ${cliente.monto_inicial}</Text>
+                        <Text style={styles.text}>Monto actual: ${cliente.monto_actual}</Text>
                     </View>
-    
-                    {renderCardHeader()}
-                    {daysVisible && renderDaysCards()}
-    
-                    {renderPaidCardHeader()}
-                    {paidDaysVisible && (
-                        <FlatList
-                            data={abonos}
-                            keyExtractor={(item) => item.id.toString()}
-                            renderItem={({ item }) => (
-                                <View style={styles.dayCard}>
-                                    <Text style={styles.cardText}>
-                                        Fecha: {formatDateToMexican(item.fecha)} - Monto: {item.monto}
-                                    </Text>
-                                </View>
-                            )}
-                        />
+                    {canRenew && !showRenewInput && (
+                        <TouchableOpacity
+                            onPress={handleRenewLoan}
+                            style={[styles.button, { marginBottom: 10, backgroundColor: 'green' }]}
+                        >
+                            <Text style={styles.buttonText}>Renovar Préstamo</Text>
+                        </TouchableOpacity>
                     )}
-    
-                    <TouchableOpacity onPress={() => setMultasVisible(!multasVisible)} style={styles.showMultasButton}>
-                        <Text style={styles.showMultasButtonText}>{multasVisible ? 'Ocultar Multas' : 'Mostrar Multas'}</Text>
+
+                    {showRenewInput && (
+                        <View style={styles.RenovarPrestamo}>
+                            <Text style={styles.cardText}>Ingrese el monto para renovar el préstamo:</Text>
+                            <Text style={[styles.cardText, { color: amountValid ? 'green' : 'red' }]}>
+                                Monto requerido: ${cliente?.monto_actual}
+                            </Text>
+                            <TextInput
+                                style={styles.input}
+                                placeholder="Monto"
+                                value={renewAmount}
+                                onChangeText={handleAmountChange}
+                                keyboardType="numeric"
+                            />
+
+                            <Text style={styles.cardText}>Ingrese el nuevo monto</Text>
+                            <TextInput
+                                style={[styles.input, { backgroundColor: amountValid ? '#fff' : '#f0f0f0' }]}
+                                placeholder="Nuevo monto"
+                                value={newInitialAmount}
+                                onChangeText={handleNewAmountInitialChange}
+                                keyboardType="numeric"
+                                editable={amountValid}
+                            />
+
+                            <Text style={styles.label}>Fecha de Término:</Text>
+                            <DropDownPicker
+                                open={open}
+                                value={fechaTermino}
+                                items={items}
+                                setOpen={setOpen}
+                                setValue={handleRenewalDaysChange}
+                                setItems={setItems}
+                                placeholder="Seleccione la nueva fecha de término"
+                                style={styles.dropdown}
+                            />
+
+                            <TouchableOpacity
+                                onPress={isFormValid ? handleConfirmRenewal : null}
+                                style={[styles.button, { marginTop: 10, backgroundColor: isFormValid ? 'green' : 'gray' }]}
+                                disabled={!isFormValid}
+                            >
+                                <Text style={styles.buttonText}>Confirmar Renovación</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => setShowRenewInput(false)}
+                                style={[styles.button, { backgroundColor: 'red', marginTop: 10 }]}
+                            >
+                                <Text style={styles.buttonText}>Cancelar</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+
+                    <TouchableOpacity
+                        onPress={() => setDaysVisible(!daysVisible)}
+                        style={[styles.button, { marginBottom: 10, marginTop: 10 }]}
+                    >
+                        <Text style={styles.buttonText}>{daysVisible ? 'Ocultar Días' : 'Mostrar Días'}</Text>
                     </TouchableOpacity>
-                    {multasVisible && (
-                        <FlatList
-                            data={multas}
-                            keyExtractor={item => item.id.toString()}
-                            renderItem={({ item }) => (
-                                <View style={styles.item}>
-                                   <Text style={styles.cardText}>
-                                        Fecha: {formatDateToMexican(item.fecha)} - Monto: {item.monto}
-                                    </Text>
-                                </View>
-                            )}
-                        />
-                    )}
-    
-                </>
+                    {daysVisible && renderDaysCards()}
+                    <TouchableOpacity
+                        onPress={() => setPaidDaysVisible(!paidDaysVisible)}
+                        style={[styles.button, { marginBottom: 10, marginTop: 10  }]}
+                    >
+                        <Text style={styles.buttonText}>{paidDaysVisible ? 'Ocultar Abonos' : 'Mostrar Abonos'}</Text>
+                    </TouchableOpacity>
+                    {paidDaysVisible && renderAbonosList()}
+                    <TouchableOpacity
+                        onPress={() => setMultasVisible(!multasVisible)}
+                        style={[styles.button, { marginBottom: 10, marginTop: 10  }]}
+                    >
+                        <Text style={styles.buttonText}>{multasVisible ? 'Ocultar Multas' : 'Mostrar Multas'}</Text>
+                    </TouchableOpacity>
+                    {multasVisible && renderMultasList()}
+
+
+                </View>
             )}
         </ScrollView>
     );
-    
-   
 };
 
 const styles = StyleSheet.create({
     container: {
-        flexGrow: 1,
-        padding: 10,
-        backgroundColor: '#121212', // Dark background color
+        padding: 16,
+        backgroundColor: '#1c1c1e',
+        height: '100%' ,
     },
-    title: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#e0e0e0', // Light text color
-    },
-    subtitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginTop: 20,
-        marginBottom: 10,
-    },
-    card: {
-        backgroundColor: '#444', // Dark card background
-        borderRadius: 10,
+    detallesCliente: {
+        backgroundColor: '#E8E8E8',
+        borderRadius: 8,
         padding: 20,
-        marginBottom: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-        elevation: 5,
-    },
-    cardTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        color: '#e0e0e0', // Light text color
         marginBottom: 10,
     },
-    cardText: {
-        fontSize: 16,
-        color: '#e0e0e0', // Light text color
-        marginBottom: 5,
-    },
-    dayCard: {
-        backgroundColor: 'green',
-        padding: 15,
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        padding: 10,
         borderRadius: 8,
         marginBottom: 10,
+        fontSize: 16
+    },
+
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 16,
+    },
+    text: {
+        fontSize: 16,
+        marginBottom: 8,
+    },
+    button: {
+        backgroundColor: '#007bff',
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderRadius: 5,
+        width: '80%',
+        margin: 'auto',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16
+    },
+    dayCard: {
+        padding: 12,
+        marginBottom: 10,
+        borderRadius: 8,
+        backgroundColor: '#E8E8E8',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
-        shadowRadius: 5,
-        elevation: 2,
+        shadowRadius: 4,
+        elevation: 3
     },
-    smallButton: {
-        marginTop: 5,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 8,
-        backgroundColor: '#007BFF',
-        alignItems: 'center',
-    },
-    button: {
-        backgroundColor: '#1e88e5', // Blue button color
-        padding: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-        marginVertical: 10,
-    },
-    buttonText: {
-        color: 'white',
-        fontSize: 14,
+    cardText: {
+        fontSize: 16,
         fontWeight: 'bold',
+        marginBottom: 16,
     },
-    pendingCard: {
-        backgroundColor: 'orange', // Dark red background for pending
+    RenovarPrestamo: {
+        backgroundColor: '#E9F0C2',
+        borderRadius: 8,
+        padding: 20,
+        marginBottom: 10,
+    },
+    abonoCard: {
+        padding: 12,
+        marginBottom: 10,
+        borderRadius: 8,
+        backgroundColor: '#CBE5C4',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3
+    },
+    multaCard: {
+        padding: 12,
+        marginBottom: 10,
+        borderRadius: 8,
+        backgroundColor: '#EFC3CA',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3
+    },
+    abonoText: {
+        fontSize: 16,
+        marginBottom: 8
+    },
+    noAbonosText: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginTop: 10,
+        marginBottom: 10,
+        color: '#888'
     },
     paidCard: {
-        backgroundColor: 'green',
+        backgroundColor: '#d4edda'
+    },
+    pendingCard: {
+        backgroundColor: '#fff3cd'
     },
     defaultCard: {
-        backgroundColor: '#444', // Darker default card background
+        backgroundColor: '#E8E8E8'
     },
-    cardHeader: {
+    buttonsContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: '#ccc',
-        padding: 10,
-        borderRadius: 8,
-        marginBottom: 10,
+        marginTop: 10,
     },
-    cardHeaderText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    arrow: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    item: {
-        
-        backgroundColor: '#2c2c2c', // Dark item background
-        padding: 10,
+    abonoButton: {
+        backgroundColor: '#4CAF50', // Verde
+        paddingVertical: 8,
+        paddingHorizontal: 10,
         borderRadius: 5,
-        marginVertical: 5,
-    },
-    showMultasButton: {
-        backgroundColor: '#ccc', // Color similar al fondo del cardHeader
-        padding: 10,
-        borderRadius: 8,
+        width: '30%',
+        justifyContent: 'center',
         alignItems: 'center',
-        marginVertical: 10,
     },
-    showMultasButtonText: {
-        fontSize: 18,
+    multaButton: {
+        backgroundColor: '#F44336', // Rojo
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderRadius: 5,
+        width: '30%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    pendienteButton: {
+        backgroundColor: '#FFEB3B', // Amarillo
+        paddingVertical: 8,
+        paddingHorizontal: 10,
+        borderRadius: 5,
+        width: '30%',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    buttonText: {
+        fontSize: 14,
         fontWeight: 'bold',
-        color: '#000', // Color del texto similar al cardHeader
+        color: '#FFF',
+        textAlign: 'center',
     },
-
+    formContainer: {
+        marginTop: 15,
+    },
 });
 
 export default ClienteDetails;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, Button, ScrollView, StyleSheet, Platform, Dimensions, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Button, ScrollView, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Table, Row, Rows } from 'react-native-table-component';
@@ -35,13 +35,13 @@ const EstadisticasTablas = () => {
                     throw new Error('No token found');
                 }
 
-                const response = await axios.get('http://192.168.1.74:3000/estadisticas/general', {
+                const response = await axios.get('http://192.168.1.17:3000/estadisticas/general', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
 
-                const trabajadorResponse = await axios.get('http://192.168.1.74:3000/estadisticas/trabajadores', {
+                const trabajadorResponse = await axios.get('http://192.168.1.17:3000/estadisticas/trabajadores', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -59,17 +59,42 @@ const EstadisticasTablas = () => {
         fetchEstadisticas();
     }, []);
 
+
+
     useEffect(() => {
         setValue(rowsPerPage);
     }, [rowsPerPage]);
 
+
+
+
+    const s2ab = (s) => {
+        const buf = new ArrayBuffer(s.length);
+        const view = new Uint8Array(buf);
+        for (let i = 0; i !== s.length; ++i) {
+            view[i] = s.charCodeAt(i) & 0xFF;
+        }
+        return buf;
+    };
+
+    const bufferToBase64 = (buffer) => {
+        let binary = '';
+        const bytes = new Uint8Array(buffer);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+            binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+    };
+
     const exportToCSV = async (data, filename) => {
-        const formattedData = data.map(item => ({
+        const formattedData = data.map((item, index) => ({
+            'No': index + 1,
             'Nombre cliente': item.nombre,
             'Direccion': item.direccion,
             'Telefono': item.telefono,
-            'Monto inicial': item.monto_inicial,
-            'Esquema de Dias-%': `${item.dias_prestamo || 'Desconocido'} Dias $${item.cobro_diario ? Math.round(item.cobro_diario) : '0'} *$1000`,
+            'Monto': item.monto_inicial,
+            'Esquema de Dias-%': item.dias_prestamo === 15 ? `15 días $85x1000 30%` : item.dias_prestamo === 20 ? `20 días $65x1000 30%` : item.esquema_dias,
             'Fecha de inicio del prestamo': new Date(item.fecha_inicio).toLocaleDateString('es-ES', {
                 day: '2-digit', month: 'long', year: 'numeric'
             }),
@@ -84,78 +109,43 @@ const EstadisticasTablas = () => {
         XLSX.utils.book_append_sheet(wb, ws, "Estadísticas");
         const wbout = XLSX.write(wb, { type: 'binary', bookType: "xlsx" });
 
-        const s2ab = (s) => {
-            const buf = new ArrayBuffer(s.length);
-            const view = new Uint8Array(buf);
-            for (let i = 0; i !== s.length; ++i) {
-                view[i] = s.charCodeAt(i) & 0xFF;
-            }
-            return buf;
-        };
-
-        const bufferToBase64 = (buffer) => {
-            let binary = '';
-            const bytes = new Uint8Array(buffer);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return btoa(binary);
-        };
-
         const uri = FileSystem.cacheDirectory + `${filename}.xlsx`;
         await FileSystem.writeAsStringAsync(uri, bufferToBase64(s2ab(wbout)), { encoding: FileSystem.EncodingType.Base64 });
 
-        if (Platform.OS === 'android') {
-            await Sharing.shareAsync(uri);
-        } else {
-            Sharing.shareAsync(uri);
-        }
+        await Sharing.shareAsync(uri);
     };
 
     const exportTrabajadorToCSV = async (data, filename) => {
-        const formattedData = data.map(item => ({
-            'Nombre Trabajador': item.trabajador_nombre,
-            'Fecha': new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
-            'Total Abonos Día': item.total_abonos_hoy,
-            'Total Abonos Semana': item.total_abonos_semana,
-            'Total Multas Día': item.total_multas_hoy,
-            'Total Multas Semana': item.total_multas_semana,
-        }));
-
-        const ws = XLSX.utils.json_to_sheet(formattedData);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Estadísticas Trabajador");
-        const wbout = XLSX.write(wb, { type: 'binary', bookType: "xlsx" });
-
-        const s2ab = (s) => {
-            const buf = new ArrayBuffer(s.length);
-            const view = new Uint8Array(buf);
-            for (let i = 0; i !== s.length; ++i) {
-                view[i] = s.charCodeAt(i) & 0xFF;
-            }
-            return buf;
-        };
-
-        const bufferToBase64 = (buffer) => {
-            let binary = '';
-            const bytes = new Uint8Array(buffer);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return btoa(binary);
-        };
-
-        const uri = FileSystem.cacheDirectory + `${filename}.xlsx`;
-        await FileSystem.writeAsStringAsync(uri, bufferToBase64(s2ab(wbout)), { encoding: FileSystem.EncodingType.Base64 });
-
-        if (Platform.OS === 'android') {
+        try {
+            console.log("Datos para exportar:", data); // Añade esta línea para depuración
+    
+            const formattedData = data.map((item, index) => ({
+                'No': index + 1,
+                'Nombre Trabajador': item.trabajador_nombre,
+                'Fecha': new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
+                'Total Abonos Día': item.total_abonos_diario_hoy,
+                'Total Abonos Semana': item.total_abonos_semanales,
+                'Total Multas Día': item.total_multas_hoy,
+                'Total Multas Semana': item.total_multas_semanales,
+            }));
+    
+            console.log("Datos formateados para exportar:", formattedData); // Añade esta línea para depuración
+    
+            const ws = XLSX.utils.json_to_sheet(formattedData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Estadísticas Trabajador");
+    
+            const wbout = XLSX.write(wb, { type: 'binary', bookType: 'xlsx' });
+    
+            const uri = FileSystem.cacheDirectory + `${filename}.xlsx`;
+            await FileSystem.writeAsStringAsync(uri, bufferToBase64(s2ab(wbout)), { encoding: FileSystem.EncodingType.Base64 });
+    
             await Sharing.shareAsync(uri);
-        } else {
-            await Sharing.shareAsync(uri);
+        } catch (error) {
+            console.error("Error exporting CSV:", error);
         }
     };
+    
 
     const handleSearch = (data, query, searchField) => {
         if (query.trim() === '') {
@@ -164,29 +154,30 @@ const EstadisticasTablas = () => {
         return data.filter(item => (item[searchField] || '').toLowerCase().includes(query.toLowerCase()));
     };
 
-    const filteredEstadisticas = estadisticas ? handleSearch(estadisticas, searchQuery, 'nombre').slice(0, rowsPerPage) : [];
-    const filteredTrabajadorEstadisticas = trabajadorEstadisticas ? handleSearch(trabajadorEstadisticas, workerSearchQuery, 'trabajador_nombre').slice(0, rowsPerPage) : [];
+const filteredEstadisticas = estadisticas ? handleSearch(estadisticas, searchQuery, 'nombre').slice(0, rowsPerPage) : [];
+const filteredTrabajadorEstadisticas = trabajadorEstadisticas ? handleSearch(trabajadorEstadisticas, workerSearchQuery, 'trabajador_nombre').slice(0, rowsPerPage) : [];
 
-    const tableHead = ['Nombre cliente', 'Direccion', 'Telefono', 'Monto inicial', 'Esquema de Dias-%', 'Fecha de inicio del prestamo', 'Fecha de termino', 'Observaciones'];
+
+    const tableHead = ['Nombre cliente', 'Direccion', 'Telefono', 'Monto', 'Esquema de Dias-%', 'Fecha de inicio del prestamo', 'Fecha de termino', 'Observaciones'];
     const tableData = filteredEstadisticas.map(item => [
         item.nombre,
         item.direccion,
         item.telefono,
         item.monto_inicial,
-        `${item.dias_prestamo || 'Desconocido'} Dias $${item.cobro_diario ? Math.round(item.cobro_diario) : '0'} *$1000`,
+        item.dias_prestamo === 15 ? `15 días - $85x1000 30%` : item.dias_prestamo === 20 ? `20 días - $65x1000` : item.esquema_dias,
         new Date(item.fecha_inicio).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
         new Date(item.fecha_termino).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
         item.ocupacion
     ]);
 
-    const trabajadorTableHead = ['Nombre Trabajador', 'Fecha', 'Total Abonos Día', 'Total Abonos Semana', 'Total Multas Día', 'Total Multas Semana'];
+    const trabajadorTableHead = ['Nombre Trabajador', 'Fecha', 'Abono x Día', 'Abono x Semana', 'Multas x Día', 'Multas x Semana'];
     const trabajadorTableData = filteredTrabajadorEstadisticas.map(item => [
         item.trabajador_nombre,
         new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' }),
-        item.total_abonos_hoy,
-        item.total_abonos_semana,
+        item.total_abonos_diarios,
+        item.total_abonos_semanales,
         item.total_multas_hoy,
-        item.total_multas_semana,
+        item.total_multas_semanales,
     ]);
 
     if (loading) {
@@ -194,7 +185,7 @@ const EstadisticasTablas = () => {
     }
 
     if (error) {
-        return <Text style={styles.errorText}>{error.message}</Text>;
+        return <Text style={styles.errorText}>Error: {error.message}</Text>;
     }
 
     return (
@@ -227,9 +218,15 @@ const EstadisticasTablas = () => {
             </ScrollView>
 
             <Button
-                title="Exportar a CSV"
-                onPress={() => exportTrabajadorToCSV(trabajadorEstadisticas, 'estadisticas_trabajador')}
+                title="Exportar"
+                onPress={() => {
+                    const fechaActual = new Date().toLocaleDateString('es-ES', {
+                        day: '2-digit', month: 'long', year: 'numeric'
+                    });
+                    exportTrabajadorToCSV(trabajadorEstadisticas, `estadisticas_trabajador_${fechaActual}`);
+                }}
             />
+
 
             <View style={styles.separator} />
 
@@ -273,6 +270,7 @@ const EstadisticasTablas = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: '#fff',
         padding: 16,
     },
     title: {
@@ -282,25 +280,29 @@ const styles = StyleSheet.create({
         textAlign: 'center'
     },
     searchInput: {
-        height: 40,
+        height: 50,
         borderColor: 'gray',
         borderWidth: 1,
         marginBottom: 10,
         paddingHorizontal: 10,
-        width: screenWidth - 32
+        width: screenWidth - 32,
+        borderRadius: 4,
     },
     border: {
         borderWidth: 1,
         borderColor: '#c8e1ff',
+        
     },
     head: {
-        height: 50,
+        height: 70,
+        width: 'auto',
         backgroundColor: '#f1f8ff',
+        
     },
     text: {
-        margin: 6,
+        margin: 10,
         textAlign: 'center',
-        width: screenWidth / 8,
+        width: Dimensions.get('window').width / 8,
     },
     errorText: {
         color: 'red',
@@ -308,14 +310,16 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     horizontalScroll: {
-        marginVertical: 10,
+        marginVertical: 0,
+        
     },
     separator: {
-        height: 20,
+        height: 0,
     },
     footerSpace: {
-        height: 50,
+        height: 0,
     },
+    
 });
 
 export default EstadisticasTablas;

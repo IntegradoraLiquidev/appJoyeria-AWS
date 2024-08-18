@@ -50,7 +50,7 @@ const EditarClientes = ({ cliente, visible, onClose, onGuardar }) => {
         try {
             const token = await AsyncStorage.getItem('token');
 
-            const response = await fetch(`http://192.168.1.74:3000/clientes/${cliente.id}`, {
+            const response = await fetch(`http://192.168.1.17:3000/clientes/${cliente.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
