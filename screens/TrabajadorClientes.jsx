@@ -56,7 +56,7 @@ const TrabajadorClientes = ({ route, navigation }) => {
     }, [id]);
 
     useEffect(() => {
-        if (isFromEdit && clienteActualizado) {
+        if (isFromEdit && clienteActualizado) { 
             const updatedClientes = clientes.map((cliente) =>
                 cliente.id === clienteActualizado.id ? clienteActualizado : cliente
             );

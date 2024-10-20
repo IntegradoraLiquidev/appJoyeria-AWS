@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -27,20 +26,30 @@ const LoginScreen = ({ navigation }) => {
     };
 
     const handleLogin = async () => {
-        try {
-            console.log('Iniciando sesión con:', { email, password });
-            const response = await axios.post('http://192.168.1.17:3000/login', { email, password });
-            const { token } = response.data;
-            console.log('Token recibido:', token);
+        // Simulación de validación local
+        const users = [
+            { email: 'admin', password: '1234', role: 'admin' },
+            { email: 'worker', password: '1234', role: 'worker' },
+        ];
 
+        const user = users.find(u => u.email === email && u.password === password);
+
+        if (user) {
+            // Simular token JWT
+            const token = btoa(JSON.stringify({ email: user.email, role: user.role }));
+            console.log('Token generado:', token);
+
+            // Guardar token en AsyncStorage
             await AsyncStorage.setItem('token', token);
 
+            // Simular la decodificación del token
             const decoded = decodeJWT(token);
             console.log('Token decodificado:', decoded);
 
             setAlertMessage('Inicio de sesión exitoso');
             setAlertType('success');
 
+            // Redirigir según el rol
             setTimeout(() => {
                 setAlertMessage(null);
                 if (decoded && decoded.role === 'admin') {
@@ -55,9 +64,8 @@ const LoginScreen = ({ navigation }) => {
                     });
                 }
             }, 2000);
-        } catch (error) {
-            console.error('Error al iniciar sesión:', error);
-            setAlertMessage('Error al iniciar sesión');
+        } else {
+            setAlertMessage('Correo o contraseña incorrectos');
             setAlertType('error');
             setTimeout(() => setAlertMessage(null), 3000);
         }
@@ -67,7 +75,8 @@ const LoginScreen = ({ navigation }) => {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
             <View style={styles.headerContainer}>
-                <Text style={styles.headerText}>PRESTAMOS DIARIOS</Text>
+                <Text style={styles.title}>Joyería</Text>
+                <Text style={styles.subtitle}>López</Text>
             </View>
             <View style={styles.formContainer}>
                 {alertMessage && (
@@ -75,7 +84,7 @@ const LoginScreen = ({ navigation }) => {
                         <Text style={styles.alertText}>{alertMessage}</Text>
                     </View>
                 )}
-                <Text style={styles.text}>Correo electrónico</Text>
+                <Text style={styles.text}>Correo electrónico:</Text>
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -85,7 +94,7 @@ const LoginScreen = ({ navigation }) => {
                         placeholderTextColor="#ccc"
                     />
                 </View>
-                <Text style={styles.text}>Contraseña</Text>
+                <Text style={styles.text}>Contraseña:</Text>
                 <View style={styles.inputContainer}>
                     <TextInput
                         style={styles.input}
@@ -115,48 +124,60 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1a1a1a',
+        backgroundColor: '#020202', // Fondo negro
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     headerContainer: {
-        backgroundColor: '#2e5c74',
-        width: '100%',
         alignItems: 'center',
-        paddingVertical: 15,
-        marginTop: StatusBar.currentHeight || 20, // Agrega margen para evitar la barra de estado
+        marginBottom: 40,
+        marginTop: -90,
     },
-    headerText: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        color: '#fff',
+    title: {
+        fontSize: 48,
+        marginRight: 50,
+        fontStyle: 'italic',
+        color: '#ecdda2', // Cobre
+    },
+    subtitle: {
+        fontSize: 36,
+        marginLeft: 50,
+        fontStyle: 'italic',
+        color: '#ecdda2', // Cobre
     },
     formContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '90%',
-        alignSelf: 'center',
+        width: '85%',
+        backgroundColor: '#373739',
+        borderRadius: 5,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 4 },
     },
     text: {
-        color: '#fff',
+        color: '#ecdda2', // Dorado
         fontSize: 16,
         fontWeight: 'bold',
+        marginTop: 10,
+        marginBottom: 10,   
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderColor: '#2e5c74',
+        borderColor: '#d1a980', // Dorado
         borderWidth: 1,
         borderRadius: 8,
         marginTop: 10,
         width: '100%',
         padding: 5,
-        backgroundColor: '#fff',
+        backgroundColor: '#19191a', // Verde oliva
     },
     input: {
         flex: 1,
         height: 40,
         paddingHorizontal: 10,
-        color: '#000',
+        color: '#d1a980', // Dorado
     },
     icon: {
         padding: 10,
@@ -164,15 +185,19 @@ const styles = StyleSheet.create({
     buttonContainer: {
         width: '100%',
         marginTop: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     loginButton: {
-        backgroundColor: '#2e5c74',
-        padding: 10,
+        backgroundColor: '#c9b977', // Cobre
+        padding: 14,
+        width: '50%',
         borderRadius: 8,
+        justifyContent: 'center',
         alignItems: 'center',
     },
     loginButtonText: {
-        color: '#fff',
+        color: '#FFF', // Blanco
         fontWeight: 'bold',
     },
     successAlert: {
@@ -192,7 +217,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     alertText: {
-        color: '#fff',
+        color: '#FFF',
         fontWeight: 'bold',
     },
 });

@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
-import { View, FlatList, Button, StyleSheet, TextInput, Text } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, FlatList, StyleSheet, TextInput, Text } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useIsFocused } from '@react-navigation/native';
 import ClienteCard from '../components/ClienteCard';
+import { Ionicons } from '@expo/vector-icons';
 
 const WorkerDashboard = ({ navigation }) => {
     const [clientes, setClientes] = useState([]);
@@ -20,7 +21,7 @@ const WorkerDashboard = ({ navigation }) => {
                     return;
                 }
 
-                const response = await axios.get('http://192.168.1.17:3000/clientes', {
+                const response = await axios.get('https://prestamos-back-production.up.railway.app/clientes', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -32,7 +33,6 @@ const WorkerDashboard = ({ navigation }) => {
                     ))
                 );
 
-                console.log('Clientes recibidos:', uniqueClientes);
                 setClientes(uniqueClientes);
                 setFilteredClientes(uniqueClientes);
             } catch (error) {
@@ -61,30 +61,18 @@ const WorkerDashboard = ({ navigation }) => {
         });
     };
 
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerRight: () => (
-                <View style={styles.buttonContainer}>
-                    <Button
-                        onPress={handleLogout}
-                        title="Cerrar sesión"
-                        color="red"
-                        
-                    />
-                </View>
-            ),
-        });
-    }, [navigation]);
-
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Lista de clientes</Text>
+            <View style={styles.headerContainer}>
+                <Text style={styles.title}>Lista de clientes</Text>
+                <Ionicons name={'exit'} size={40} color={"#ecdda2"} onPress={handleLogout} />
+            </View>
             <TextInput
                 style={styles.searchInput}
                 placeholder="Buscar cliente por nombre"
                 value={searchText}
                 onChangeText={setSearchText}
-                placeholderTextColor="#aaa"
+                placeholderTextColor="#d1a980"
             />
             <FlatList
                 data={filteredClientes}
@@ -106,31 +94,30 @@ const WorkerDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#1c1c1e',
-        padding: 10,
+        backgroundColor: '#000', // Fondo negro
+        padding: 20,
     },
-    title: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        color: '#fff',
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         marginBottom: 10,
     },
-    buttonContainer: {
-        width: 125,
-        height: 38,
-        margin: 'end',
-        marginRight: 10,
-        marginTop: 10,
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#c9b977', // Texto dorado
+        marginBottom: 10,
     },
     searchInput: {
         height: 40,
-        borderColor: '#555',
+        borderColor: '#ecdda2', // Verde oliva
         borderWidth: 1,
         paddingHorizontal: 8,
         borderRadius: 4,
-        color: '#fff',
+        color: '#d1a980', // Texto dorado
         marginBottom: 10,
-        backgroundColor: '#fff',
+        backgroundColor: '#1c1c1e', // Fondo más oscuro
     },
 });
 
