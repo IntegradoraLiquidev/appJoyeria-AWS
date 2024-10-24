@@ -28,7 +28,7 @@ const NuevoCliente = ({ navigation }) => {
                 const response = await axios.get('http://192.168.1.10:3000/api/categorias');
                 const categorias = response.data.map((cat) => ({
                     label: cat.nombre,
-                    value: cat.id_categoria,  // Asegúrate de usar 'id_categoria'
+                    value: cat.id_categoria,
                 }));
                 setCategorias(categorias);
             } catch (error) {
@@ -46,7 +46,6 @@ const NuevoCliente = ({ navigation }) => {
             const response = await axios.get(
                 `http://192.168.1.10:3000/api/productos?categoria=${categoriaId}`
             );
-            console.log('Productos recibidos:', response.data);  // <-- Verificar respuesta
             const productos = response.data.map((prod) => ({
                 label: prod.nombre,
                 value: prod.id_producto,
@@ -58,11 +57,15 @@ const NuevoCliente = ({ navigation }) => {
         }
     };
 
-
-
-
     const handleAddCliente = async () => {
         setIsLoading(true);
+
+        // Validar campos obligatorios
+        if (!nombre || !direccion || !telefono || !producto || !quilates || !precioTotal || !formaPago) {
+            Alert.alert('Error', 'Por favor, complete todos los campos');
+            setIsLoading(false);
+            return;
+        }
 
         try {
             const token = await AsyncStorage.getItem('token');
@@ -86,6 +89,15 @@ const NuevoCliente = ({ navigation }) => {
             );
 
             Alert.alert('Éxito', 'Cliente agregado exitosamente');
+            // Limpiar formulario después de agregar cliente
+            setNombre('');
+            setDireccion('');
+            setTelefono('');
+            setProducto(null);
+            setCategoria(null);
+            setQuilates('');
+            setPrecioTotal('');
+            setFormaPago('');
             navigation.goBack();
         } catch (error) {
             console.error('Error al agregar cliente:', error);
@@ -96,7 +108,7 @@ const NuevoCliente = ({ navigation }) => {
     };
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
             <Text style={styles.title}>Agregar nuevo cliente</Text>
 
             <Text style={styles.label}>Nombre:</Text>
@@ -133,7 +145,7 @@ const NuevoCliente = ({ navigation }) => {
                 value={categoria}
                 items={categorias}
                 setOpen={setOpenCategoria}
-                setValue={setCategoria}  // <-- Directamente establecer el valor
+                setValue={setCategoria}
                 onChangeValue={(value) => fetchProductosPorCategoria(value)}
                 placeholder="Seleccione una categoría"
                 placeholderStyle={{ color: '#748873' }}
