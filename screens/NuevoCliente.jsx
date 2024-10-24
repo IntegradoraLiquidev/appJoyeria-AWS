@@ -3,90 +3,93 @@ import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView, ActivityI
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DropDownPicker from 'react-native-dropdown-picker';
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
 
 const NuevoCliente = ({ navigation }) => {
     const [nombre, setNombre] = useState('');
-    const [ocupacion, setOcupacion] = useState('');
     const [direccion, setDireccion] = useState('');
     const [telefono, setTelefono] = useState('');
-    const [fechaTermino, setFechaTermino] = useState('');
-    const [montoInicial, setMontoInicial] = useState('');
-    const [token, setToken] = useState(null);
-    const [open, setOpen] = useState(false);
-    const [items, setItems] = useState([]);
+    const [producto, setProducto] = useState(null);
+    const [categoria, setCategoria] = useState(null);
+    const [categorias, setCategorias] = useState([]);
+    const [productos, setProductos] = useState([]);
+    const [quilates, setQuilates] = useState('');
+    const [precioTotal, setPrecioTotal] = useState('');
+    const [formaPago, setFormaPago] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+    const [openCategoria, setOpenCategoria] = useState(false);
+    const [openProducto, setOpenProducto] = useState(false);
+    const [openPago, setOpenPago] = useState(false);
+
+    // Fetch de las categorías al montar el componente
     useEffect(() => {
-        const getToken = async () => {
-            const token = await AsyncStorage.getItem('token');
-            setToken(token);
+        const fetchCategorias = async () => {
+            try {
+                const response = await axios.get('http://192.168.1.10:3000/api/categorias');
+                const categorias = response.data.map((cat) => ({
+                    label: cat.nombre,
+                    value: cat.id_categoria,  // Asegúrate de usar 'id_categoria'
+                }));
+                setCategorias(categorias);
+            } catch (error) {
+                console.error('Error al obtener categorías:', error);
+                Alert.alert('Error', 'No se pudieron cargar las categorías');
+            }
         };
 
-        getToken();
-
-        // Set the array to start from the next day
-        const fechaInicio = dayjs().startOf('day').add(1, 'day');
-        fechaInicio.format();
-
-        setItems([
-            { label: 'Seleccionar fecha', value: '' },
-            { label: '15 días', value: '15 días' },
-            { label: '20 días', value: '20 días' },
-        ]);
+        fetchCategorias();
     }, []);
+
+    // Fetch de los productos filtrados por categoría
+    const fetchProductosPorCategoria = async (categoriaId) => {
+        try {
+            const response = await axios.get(
+                `http://192.168.1.10:3000/api/productos?categoria=${categoriaId}`
+            );
+            console.log('Productos recibidos:', response.data);  // <-- Verificar respuesta
+            const productos = response.data.map((prod) => ({
+                label: prod.nombre,
+                value: prod.id_producto,
+            }));
+            setProductos(productos);
+        } catch (error) {
+            console.error('Error al obtener productos:', error.response || error);
+            Alert.alert('Error', 'No se pudieron cargar los productos');
+        }
+    };
+
+
+
 
     const handleAddCliente = async () => {
         setIsLoading(true);
 
-        if (!token) {
-            console.error('No token found');
-            Alert.alert('Error', 'No se encontró un token de autenticación');
-            return;
-        }
-
-        // Nueva fecha de inicio
-        const fechaInicio = dayjs().startOf('day');
-        let newFechaTermino;
-        if (fechaTermino === '15 días') {
-            newFechaTermino = fechaInicio.add(15, 'day');
-        } else if (fechaTermino === '20 días') {
-            newFechaTermino = fechaInicio.add(20, 'day');
-        }
-
-        const formattedFechaInicio = fechaInicio.format('YYYY-MM-DD');
-        const formattedFechaTermino = newFechaTermino.format('YYYY-MM-DD');
-
         try {
-            await axios.post('https://prestamos-back-production.up.railway.app/clientes', {
-                nombre,
-                ocupacion,
-                direccion,
-                telefono,
-                fecha_inicio: formattedFechaInicio,
-                fecha_termino: formattedFechaTermino,
-                monto_inicial: parseFloat(montoInicial),
-            }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                Alert.alert('Error', 'No se encontró un token de autenticación');
+                return;
+            }
 
-            setNombre('');
-            setOcupacion('');
-            setDireccion('');
-            setTelefono('');
-            setFechaTermino('');
-            setMontoInicial('');
+            await axios.post(
+                'http://192.168.1.10:3000/api/clientes',
+                {
+                    nombre,
+                    direccion,
+                    telefono,
+                    producto_id: producto,
+                    quilates: parseFloat(quilates),
+                    precio_total: parseFloat(precioTotal),
+                    forma_pago: formaPago,
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
             Alert.alert('Éxito', 'Cliente agregado exitosamente');
+            navigation.goBack();
         } catch (error) {
             console.error('Error al agregar cliente:', error);
-            Alert.alert('Error', 'Hubo un error al agregar el cliente');
+            Alert.alert('Error', 'Hubo un problema al agregar el cliente');
         } finally {
             setIsLoading(false);
         }
@@ -95,72 +98,103 @@ const NuevoCliente = ({ navigation }) => {
     return (
         <ScrollView style={styles.container}>
             <Text style={styles.title}>Agregar nuevo cliente</Text>
+
             <Text style={styles.label}>Nombre:</Text>
             <TextInput
                 style={styles.input}
                 value={nombre}
                 onChangeText={setNombre}
                 placeholder="Ingrese el nombre"
-                placeholderTextColor="#888"
+                placeholderTextColor="#748873"
             />
-            <Text style={styles.label}>Ocupación:</Text>
-            <TextInput
-                style={styles.input}
-                value={ocupacion}
-                onChangeText={setOcupacion}
-                placeholder="Ingrese la ocupación"
-                placeholderTextColor="#888"
-            />
+
             <Text style={styles.label}>Dirección:</Text>
             <TextInput
                 style={styles.input}
                 value={direccion}
                 onChangeText={setDireccion}
                 placeholder="Ingrese la dirección"
-                placeholderTextColor="#888"
+                placeholderTextColor="#748873"
             />
+
             <Text style={styles.label}>Teléfono:</Text>
             <TextInput
                 style={styles.input}
                 value={telefono}
                 onChangeText={setTelefono}
                 placeholder="Ingrese el teléfono"
-                placeholderTextColor="#888"
                 keyboardType="phone-pad"
+                placeholderTextColor="#748873"
             />
-            <Text style={styles.label}>Fecha de Término:</Text>
+
+            <Text style={styles.label}>Categoría:</Text>
             <DropDownPicker
-                open={open}
-                value={fechaTermino}
-                items={items}
-                setOpen={setOpen}
-                setValue={setFechaTermino}
-                setItems={setItems}
-                style={styles.dropdown}
+                open={openCategoria}
+                value={categoria}
+                items={categorias}
+                setOpen={setOpenCategoria}
+                setValue={setCategoria}  // <-- Directamente establecer el valor
+                onChangeValue={(value) => fetchProductosPorCategoria(value)}
+                placeholder="Seleccione una categoría"
+                placeholderStyle={{ color: '#748873' }}
+                style={[styles.input, styles.dropdown]}
                 dropDownContainerStyle={styles.dropdownContainer}
-                placeholder="Seleccionar fecha"
-                zIndex={1000}
-                zIndexInverse={3000}
             />
-            <Text style={styles.label}>Monto Inicial:</Text>
+
+            <Text style={styles.label}>Producto:</Text>
+            <DropDownPicker
+                open={openProducto}
+                value={producto}
+                items={productos}
+                setOpen={setOpenProducto}
+                setValue={setProducto}
+                placeholder="Seleccione un producto"
+                placeholderStyle={{ color: '#748873' }}
+                style={[styles.input, styles.dropdown]}
+                dropDownContainerStyle={styles.dropdownContainer}
+            />
+
+            <Text style={styles.label}>Quilates:</Text>
             <TextInput
                 style={styles.input}
-                value={montoInicial}
-                onChangeText={setMontoInicial}
-                placeholder="Ingrese el monto inicial"
-                placeholderTextColor="#888"
+                value={quilates}
+                onChangeText={setQuilates}
+                placeholder="Ingrese los quilates"
                 keyboardType="numeric"
+                placeholderTextColor="#748873"
             />
+
+            <Text style={styles.label}>Precio Total:</Text>
+            <TextInput
+                style={styles.input}
+                value={precioTotal}
+                onChangeText={setPrecioTotal}
+                placeholder="Ingrese el precio total"
+                keyboardType="numeric"
+                placeholderTextColor="#748873"
+            />
+
+            <Text style={styles.label}>Forma de Pago:</Text>
+            <DropDownPicker
+                open={openPago}
+                value={formaPago}
+                items={[
+                    { label: 'Diario', value: 'diario' },
+                    { label: 'Semanal', value: 'semanal' },
+                ]}
+                setOpen={setOpenPago}
+                setValue={setFormaPago}
+                placeholder="Seleccione la forma de pago"
+                placeholderStyle={{ color: '#748873' }}
+                style={[styles.input, styles.dropdown]}
+                dropDownContainerStyle={styles.dropdownContainer}
+            />
+
             <View style={styles.buttonContainer}>
                 {isLoading ? (
                     <ActivityIndicator size="large" color="#28A745" />
                 ) : (
-                    <Button
-                        title="Agregar Cliente"
-                        onPress={handleAddCliente}
-                        color="#a87a53"  // Color cobre para el botón
-                        disabled={isLoading}
-                    />
+                    <Button title="Agregar Cliente" onPress={handleAddCliente} color="#c9b977" />
                 )}
             </View>
         </ScrollView>
@@ -171,34 +205,35 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        backgroundColor: '#000000', // Fondo negro
+        backgroundColor: '#000',
     },
     title: {
         fontSize: 24,
-        color: '#d1a980', // Texto dorado
+        color: '#ecdda2',
         marginBottom: 20,
         textAlign: 'center',
-        fontWeight: "bold",
+        fontWeight: 'bold',
     },
     label: {
         fontSize: 16,
-        color: '#d1a980', // Texto dorado
+        color: '#ecdda2',
         marginBottom: 8,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#748873', // Borde verde oliva
+        borderColor: '#748873',
+        borderRadius: 5,
         padding: 10,
         marginBottom: 20,
         color: '#fff',
-        backgroundColor: '#1c1c1e', // Fondo oscuro para el input
+        backgroundColor: '#1c1c1e',
     },
     dropdown: {
-        borderColor: '#748873', // Borde verde oliva
-        backgroundColor: '#1c1c1e', // Fondo oscuro
+        borderColor: '#748873',
+        backgroundColor: '#fff',
     },
     dropdownContainer: {
-        backgroundColor: '#363f30', // Fondo verde oscuro para la lista desplegable
+        backgroundColor: '#fff',
     },
     buttonContainer: {
         marginTop: 20,
