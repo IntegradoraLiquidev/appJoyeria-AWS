@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
+import axios from 'axios';
+import { decode as atob } from 'base-64';
 
 const LoginScreen = ({ navigation }) => {
     const [email, setEmail] = useState('');
@@ -12,65 +14,66 @@ const LoginScreen = ({ navigation }) => {
 
     const decodeJWT = (token) => {
         try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-
-            return JSON.parse(jsonPayload);
+            const base64Url = token.split('.')[1]; // Extraer payload
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // Normalizar caracteres
+            const jsonPayload = atob(base64); // Decodificar Base64
+            return JSON.parse(jsonPayload); // Convertir a objeto JSON
         } catch (error) {
             console.error('Error al decodificar el JWT:', error);
             return null;
         }
     };
-
+    
     const handleLogin = async () => {
-        // Simulación de validación local
-        const users = [
-            { email: 'admin', password: '1234', role: 'admin' },
-            { email: 'worker', password: '1234', role: 'worker' },
-        ];
-
-        const user = users.find(u => u.email === email && u.password === password);
-
-        if (user) {
-            // Simular token JWT
-            const token = btoa(JSON.stringify({ email: user.email, role: user.role }));
-            console.log('Token generado:', token);
-
-            // Guardar token en AsyncStorage
+        try {
+            console.log('Iniciando sesión con:', { email, password });
+            const response = await axios.post('http://192.168.1.10:3000/api/usuarios/login', { email, password });
+            const { token } = response.data;
+            console.log('Token recibido:', token);
+    
             await AsyncStorage.setItem('token', token);
-
-            // Simular la decodificación del token
+    
             const decoded = decodeJWT(token);
             console.log('Token decodificado:', decoded);
-
+    
+            // Verifica que el token tenga el rol
+            if (!decoded || !decoded.role) {
+                setAlertMessage('Error al obtener el rol del usuario.');
+                setAlertType('error');
+                setTimeout(() => setAlertMessage(null), 3000);
+                return;
+            }
+    
             setAlertMessage('Inicio de sesión exitoso');
             setAlertType('success');
-
-            // Redirigir según el rol
+    
             setTimeout(() => {
                 setAlertMessage(null);
-                if (decoded && decoded.role === 'admin') {
+                if (decoded.role === 'Administrador') {
                     navigation.reset({
                         index: 0,
                         routes: [{ name: 'AdminDashboard' }],
                     });
-                } else {
+                } else if (decoded.role === 'Trabajador') {
                     navigation.reset({
                         index: 0,
                         routes: [{ name: 'WorkerDashboard' }],
                     });
+                } else {
+                    setAlertMessage('Rol no reconocido');
+                    setAlertType('error');
+                    setTimeout(() => setAlertMessage(null), 3000);
                 }
             }, 2000);
-        } else {
-            setAlertMessage('Correo o contraseña incorrectos');
+        } catch (error) {
+            console.error('Error al iniciar sesión:', error.response ? error.response.data : error.message);
+            setAlertMessage('Error al iniciar sesión');
             setAlertType('error');
             setTimeout(() => setAlertMessage(null), 3000);
         }
     };
-
+    
+    
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
