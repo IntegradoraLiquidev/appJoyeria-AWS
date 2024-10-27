@@ -75,7 +75,7 @@ const WorkerDashboard = ({ navigation }) => {
                 renderItem={({ item }) => (
                     <ClienteCard
                         cliente={item}
-                        onPress={() => navigation.navigate('ClienteDetails', { id: item.id_cliente })}
+                        onPress={() => navigation.navigate('Detalles del cliente', { id: item.id_cliente })}
                     />
                 )}
             />

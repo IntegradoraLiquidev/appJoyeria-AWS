@@ -97,7 +97,7 @@ export default function App() {
                     options={{ headerShown: false }} 
                 />
                 <Stack.Screen 
-                    name="ClienteDetails" 
+                    name="Detalles del cliente" 
                     component={ClienteDetails} 
                     options={{ headerShown: true }} 
                 />
