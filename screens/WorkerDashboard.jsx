@@ -21,20 +21,16 @@ const WorkerDashboard = ({ navigation }) => {
                     return;
                 }
 
-                const response = await axios.get('https://prestamos-back-production.up.railway.app/clientes', {
+                const response = await axios.get('http://192.168.1.10:3000/api/clientes', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
 
-                const uniqueClientes = response.data.filter((cliente, index, self) =>
-                    index === self.findIndex((c) => (
-                        c.id === cliente.id
-                    ))
-                );
+                console.log(response.data); // Verificar la estructura de los datos
 
-                setClientes(uniqueClientes);
-                setFilteredClientes(uniqueClientes);
+                setClientes(response.data);
+                setFilteredClientes(response.data);
             } catch (error) {
                 console.error(error);
             }
@@ -47,7 +43,6 @@ const WorkerDashboard = ({ navigation }) => {
 
     useEffect(() => {
         const filtered = clientes.filter(cliente =>
-            (cliente.estado !== 'completado' || cliente.monto_actual === 0) &&
             cliente.nombre.toLowerCase().includes(searchText.toLowerCase())
         );
         setFilteredClientes(filtered);
@@ -76,14 +71,11 @@ const WorkerDashboard = ({ navigation }) => {
             />
             <FlatList
                 data={filteredClientes}
-                keyExtractor={item => item.id.toString()}
+                keyExtractor={item => item.id_cliente ? item.id_cliente.toString() : Math.random().toString()}
                 renderItem={({ item }) => (
                     <ClienteCard
-                        cliente={{
-                            ...item,
-                            total_multas: item.total_multas !== undefined ? item.total_multas : 0
-                        }}
-                        onPress={() => navigation.navigate('ClienteDetails', { id: item.id })}
+                        cliente={item}
+                        onPress={() => navigation.navigate('ClienteDetails', { id: item.id_cliente })}
                     />
                 )}
             />
@@ -94,7 +86,7 @@ const WorkerDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000', // Fondo negro
+        backgroundColor: '#000',
         padding: 20,
     },
     headerContainer: {
@@ -106,18 +98,18 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#c9b977', // Texto dorado
+        color: '#c9b977',
         marginBottom: 10,
     },
     searchInput: {
         height: 40,
-        borderColor: '#ecdda2', // Verde oliva
+        borderColor: '#ecdda2',
         borderWidth: 1,
         paddingHorizontal: 8,
         borderRadius: 4,
-        color: '#d1a980', // Texto dorado
+        color: '#d1a980',
         marginBottom: 10,
-        backgroundColor: '#1c1c1e', // Fondo más oscuro
+        backgroundColor: '#1c1c1e',
     },
 });
 

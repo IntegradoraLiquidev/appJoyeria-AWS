@@ -4,12 +4,12 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) => {
     return (
-        <View style={[styles.card, cliente.total_multas >= 9 && styles.cardWarning]}>
+        <View style={[styles.card, cliente.forma_pago >= 9 && styles.cardWarning]}>
             <Text style={styles.cardText}>Nombre: {cliente.nombre}</Text>
-            <Text style={styles.cardText}>Monto Actual: {cliente.monto_actual}</Text>
-            <Text style={styles.cardText}>Total de Multas: {cliente.total_multas}</Text>
+            <Text style={styles.cardText}>A pagar: {cliente.precio_total}</Text>
+            <Text style={styles.cardText}>Forma de pago: {cliente.forma_pago}</Text>
             <View style={styles.buttonContainer}>
-            <Button title="Ver Detalles" onPress={onPress} color="#007BFF" />
+                <Button title="Ver Detalles" onPress={onPress} color="#007BFF" />
             </View>
             {isAdmin && (
                 <View style={styles.actionsContainer}>
@@ -39,23 +39,20 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     cardWarning: {
-        backgroundColor: '#b22222', // Fondo rojo oscuro para advertencia
+        backgroundColor: '#b22222',
     },
     cardText: {
         fontSize: 16,
-        color: '#000', 
+        color: '#000',
         marginBottom: 10,
         padding: 2,
-        
     },
     buttonContainer: {
         width: 150,
         marginTop: 10,
         margin: 'auto',
-
     },
     actionsContainer: {
-        
         flexDirection: 'row',
         position: 'absolute',
         top: 10,
