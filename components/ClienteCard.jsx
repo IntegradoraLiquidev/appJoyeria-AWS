@@ -6,7 +6,8 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
     return (
         <View style={[styles.card, cliente.forma_pago >= 9 && styles.cardWarning]}>
             <Text style={styles.cardText}>Nombre: {cliente.nombre}</Text>
-            <Text style={styles.cardText}>A pagar: {cliente.precio_total}</Text>
+
+            <Text style={styles.cardText}>A pagar: {cliente.monto_actual}</Text>
             <Text style={styles.cardText}>Forma de pago: {cliente.forma_pago}</Text>
             <View style={styles.buttonContainer}>
                 <Button title="Ver Detalles" onPress={onPress} color="#007BFF" />

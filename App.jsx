@@ -37,7 +37,7 @@ function WorkerTabs() {
                 tabBarInactiveTintColor: '#ccc',
                 tabBarStyle: {
                     backgroundColor: '#1c1c1e',
-                    height: 60,
+                    height: 50
                 },
             })}
         >
