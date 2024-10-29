@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Animated } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,6 +11,13 @@ const ClienteDetails = ({ route }) => {
     const [abonos, setAbonos] = useState([]);
     const [isAbonosVisible, setIsAbonosVisible] = useState(false);
     const navigation = useNavigation();
+
+    // Animación para el botón "No abonó"
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    // Animación para cada abono en el historial
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const translateYAnim = useRef(new Animated.Value(10)).current;
 
     useEffect(() => {
         fetchDetails();
@@ -31,12 +38,12 @@ const ClienteDetails = ({ route }) => {
             const token = await AsyncStorage.getItem('token');
             if (!token) return;
 
-            const clienteResponse = await axios.get(`http://192.168.1.10:3000/api/clientes/${id}`, {
+            const clienteResponse = await axios.get(`http://172.20.31.191:3000/api/clientes/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setCliente(clienteResponse.data);
 
-            const abonosResponse = await axios.get(`http://192.168.1.10:3000/api/clientes/${id}/abonos`, {
+            const abonosResponse = await axios.get(`http://172.20.31.191:3000/api/clientes/${id}/abonos`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -50,7 +57,6 @@ const ClienteDetails = ({ route }) => {
         }
     };
 
-
     const handleAddAbono = () => {
         fetchDetails();
         Alert.alert('Pago agregado con éxito', 'El pago se ha agregado correctamente.');
@@ -62,7 +68,7 @@ const ClienteDetails = ({ route }) => {
             if (!token) return;
 
             await axios.put(
-                `http://192.168.1.10:3000/api/clientes/${id}/incrementarMonto`,
+                `http://172.20.31.191:3000/api/clientes/${id}/incrementarMonto`,
                 { incremento: 10 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -71,6 +77,33 @@ const ClienteDetails = ({ route }) => {
             Alert.alert('Monto incrementado', 'Se ha añadido 10 pesos al monto actual.');
         } catch (error) {
             console.error('Error incrementing monto_actual:', error);
+        }
+    };
+
+    const handlePressIn = () => {
+        Animated.spring(scaleAnim, {
+            toValue: 0.95,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const handlePressOut = () => {
+        Animated.spring(scaleAnim, {
+            toValue: 1,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const handleToggleAbonos = () => {
+        setIsAbonosVisible(!isAbonosVisible);
+        if (!isAbonosVisible) {
+            Animated.parallel([
+                Animated.timing(fadeAnim, { toValue: 1, duration: 500, useNativeDriver: true }),
+                Animated.timing(translateYAnim, { toValue: 0, duration: 500, useNativeDriver: true })
+            ]).start();
+        } else {
+            fadeAnim.setValue(0);
+            translateYAnim.setValue(10);
         }
     };
 
@@ -93,13 +126,20 @@ const ClienteDetails = ({ route }) => {
             <View style={styles.clientInfo}>
                 <Text style={styles.sectionTitle}>Realizar Abono</Text>
                 <AbonoForm clienteId={id} onAddAbono={handleAddAbono} />
-                <TouchableOpacity style={styles.noAbonoButton} onPress={handleNoAbono}>
-                    <Text style={styles.noAbonoButtonText}>No abonó</Text>
-                </TouchableOpacity>
+                
+                <Animated.View style={[styles.noAbonoButton, { transform: [{ scale: scaleAnim }] }]}>
+                    <TouchableOpacity
+                        onPressIn={handlePressIn}
+                        onPressOut={handlePressOut}
+                        onPress={handleNoAbono}
+                    >
+                        <Text style={styles.noAbonoButtonText}>No abonó</Text>
+                    </TouchableOpacity>
+                </Animated.View>
 
                 <View style={styles.buttonSpacing} />
 
-                <TouchableOpacity onPress={() => setIsAbonosVisible(!isAbonosVisible)}>
+                <TouchableOpacity onPress={handleToggleAbonos}>
                     <Text style={styles.hiddeTitle}>
                         {isAbonosVisible ? 'Ocultar' : 'Mostrar'} Historial de Abonos
                     </Text>
@@ -107,19 +147,20 @@ const ClienteDetails = ({ route }) => {
 
                 {isAbonosVisible && (
                     abonos.length > 0 ? (
-                        abonos
-                            .slice()
-                            .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)) 
-                            .map((abono, index) => (
-                                <View key={index} style={[
+                        abonos.map((abono, index) => (
+                            <Animated.View
+                                key={index}
+                                style={[
                                     styles.abonoItem,
-                                    abono.estado === 'no_abono' ? styles.noAbonoBackground : styles.pagadoBackground
-                                ]}>
-                                    <Text style={styles.abonoText}>Monto: {abono.monto}</Text>
-                                    <Text style={styles.abonoText}>Fecha: {new Date(abono.fecha).toLocaleDateString()}</Text>
-                                    <Text style={styles.abonoText}>Estado: {abono.estado === 'no_abono' ? 'No Abonado' : 'Pagado'}</Text>
-                                </View>
-                            ))
+                                    abono.estado === 'no_abono' ? styles.noAbonoBackground : styles.pagadoBackground,
+                                    { opacity: fadeAnim, transform: [{ translateY: translateYAnim }] }
+                                ]}
+                            >
+                                <Text style={styles.abonoText}>Monto: {abono.monto}</Text>
+                                <Text style={styles.abonoText}>Fecha: {new Date(abono.fecha).toLocaleDateString()}</Text>
+                                <Text style={styles.abonoText}>Estado: {abono.estado === 'no_abono' ? 'No Abonado' : 'Pagado'}</Text>
+                            </Animated.View>
+                        ))
                     ) : (
                         <Text style={styles.noAbonosText}>No hay abonos registrados.</Text>
                     )
@@ -128,6 +169,7 @@ const ClienteDetails = ({ route }) => {
         </ScrollView>
     );
 };
+
 
 const styles = StyleSheet.create({
     container: {

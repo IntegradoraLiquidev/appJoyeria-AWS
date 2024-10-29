@@ -20,15 +20,13 @@ const WorkerDashboard = ({ navigation }) => {
                     console.error('No token found');
                     return;
                 }
-
-                const response = await axios.get('http://192.168.1.10:3000/api/clientes', {
+                const response = await axios.get('http://172.20.31.191:3000/api/clientes', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
 
-                console.log(response.data); // Verificar la estructura de los datos
-
+                console.log(response.data);
                 setClientes(response.data);
                 setFilteredClientes(response.data);
             } catch (error) {
@@ -59,12 +57,12 @@ const WorkerDashboard = ({ navigation }) => {
     return (
         <View style={styles.container}>
             <View style={styles.headerContainer}>
-                <Text style={styles.title}>Lista de clientes</Text>
-                <Ionicons name={'exit'} size={40} color={"#ecdda2"} onPress={handleLogout} />
+                <Text style={styles.title}>Clientes</Text>
+                <Ionicons name={'exit-outline'} size={32} color={"#ff6347"} onPress={handleLogout} style={styles.logoutIcon} />
             </View>
             <TextInput
                 style={styles.searchInput}
-                placeholder="Buscar cliente por nombre"
+                placeholder="Buscar cliente"
                 value={searchText}
                 onChangeText={setSearchText}
                 placeholderTextColor="#d1a980"
@@ -78,6 +76,7 @@ const WorkerDashboard = ({ navigation }) => {
                         onPress={() => navigation.navigate('Detalles del cliente', { id: item.id_cliente })}
                     />
                 )}
+                contentContainerStyle={styles.listContent}
             />
         </View>
     );
@@ -86,30 +85,39 @@ const WorkerDashboard = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000',
+        backgroundColor: '#0f0f0f',
         padding: 20,
     },
     headerContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 20,
     },
     title: {
-        fontSize: 24,
+        fontSize: 26,
         fontWeight: 'bold',
-        color: '#c9b977',
-        marginBottom: 10,
+        color: '#f5c469',
+        letterSpacing: 0.5,
+    },
+    logoutIcon: {
+        padding: 8,
+        borderRadius: 20,
+        backgroundColor: '#1c1c1e',
     },
     searchInput: {
-        height: 40,
-        borderColor: '#ecdda2',
+        height: 45,
+        borderColor: '#707070',
         borderWidth: 1,
-        paddingHorizontal: 8,
-        borderRadius: 4,
+        borderRadius: 8,
+        paddingHorizontal: 12,
         color: '#d1a980',
-        marginBottom: 10,
         backgroundColor: '#1c1c1e',
+        marginBottom: 15,
+        fontSize: 16,
+    },
+    listContent: {
+        paddingBottom: 20,
     },
 });
 

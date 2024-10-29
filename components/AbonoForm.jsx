@@ -36,7 +36,7 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
             const fecha = new Date().toISOString().split('T')[0];
 
             const response = await axios.post(
-                `http://192.168.1.10:3000/api/clientes/${clienteId}/abonos`,
+                `http://172.20.31.191:3000/api/clientes/${clienteId}/abonos`,
                 { monto: parsedMonto, fecha },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

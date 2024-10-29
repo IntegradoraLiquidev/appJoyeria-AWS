@@ -54,12 +54,12 @@ const EstadisticasScreen = () => {
                 <Text style={styles.cardValue}>{totalClientes}</Text>
             </View>
             <View style={styles.card}>
-                <Text style={styles.cardTitle}>Total Préstamos Activos</Text>
-                <Text style={styles.cardValue}>{totalPrestamosActivos}</Text>
+                <Text style={styles.cardTitle}>Total clientes completados</Text>
+                <Text style={styles.cardValue}>{totalPrestamosCompletados}</Text>
             </View>
             <View style={styles.card}>
-                <Text style={styles.cardTitle}>Total Préstamos Completados</Text>
-                <Text style={styles.cardValue}>{totalPrestamosCompletados}</Text>
+                <Text style={styles.cardTitle}>Total clientes pendientes</Text>
+                <Text style={styles.cardValue}>{totalPrestamosActivos}</Text>
             </View>
             <View style={styles.buttonContainer}>
                 <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EstadisticasTablas')}>
