@@ -21,12 +21,7 @@ const ClienteDetails = ({ route }) => {
             Alert.alert(
                 "Pagos Completados",
                 "El cliente ha completado todos los pagos.",
-                [
-                    {
-                        text: "Aceptar",
-                        onPress: () => navigation.navigate('WorkerDashboard')
-                    }
-                ]
+                [{ text: "Aceptar", onPress: () => navigation.navigate('WorkerDashboard') }]
             );
         }
     }, [cliente]);
@@ -37,18 +32,24 @@ const ClienteDetails = ({ route }) => {
             if (!token) return;
 
             const clienteResponse = await axios.get(`http://192.168.1.10:3000/api/clientes/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
             });
             setCliente(clienteResponse.data);
 
             const abonosResponse = await axios.get(`http://192.168.1.10:3000/api/clientes/${id}/abonos`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: { Authorization: `Bearer ${token}` },
             });
-            setAbonos(abonosResponse.data);
+
+            const abonosOrdenados = abonosResponse.data.sort(
+                (a, b) => new Date(b.fecha) - new Date(a.fecha)
+            );
+
+            setAbonos(abonosOrdenados);
         } catch (error) {
             console.error('Error fetching details:', error);
         }
     };
+
 
     const handleAddAbono = () => {
         fetchDetails();
@@ -65,7 +66,8 @@ const ClienteDetails = ({ route }) => {
                 { incremento: 10 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            fetchDetails();  // Actualiza los detalles para reflejar el nuevo monto actual
+
+            fetchDetails();
             Alert.alert('Monto incrementado', 'Se ha añadido 10 pesos al monto actual.');
         } catch (error) {
             console.error('Error incrementing monto_actual:', error);
@@ -76,38 +78,53 @@ const ClienteDetails = ({ route }) => {
         <ScrollView style={styles.container}>
             <View style={styles.clientInfo}>
                 <Text style={styles.clientName}>{cliente?.nombre}</Text>
+                <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Dirección: {cliente?.direccion}</Text>
+                <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Teléfono: {cliente?.telefono}</Text>
+                <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Monto inicial: {cliente?.precio_total}</Text>
+                <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Forma de pago: {cliente?.forma_pago}</Text>
+                <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Monto actual: {cliente?.monto_actual}</Text>
             </View>
 
-            <Text style={styles.sectionTitle}>Realizar Abono:</Text>
-            <AbonoForm clienteId={id} onAddAbono={handleAddAbono} />
+            <View style={styles.clientInfo}>
+                <Text style={styles.sectionTitle}>Realizar Abono</Text>
+                <AbonoForm clienteId={id} onAddAbono={handleAddAbono} />
+                <TouchableOpacity style={styles.noAbonoButton} onPress={handleNoAbono}>
+                    <Text style={styles.noAbonoButtonText}>No abonó</Text>
+                </TouchableOpacity>
 
-            <TouchableOpacity style={styles.noAbonoButton} onPress={handleNoAbono}>
-                <Text style={styles.noAbonoButtonText}>No abonó</Text>
-            </TouchableOpacity>
+                <View style={styles.buttonSpacing} />
 
-            <TouchableOpacity onPress={() => setIsAbonosVisible(!isAbonosVisible)}>
-                <Text style={styles.hiddeTitle}>
-                    {isAbonosVisible ? 'Ocultar' : 'Mostrar'} Historial de Abonos
-                </Text>
-            </TouchableOpacity>
+                <TouchableOpacity onPress={() => setIsAbonosVisible(!isAbonosVisible)}>
+                    <Text style={styles.hiddeTitle}>
+                        {isAbonosVisible ? 'Ocultar' : 'Mostrar'} Historial de Abonos
+                    </Text>
+                </TouchableOpacity>
 
-            {isAbonosVisible && (
-                abonos.length > 0 ? (
-                    abonos.map((abono, index) => (
-                        <View key={index} style={styles.abonoItem}>
-                            <Text style={styles.abonoText}>Monto: {abono.monto}</Text>
-                            <Text style={styles.abonoText}>Fecha: {new Date(abono.fecha).toLocaleDateString()}</Text>
-                        </View>
-                    ))
-                ) : (
-                    <Text style={styles.noAbonosText}>No hay abonos registrados.</Text>
-                )
-            )}
+                {isAbonosVisible && (
+                    abonos.length > 0 ? (
+                        abonos
+                            .slice()
+                            .sort((a, b) => new Date(b.fecha) - new Date(a.fecha)) 
+                            .map((abono, index) => (
+                                <View key={index} style={[
+                                    styles.abonoItem,
+                                    abono.estado === 'no_abono' ? styles.noAbonoBackground : styles.pagadoBackground
+                                ]}>
+                                    <Text style={styles.abonoText}>Monto: {abono.monto}</Text>
+                                    <Text style={styles.abonoText}>Fecha: {new Date(abono.fecha).toLocaleDateString()}</Text>
+                                    <Text style={styles.abonoText}>Estado: {abono.estado === 'no_abono' ? 'No Abonado' : 'Pagado'}</Text>
+                                </View>
+                            ))
+                    ) : (
+                        <Text style={styles.noAbonosText}>No hay abonos registrados.</Text>
+                    )
+                )}
+            </View>
         </ScrollView>
     );
 };
@@ -115,63 +132,95 @@ const ClienteDetails = ({ route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 20
+        backgroundColor: '#0d0d0d',
+        padding: 20,
     },
     clientInfo: {
-        marginBottom: 20
+        backgroundColor: '#1a1a1a',
+        borderRadius: 15,
+        padding: 20,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOpacity: 0.6,
+        shadowRadius: 20,
+        elevation: 12,
     },
     clientName: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        marginBottom: 10
+        color: '#f5c469',
+        marginBottom: 12,
+        textAlign: 'center',
+        letterSpacing: 3,
     },
     clientDetail: {
         fontSize: 16,
-        marginBottom: 5
+        color: '#d1d1d1',
+        marginBottom: 5,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#333',
+        marginVertical: 10,
     },
     sectionTitle: {
-        fontSize: 18,
+        fontSize: 26,
         fontWeight: 'bold',
-        marginVertical: 10,
-        color: '#000'
+        color: '#f5c469',
+        marginVertical: 20,
+        textAlign: 'center',
     },
     hiddeTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
-        marginVertical: 10,
-        color: '#000',
-        backgroundColor: '#d0d0d0',
-        padding: 10,
+        color: '#ecdda2',
+        paddingVertical: 12,
+        backgroundColor: '#2a2a2a',
         borderRadius: 10,
+        textAlign: 'center',
+        elevation: 10,
     },
     abonoItem: {
-        padding: 10,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-        marginBottom: 10
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 12,
     },
     abonoText: {
-        fontSize: 16
+        fontSize: 16,
+        color: '#fff',
     },
     noAbonosText: {
         fontSize: 16,
         color: '#888',
         textAlign: 'center',
-        marginTop: 10
+    },
+    noAbonoBackground: {
+        backgroundColor: '#ff4c4c',
+    },
+    pagadoBackground: {
+        backgroundColor: '#1db954',
     },
     noAbonoButton: {
-        backgroundColor:
-            '#ff6347',
-        padding: 10,
+        backgroundColor: '#ff6347',
+        paddingVertical: 10,
+        paddingHorizontal: 1,
         borderRadius: 10,
         alignItems: 'center',
-        marginVertical: 10
+        marginVertical: 15, // Separación con otros elementos
+        shadowColor: '#ff6347',
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 1,
+        shadowRadius: 10,
+        elevation: 2,
     },
+
+    buttonSpacing: {
+        height: 15, // Espacio vertical entre botones
+    },
+
     noAbonoButtonText: {
         color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold'
-    }
+        fontWeight: 'bold',
+    },
 });
 
 export default ClienteDetails;
