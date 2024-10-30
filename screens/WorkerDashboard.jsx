@@ -108,7 +108,6 @@ const WorkerDashboard = ({ navigation }) => {
                 placeholderTextColor="#d1a980"
             />
 
-            {/* Lista de Clientes Pendientes */}
             <FlatList
                 data={filteredClientes}
                 keyExtractor={(item) =>

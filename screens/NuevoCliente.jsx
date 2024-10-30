@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    StyleSheet,
-    Alert,
-    ScrollView,
-    ActivityIndicator,
-    TouchableOpacity,
-    Animated,
+    View, Text, TextInput, StyleSheet, Alert, ScrollView, ActivityIndicator, TouchableOpacity, Animated,
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -26,7 +18,7 @@ const NuevoCliente = ({ navigation }) => {
     const [precioTotal, setPrecioTotal] = useState('');
     const [formaPago, setFormaPago] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-
+    const [abonoInicial, setAbonoInicial] = useState('');
     const [openCategoria, setOpenCategoria] = useState(false);
     const [openProducto, setOpenProducto] = useState(false);
     const [openPago, setOpenPago] = useState(false);
@@ -75,6 +67,10 @@ const NuevoCliente = ({ navigation }) => {
             return;
         }
 
+        const montoActual = abonoInicial
+            ? Math.max(0, parseFloat(precioTotal) - parseFloat(abonoInicial))
+            : parseFloat(precioTotal);
+
         try {
             const token = await AsyncStorage.getItem('token');
             if (!token) throw new Error('No se encontró un token de autenticación');
@@ -89,11 +85,26 @@ const NuevoCliente = ({ navigation }) => {
                     quilates: parseFloat(quilates),
                     precio_total: parseFloat(precioTotal),
                     forma_pago: formaPago,
+                    monto_actual: montoActual,
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
 
             Alert.alert('Éxito', 'Cliente agregado exitosamente');
+
+            // Resetear los campos después de agregar el cliente
+            setNombre('');
+            setDireccion('');
+            setTelefono('');
+            setProducto(null);
+            setCategoria(null);
+            setQuilates('');
+            setPrecioTotal('');
+            setFormaPago('');
+            setAbonoInicial('');
+            setProductos([]);  // Limpiar productos si es necesario
+
+            // Navegar de regreso (opcional)
             navigation.goBack();
         } catch (error) {
             Alert.alert('Error', 'Hubo un problema al agregar el cliente');
@@ -202,6 +213,15 @@ const NuevoCliente = ({ navigation }) => {
                 value={precioTotal}
                 onChangeText={setPrecioTotal}
                 placeholder="Precio Total"
+                keyboardType="numeric"
+                placeholderTextColor="#999"
+            />
+
+            <TextInput
+                style={styles.input}
+                value={abonoInicial}
+                onChangeText={setAbonoInicial}
+                placeholder="Abono Inicial (Opcional)"
                 keyboardType="numeric"
                 placeholderTextColor="#999"
             />
