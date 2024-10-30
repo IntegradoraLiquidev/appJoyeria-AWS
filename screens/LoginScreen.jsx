@@ -27,7 +27,7 @@ const LoginScreen = ({ navigation }) => {
     const handleLogin = async () => {
         try {
             console.log('Iniciando sesión con:', { email, password });
-            const response = await axios.post('http://172.20.31.191:3000/api/usuarios/login', { email, password });
+            const response = await axios.post('http://192.168.1.10:3000/api/usuarios/login', { email, password });
             const { token } = response.data;
             console.log('Token recibido:', token);
     

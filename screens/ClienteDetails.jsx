@@ -38,12 +38,12 @@ const ClienteDetails = ({ route }) => {
             const token = await AsyncStorage.getItem('token');
             if (!token) return;
 
-            const clienteResponse = await axios.get(`http://172.20.31.191:3000/api/clientes/${id}`, {
+            const clienteResponse = await axios.get(`http://192.168.1.10:3000/api/clientes/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setCliente(clienteResponse.data);
 
-            const abonosResponse = await axios.get(`http://172.20.31.191:3000/api/clientes/${id}/abonos`, {
+            const abonosResponse = await axios.get(`http://192.168.1.10:3000/api/clientes/${id}/abonos`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -68,7 +68,7 @@ const ClienteDetails = ({ route }) => {
             if (!token) return;
 
             await axios.put(
-                `http://172.20.31.191:3000/api/clientes/${id}/incrementarMonto`,
+                `http://192.168.1.10:3000/api/clientes/${id}/incrementarMonto`,
                 { incremento: 10 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 1,
         borderRadius: 10,
         alignItems: 'center',
-        marginVertical: 15, // Separación con otros elementos
+        marginVertical: 15, 
         shadowColor: '#ff6347',
         shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 1,
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     },
 
     buttonSpacing: {
-        height: 15, // Espacio vertical entre botones
+        height: 15, 
     },
 
     noAbonoButtonText: {
