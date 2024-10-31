@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { 
-    View, 
-    Text, 
-    TextInput, 
-    TouchableOpacity, 
-    StyleSheet, 
-    Alert, 
-    ActivityIndicator 
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet,
+    Alert,
+    ActivityIndicator
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -48,11 +48,15 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
             } else {
                 console.error('Error al agregar abono:', response.data);
             }
+
+
         } catch (error) {
             console.error('Error en la solicitud de agregar abono:', error);
         } finally {
             setLoading(false);
         }
+
+
     };
 
     return (
@@ -66,9 +70,9 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
                 onChangeText={(text) => setMonto(text.replace(/[^0-9.]/g, ''))}
                 keyboardType="numeric"
             />
-            <TouchableOpacity 
-                style={[styles.button, loading && styles.buttonDisabled]} 
-                onPress={handleAddAbono} 
+            <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
+                onPress={handleAddAbono}
                 disabled={loading}
             >
                 {loading ? (
@@ -100,7 +104,7 @@ const styles = StyleSheet.create({
         color: '#fff', // Dorado elegante
     },
     input: {
-        height: 45,
+        height: 50,
         borderWidth: 1,
         borderRadius: 10,
         borderColor: '#d1a980',

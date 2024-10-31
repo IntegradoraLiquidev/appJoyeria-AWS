@@ -123,18 +123,22 @@ const ClienteDetails = ({ route }) => {
             </View>
 
             <View style={styles.clientInfo}>
-                <Text style={styles.sectionTitle}>Realizar Abono</Text>
-                <AbonoForm clienteId={id} onAddAbono={handleAddAbono} />
 
-                <Animated.View style={[styles.noAbonoButton, { transform: [{ scale: scaleAnim }] }]}>
-                    <TouchableOpacity
-                        onPressIn={handlePressIn}
-                        onPressOut={handlePressOut}
-                        onPress={handleNoAbono}
-                    >
-                        <Text style={styles.noAbonoButtonText}>No abonó</Text>
+                <Text style={styles.sectionTitle}>Realizar Abono</Text>
+                {cliente?.monto_actual > 0 ? (
+                    <AbonoForm clienteId={id} onAddAbono={handleAddAbono} /> &&
+                    <Animated.View style={[styles.noAbonoButton, { transform: [{ scale: scaleAnim }] }]}>
+                        <TouchableOpacity onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handleNoAbono}>
+                            <Text style={[styles.noAbonoButtonText, cliente?.monto_actual <= 0 && styles.disabledText]}>
+                                No abonó
+                            </Text>
+                        </TouchableOpacity>
+                    </Animated.View>
+                ) : (
+                    <TouchableOpacity >
+                        <Text style={styles.check}> El cliente ha completado todos los pagos.</Text>
                     </TouchableOpacity>
-                </Animated.View>
+                )}
 
                 <View style={styles.buttonSpacing} />
 
@@ -208,7 +212,7 @@ const styles = StyleSheet.create({
         fontSize: 26,
         fontWeight: 'bold',
         color: '#f5c469',
-        marginVertical: 20,
+        marginBottom: 30,
         textAlign: 'center',
     },
     hiddeTitle: {
@@ -224,6 +228,13 @@ const styles = StyleSheet.create({
         padding: 15,
         borderRadius: 12,
         marginBottom: 12,
+    },
+    check:{
+        fontSize: 16,
+        color: '#888',
+        textAlign: 'center',
+        marginBottom: 12,
+        marginTop: 0
     },
     abonoText: {
         fontSize: 16,

@@ -9,7 +9,6 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
             <Text style={styles.cardText}>Dirección: {cliente.direccion}</Text>
             <Text style={styles.cardText}>Teléfono: {cliente.telefono}</Text>
             <Text style={styles.cardText}>Por pagar: {cliente.monto_actual}</Text>
-            <Text style={styles.cardText}>Forma de pago: {cliente.forma_pago}</Text>
             <Text style={styles.cardText}>
                 Próximo pago: {cliente.fecha_proximo_pago ? new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES') : 'No disponible'}
             </Text>
