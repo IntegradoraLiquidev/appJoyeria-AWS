@@ -1,52 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) => {
-    const [proximaFechaPago, setProximaFechaPago] = useState('');
-
-    useEffect(() => {
-        calcularProximaFechaPago();
-    }, [cliente]);
-
-    const calcularProximaFechaPago = () => {
-        // Usamos la fecha de creación o una fecha predeterminada si ambas son inválidas.
-        const ultimaFecha = cliente.ultimaFechaAbono 
-            ? new Date(Date.parse(cliente.ultimaFechaAbono)) 
-            : cliente.fecha_creacion
-            ? new Date(Date.parse(cliente.fecha_creacion))
-            : new Date(); // Si ambas fechas están ausentes, usa la fecha actual como base.
-
-        if (isNaN(ultimaFecha.getTime())) {
-            console.error("Fecha inválida en el cliente:", cliente);
-            setProximaFechaPago("Fecha inválida");
-            return;
-        }
-
-        let diasIncremento = cliente.forma_pago.toLowerCase() === 'semanal' ? 7 : 1;
-        const proximaFecha = new Date(ultimaFecha);
-        proximaFecha.setDate(proximaFecha.getDate() + diasIncremento);
-
-        const hoy = new Date();
-        const diferenciaDias = Math.ceil((proximaFecha - hoy) / (1000 * 60 * 60 * 24));
-
-        if (diferenciaDias === 0) {
-            setProximaFechaPago("Hoy");
-        } else if (cliente.forma_pago.toLowerCase() === 'diario' && diferenciaDias === 1) {
-            setProximaFechaPago("Mañana");
-        } else if (cliente.forma_pago.toLowerCase() === 'semanal') {
-            setProximaFechaPago(`Faltan ${diferenciaDias} días`);
-        } else {
-            setProximaFechaPago(`Faltan ${diferenciaDias} días`);
-        }
-    };
-
     return (
         <View style={[styles.card, cliente.forma_pago >= 9 && styles.cardWarning]}>
-            <Text style={styles.cardText}>Nombre: {cliente.nombre}</Text>
-            <Text style={styles.cardText}>A pagar: {cliente.monto_actual}</Text>
+            <Text style={styles.cardName}>{cliente.nombre}</Text>
+            <Text style={styles.cardText}>Dirección: {cliente.direccion}</Text>
+            <Text style={styles.cardText}>Teléfono: {cliente.telefono}</Text>
+            <Text style={styles.cardText}>Por pagar: {cliente.monto_actual}</Text>
             <Text style={styles.cardText}>Forma de pago: {cliente.forma_pago}</Text>
-            <Text style={styles.cardText}>Próximo pago: {proximaFechaPago}</Text>
+            <Text style={styles.cardText}>
+                Próximo pago: {cliente.fecha_proximo_pago ? new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES') : 'No disponible'}
+            </Text>
+
+
 
             <TouchableOpacity onPress={onPress} style={styles.detailsButton}>
                 <Text style={styles.detailsButtonText}>Ver Detalles</Text>
@@ -84,10 +52,19 @@ const styles = StyleSheet.create({
     cardWarning: {
         backgroundColor: '#b22222',
     },
+    cardName: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#f5c469',
+        marginBottom: 12,
+        letterSpacing: 3,
+    },
     cardText: {
         fontSize: 16,
         color: '#d1d1d1',
         marginBottom: 8,
+        fontWeight: 'bold',
+        
     },
     detailsButton: {
         backgroundColor: '#d4af37',

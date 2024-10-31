@@ -143,6 +143,8 @@ const NuevoCliente = ({ navigation }) => {
         ]).start(() => handleAddCliente());
     };
 
+    
+
     return (
         <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
             <Text style={styles.title}>Agregar Cliente</Text>
