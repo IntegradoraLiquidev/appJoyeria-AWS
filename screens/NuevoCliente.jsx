@@ -104,7 +104,6 @@ const NuevoCliente = ({ navigation }) => {
             setAbonoInicial('');
             setProductos([]);  // Limpiar productos si es necesario
 
-            // Navegar de regreso (opcional)
             navigation.goBack();
         } catch (error) {
             Alert.alert('Error', 'Hubo un problema al agregar el cliente');

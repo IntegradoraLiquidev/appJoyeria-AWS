@@ -93,7 +93,6 @@ const ClienteDetails = ({ route }) => {
             useNativeDriver: true,
         }).start();
     };
-
     const handleToggleAbonos = () => {
         setIsAbonosVisible(!isAbonosVisible);
         if (!isAbonosVisible) {
@@ -126,7 +125,7 @@ const ClienteDetails = ({ route }) => {
             <View style={styles.clientInfo}>
                 <Text style={styles.sectionTitle}>Realizar Abono</Text>
                 <AbonoForm clienteId={id} onAddAbono={handleAddAbono} />
-                
+
                 <Animated.View style={[styles.noAbonoButton, { transform: [{ scale: scaleAnim }] }]}>
                     <TouchableOpacity
                         onPressIn={handlePressIn}
@@ -247,7 +246,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 1,
         borderRadius: 10,
         alignItems: 'center',
-        marginVertical: 15, 
+        marginVertical: 15,
         shadowColor: '#ff6347',
         shadowOffset: { width: 0, height: 5 },
         shadowOpacity: 1,
@@ -256,7 +255,7 @@ const styles = StyleSheet.create({
     },
 
     buttonSpacing: {
-        height: 15, 
+        height: 15,
     },
 
     noAbonoButtonText: {
