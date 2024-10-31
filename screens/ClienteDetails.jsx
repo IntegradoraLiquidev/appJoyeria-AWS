@@ -126,14 +126,16 @@ const ClienteDetails = ({ route }) => {
 
                 <Text style={styles.sectionTitle}>Realizar Abono</Text>
                 {cliente?.monto_actual > 0 ? (
-                    <AbonoForm clienteId={id} onAddAbono={handleAddAbono} /> &&
-                    <Animated.View style={[styles.noAbonoButton, { transform: [{ scale: scaleAnim }] }]}>
-                        <TouchableOpacity onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handleNoAbono}>
-                            <Text style={[styles.noAbonoButtonText, cliente?.monto_actual <= 0 && styles.disabledText]}>
-                                No abonó
-                            </Text>
-                        </TouchableOpacity>
-                    </Animated.View>
+                    <>
+                        <AbonoForm clienteId={id} onAddAbono={handleAddAbono} />
+                        <Animated.View style={[styles.noAbonoButton, { transform: [{ scale: scaleAnim }] }]}>
+                            <TouchableOpacity onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handleNoAbono}>
+                                <Text style={[styles.noAbonoButtonText]}>
+                                    No abonó
+                                </Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </>
                 ) : (
                     <TouchableOpacity >
                         <Text style={styles.check}> El cliente ha completado todos los pagos.</Text>
@@ -229,7 +231,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 12,
     },
-    check:{
+    check: {
         fontSize: 16,
         color: '#888',
         textAlign: 'center',
