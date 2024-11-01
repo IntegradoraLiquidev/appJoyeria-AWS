@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
-import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
-    Alert,
-    ActivityIndicator
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AbonoForm = ({ clienteId, onAddAbono }) => {
     const [monto, setMonto] = useState('');
     const [loading, setLoading] = useState(false);
+    const [fechaProximoPago, setFechaProximoPago] = useState(null); // Nuevo estado para la fecha
 
     const handleAddAbono = async () => {
         if (loading) return;
@@ -34,33 +27,22 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
             }
 
             const fecha = new Date().toISOString().split('T')[0];
-
-            const response = await axios.post(
-                `http://192.168.1.10:3000/api/clientes/${clienteId}/abonos`,
-                { monto: parsedMonto, fecha },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            const response = await axios.post(`http://192.168.1.10:3000/api/clientes/${clienteId}/abonos`, { monto: parsedMonto, fecha });
 
             if (response.status === 201) {
                 console.log('Abono added successfully:', response.data);
-                onAddAbono();
-                setMonto(''); // Limpiar el campo del monto
-            } else {
-                console.error('Error al agregar abono:', response.data);
+                setFechaProximoPago(response.data.fecha_proximo_pago); // Actualiza la fecha de próximo pago en el estado
+                onAddAbono(response.data.fecha_proximo_pago); // Llama a la función de callback si es necesario
             }
-
-
         } catch (error) {
             console.error('Error en la solicitud de agregar abono:', error);
         } finally {
             setLoading(false);
         }
-
-
     };
 
     return (
-        <View >
+        <View>
             <Text style={styles.label}>Agregar Monto</Text>
             <TextInput
                 style={styles.input}
@@ -81,6 +63,9 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
                     <Text style={styles.buttonText}>Abonar</Text>
                 )}
             </TouchableOpacity>
+            {fechaProximoPago && (
+                <Text style={{ marginTop: 10, color: '#d4af37' }}>Próximo pago: {fechaProximoPago}</Text>
+            )}
         </View>
     );
 };
