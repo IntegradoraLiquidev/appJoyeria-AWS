@@ -4,7 +4,8 @@ import {
     FlatList, 
     StyleSheet, 
     TextInput, 
-    Text 
+    Text, 
+    TouchableOpacity 
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,6 +17,7 @@ const WorkerDashboard = ({ navigation }) => {
     const [clientes, setClientes] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [filteredClientes, setFilteredClientes] = useState([]);
+    const [isAccordionOpen, setIsAccordionOpen] = useState(false);
     const isFocused = useIsFocused();
 
     useEffect(() => {
@@ -33,8 +35,6 @@ const WorkerDashboard = ({ navigation }) => {
                 const clientesPendientes = response.data.filter(
                     (cliente) => cliente.monto_actual > 0
                 );
-
-                console.log(clientesPendientes.length)
 
                 setClientes(clientesPendientes);
                 setFilteredClientes(clientesPendientes);
@@ -63,6 +63,18 @@ const WorkerDashboard = ({ navigation }) => {
         });
     };
 
+    const today = new Date().toLocaleDateString('es-ES');
+    const clientesConPagoHoy = filteredClientes.filter(
+        (cliente) =>
+            cliente.fecha_proximo_pago &&
+            new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES') === today
+    );
+    const clientesSinPagoHoy = filteredClientes.filter(
+        (cliente) =>
+            !cliente.fecha_proximo_pago ||
+            new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES') !== today
+    );
+
     return (
         <View style={styles.container}>
             <View style={styles.headerContainer}>
@@ -84,9 +96,9 @@ const WorkerDashboard = ({ navigation }) => {
                 placeholderTextColor="#d1a980"
             />
 
-            {/* Lista de Clientes Pendientes */}
+            {/* Clientes con pago hoy */}
             <FlatList
-                data={filteredClientes}
+                data={clientesConPagoHoy}
                 keyExtractor={(item) =>
                     item.id_cliente ? item.id_cliente.toString() : Math.random().toString()
                 }
@@ -100,6 +112,37 @@ const WorkerDashboard = ({ navigation }) => {
                 )}
                 contentContainerStyle={styles.listContent}
             />
+
+            {/* Acordeón para clientes sin pago hoy */}
+            <TouchableOpacity
+                style={styles.accordionHeader}
+                onPress={() => setIsAccordionOpen(!isAccordionOpen)}
+            >
+                <Text style={styles.accordionTitle}>Clientes sin pago hoy</Text>
+                <Ionicons
+                    name={isAccordionOpen ? 'chevron-up' : 'chevron-down'}
+                    size={18}
+                    color="#fff"
+                />
+            </TouchableOpacity>
+
+            {isAccordionOpen && (
+                <FlatList
+                    data={clientesSinPagoHoy}
+                    keyExtractor={(item) =>
+                        item.id_cliente ? item.id_cliente.toString() : Math.random().toString()
+                    }
+                    renderItem={({ item }) => (
+                        <ClienteCard
+                            cliente={item}
+                            onPress={() =>
+                                navigation.navigate('Detalles del cliente', { id: item.id_cliente })
+                            }
+                        />
+                    )}
+                    contentContainerStyle={styles.listContent}
+                />
+            )}
         </View>
     );
 };
@@ -140,6 +183,20 @@ const styles = StyleSheet.create({
     },
     listContent: {
         paddingBottom: 20,
+    },
+    accordionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 15,
+        borderRadius: 8,
+        marginTop: 15,
+    },
+    accordionTitle: {
+        fontSize: 16,
+        color: '#fff',
+        fontWeight: 'bold',
     },
 });
 

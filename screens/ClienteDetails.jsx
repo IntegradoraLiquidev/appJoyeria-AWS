@@ -242,6 +242,10 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#fff',
     },
+    etiqueta: {
+        fontSize: 16,
+        color: '#fff',
+    },
     noAbonosText: {
         fontSize: 16,
         color: '#888',
