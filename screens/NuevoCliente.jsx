@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    View, Text, TextInput, StyleSheet, Alert, ScrollView, ActivityIndicator, TouchableOpacity, Animated,
+    View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, ScrollView, ActivityIndicator, TouchableOpacity, Animated, Platform,
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DropDownPicker from 'react-native-dropdown-picker';
+
 
 const NuevoCliente = ({ navigation }) => {
     const [nombre, setNombre] = useState('');
@@ -23,7 +24,6 @@ const NuevoCliente = ({ navigation }) => {
     const [openProducto, setOpenProducto] = useState(false);
     const [openPago, setOpenPago] = useState(false);
 
-    // Animación para el botón
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const opacityAnim = useRef(new Animated.Value(1)).current;
 
@@ -92,7 +92,6 @@ const NuevoCliente = ({ navigation }) => {
 
             Alert.alert('Éxito', 'Cliente agregado exitosamente');
 
-            // Resetear los campos después de agregar el cliente
             setNombre('');
             setDireccion('');
             setTelefono('');
@@ -102,7 +101,7 @@ const NuevoCliente = ({ navigation }) => {
             setPrecioTotal('');
             setFormaPago('');
             setAbonoInicial('');
-            setProductos([]);  // Limpiar productos si es necesario
+            setProductos([]);
 
             navigation.goBack();
         } catch (error) {
@@ -142,121 +141,131 @@ const NuevoCliente = ({ navigation }) => {
         ]).start(() => handleAddCliente());
     };
 
-    
-
     return (
-        <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-            <Text style={styles.title}>Agregar Cliente</Text>
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView
+                contentContainerStyle={{ paddingBottom: 20 }}
+                showsVerticalScrollIndicator={false}
+            >
+                <View contentContainerStyle={{ paddingBottom: 20 }}>
+                    <View>
+                        <Text style={styles.title}>Agregar Cliente</Text>
 
-            <TextInput
-                style={styles.input}
-                value={nombre}
-                onChangeText={setNombre}
-                placeholder="Nombre"
-                placeholderTextColor="#999"
-            />
+                        <TextInput
+                            style={styles.input}
+                            value={nombre}
+                            onChangeText={setNombre}
+                            placeholder="Nombre"
+                            placeholderTextColor="#999"
+                        />
 
-            <TextInput
-                style={styles.input}
-                value={direccion}
-                onChangeText={setDireccion}
-                placeholder="Dirección"
-                placeholderTextColor="#999"
-            />
+                        <TextInput
+                            style={styles.input}
+                            value={direccion}
+                            onChangeText={setDireccion}
+                            placeholder="Dirección"
+                            placeholderTextColor="#999"
+                        />
 
-            <TextInput
-                style={styles.input}
-                value={telefono}
-                onChangeText={setTelefono}
-                placeholder="Teléfono"
-                keyboardType="phone-pad"
-                placeholderTextColor="#999"
-            />
+                        <TextInput
+                            style={styles.input}
+                            value={telefono}
+                            onChangeText={setTelefono}
+                            placeholder="Teléfono"
+                            keyboardType="phone-pad"
+                            placeholderTextColor="#999"
+                        />
 
-            <View style={{ zIndex: 100 }}>
-                <DropDownPicker
-                    open={openCategoria}
-                    value={categoria}
-                    items={categorias}
-                    setOpen={setOpenCategoria}
-                    setValue={setCategoria}
-                    onChangeValue={fetchProductosPorCategoria}
-                    placeholder="Categoría"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={styles.dropdownContainer}
-                />
-            </View>
+                        <View style={{ zIndex: 100 }}>
+                            <DropDownPicker
+                                open={openCategoria}
+                                value={categoria}
+                                items={categorias}
+                                setOpen={setOpenCategoria}
+                                setValue={setCategoria}
+                                onChangeValue={fetchProductosPorCategoria}
+                                placeholder="Categoría"
+                                style={styles.dropdown}
+                                dropDownContainerStyle={styles.dropdownContainer}
+                            />
+                        </View>
 
-            <View style={{ zIndex: 90 }}>
-                <DropDownPicker
-                    open={openProducto}
-                    value={producto}
-                    items={productos}
-                    setOpen={setOpenProducto}
-                    setValue={setProducto}
-                    placeholder="Producto"
-                    style={styles.dropdown}
-                    dropDownContainerStyle={styles.dropdownContainer}
-                />
-            </View>
+                        <View style={{ zIndex: 90 }}>
+                            <DropDownPicker
+                                open={openProducto}
+                                value={producto}
+                                items={productos}
+                                setOpen={setOpenProducto}
+                                setValue={setProducto}
+                                placeholder="Producto"
+                                style={styles.dropdown}
+                                dropDownContainerStyle={styles.dropdownContainer}
+                            />
+                        </View>
 
-            <TextInput
-                style={styles.input}
-                value={quilates}
-                onChangeText={setQuilates}
-                placeholder="Quilates"
-                keyboardType="numeric"
-                placeholderTextColor="#999"
-            />
+                        <TextInput
+                            style={styles.input}
+                            value={quilates}
+                            onChangeText={setQuilates}
+                            placeholder="Quilates"
+                            keyboardType="numeric"
+                            placeholderTextColor="#999"
+                        />
 
-            <TextInput
-                style={styles.input}
-                value={precioTotal}
-                onChangeText={setPrecioTotal}
-                placeholder="Precio Total"
-                keyboardType="numeric"
-                placeholderTextColor="#999"
-            />
+                        <TextInput
+                            style={styles.input}
+                            value={precioTotal}
+                            onChangeText={setPrecioTotal}
+                            placeholder="Precio Total"
+                            keyboardType="numeric"
+                            placeholderTextColor="#999"
+                        />
 
-            <TextInput
-                style={styles.input}
-                value={abonoInicial}
-                onChangeText={setAbonoInicial}
-                placeholder="Abono Inicial (Opcional)"
-                keyboardType="numeric"
-                placeholderTextColor="#999"
-            />
+                        <TextInput
+                            style={styles.input}
+                            value={abonoInicial}
+                            onChangeText={setAbonoInicial}
+                            placeholder="Abono Inicial (Opcional)"
+                            keyboardType="numeric"
+                            placeholderTextColor="#999"
+                        />
 
-            <DropDownPicker
-                open={openPago}
-                value={formaPago}
-                items={[
-                    { label: 'Diario', value: 'diario' },
-                    { label: 'Semanal', value: 'semanal' },
-                ]}
-                setOpen={setOpenPago}
-                setValue={setFormaPago}
-                placeholder="Forma de Pago"
-                style={[styles.dropdown, openPago && { zIndex: 80 }]}
-                dropDownContainerStyle={[styles.dropdownContainer, { zIndex: 80 }]}
-            />
+                        <DropDownPicker
+                            open={openPago}
+                            value={formaPago}
+                            items={[
+                                { label: 'Diario', value: 'diario' },
+                                { label: 'Semanal', value: 'semanal' },
+                            ]}
+                            setOpen={setOpenPago}
+                            setValue={setFormaPago}
+                            placeholder="Forma de Pago"
+                            style={[styles.dropdown, openPago && { zIndex: 80 }]}
+                            dropDownContainerStyle={[styles.dropdownContainer, { zIndex: 80 }]}
+                        />
 
-            <View style={styles.buttonContainer}>
-                {isLoading ? (
-                    <ActivityIndicator size="large" color="#0f0" />
-                ) : (
-                    <Animated.View style={{ transform: [{ scale: scaleAnim }], opacity: opacityAnim }}>
-                        <TouchableOpacity
-                            style={styles.button}
-                            onPressIn={handlePressIn}
-                            onPressOut={handlePressOut}
-                        >
-                            <Text style={styles.buttonText}>Agregar Cliente</Text>
-                        </TouchableOpacity>
-                    </Animated.View>
-                )}
-            </View>
-        </ScrollView>
+                        <View style={styles.buttonContainer}>
+                            {isLoading ? (
+                                <ActivityIndicator size="large" color="#0f0" />
+                            ) : (
+                                <Animated.View style={{ transform: [{ scale: scaleAnim }], opacity: opacityAnim }}>
+                                    <TouchableOpacity
+                                        style={styles.button}
+                                        onPressIn={handlePressIn}
+                                        onPressOut={handlePressOut}
+                                    >
+                                        <Text style={styles.buttonText}>Agregar Cliente</Text>
+                                    </TouchableOpacity>
+                                </Animated.View>
+                            )}
+                        </View>
+                    </View>
+                </View>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 

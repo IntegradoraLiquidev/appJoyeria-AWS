@@ -16,11 +16,11 @@ const ClienteDetails = ({ route }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     // Animación para cada abono en el historial
-    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const fadeAnim = useRef(new Animated.Value(0)).current; 
     const translateYAnim = useRef(new Animated.Value(10)).current;
 
     useEffect(() => {
-        fetchDetails();
+        fetchDetails(); 
     }, []);
 
     useEffect(() => {
@@ -119,12 +119,12 @@ const ClienteDetails = ({ route }) => {
                 <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Forma de pago: {cliente?.forma_pago}</Text>
                 <View style={styles.divider} />
-                <Text style={styles.clientDetail}>Monto actual: {cliente?.monto_actual}</Text>
+                <Text style={styles.clientDetail}>Por pagar: {cliente?.monto_actual}</Text>
             </View>
 
             <View style={styles.clientInfo}>
 
-                <Text style={styles.sectionTitle}>Realizar Abono</Text>
+                <Text style={styles.sectionTitle}>Realizar abono</Text>
                 {cliente?.monto_actual > 0 ? (
                     <>
                         <AbonoForm clienteId={id} onAddAbono={handleAddAbono} />

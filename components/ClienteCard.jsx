@@ -1,10 +1,30 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) => {
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+
+    const handlePress = () => {
+        // Efecto de "pop" en el botón de "Ver Detalles"
+        Animated.sequence([
+            Animated.timing(scaleAnim, {
+                toValue: 1.02,
+                duration: 100,
+                useNativeDriver: true,
+            }),
+            Animated.timing(scaleAnim, {
+                toValue: 1,
+                duration: 100,
+                useNativeDriver: true,
+            }),
+        ]).start(() => {
+            onPress();
+        });
+    };
+
     return (
-        <View style={[styles.card, cliente.forma_pago >= 9 && styles.cardWarning]}>
+        <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
             <Text style={styles.cardName}>{cliente.nombre}</Text>
             <Text style={styles.cardText}>Dirección: {cliente.direccion}</Text>
             <Text style={styles.cardText}>Teléfono: {cliente.telefono}</Text>
@@ -13,9 +33,7 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
                 Próximo pago: {cliente.fecha_proximo_pago ? new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES') : 'No disponible'}
             </Text>
 
-
-
-            <TouchableOpacity onPress={onPress} style={styles.detailsButton}>
+            <TouchableOpacity onPress={handlePress} style={styles.detailsButton}>
                 <Text style={styles.detailsButtonText}>Ver Detalles</Text>
             </TouchableOpacity>
 
@@ -32,7 +50,7 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
                     </TouchableOpacity>
                 </View>
             )}
-        </View>
+        </Animated.View>
     );
 };
 
@@ -48,9 +66,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 4 },
         elevation: 5,
     },
-    cardWarning: {
-        backgroundColor: '#b22222',
-    },
     cardName: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -63,7 +78,6 @@ const styles = StyleSheet.create({
         color: '#d1d1d1',
         marginBottom: 8,
         fontWeight: 'bold',
-        
     },
     detailsButton: {
         backgroundColor: '#d4af37',
