@@ -64,19 +64,30 @@ const ClienteDetails = ({ route }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (!token) return;
-
+    
+            const today = new Date().toISOString().split('T')[0]; // Obtén solo la fecha en formato "YYYY-MM-DD"
+            const lastNoAbonoDate = await AsyncStorage.getItem(`lastNoAbonoDate_${id}`);
+    
+            if (lastNoAbonoDate === today) {
+                Alert.alert('Acción ya realizada', 'El botón de "No abonó" solo se puede presionar una vez al día.');
+                return;
+            }
+    
             await axios.put(
                 `http://192.168.1.76:3000/api/clientes/${id}/incrementarMonto`,
                 { incremento: 10 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-
+    
+            await AsyncStorage.setItem(`lastNoAbonoDate_${id}`, today); // Guarda la fecha actual
+    
             fetchDetails();
             Alert.alert('Monto incrementado', 'Se ha añadido 10 pesos al monto actual.');
         } catch (error) {
             console.error('Error incrementing monto_actual:', error);
         }
     };
+    
 
     const handlePressIn = () => {
         Animated.spring(scaleAnim, {
@@ -219,7 +230,7 @@ const styles = StyleSheet.create({
     clientAmountText: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#f5c469', // Color rojo suave
+        color: '#ff6347', // Color rojo suave
         textAlign: 'center',
         textShadowColor: '#000', // Color de sombra
         textShadowOffset: { width: 1, height: 1 }, // Desplazamiento de sombra
