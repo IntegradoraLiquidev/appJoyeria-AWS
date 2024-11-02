@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AbonoForm from '../components/AbonoForm';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 const ClienteDetails = ({ route }) => {
     const { id } = route.params;
@@ -12,15 +13,12 @@ const ClienteDetails = ({ route }) => {
     const [isAbonosVisible, setIsAbonosVisible] = useState(false);
     const navigation = useNavigation();
 
-    // Animación para el botón "No abonó"
     const scaleAnim = useRef(new Animated.Value(1)).current;
-
-    // Animación para cada abono en el historial
-    const fadeAnim = useRef(new Animated.Value(0)).current; 
+    const fadeAnim = useRef(new Animated.Value(0)).current;
     const translateYAnim = useRef(new Animated.Value(10)).current;
 
     useEffect(() => {
-        fetchDetails(); 
+        fetchDetails();
     }, []);
 
     useEffect(() => {
@@ -38,12 +36,12 @@ const ClienteDetails = ({ route }) => {
             const token = await AsyncStorage.getItem('token');
             if (!token) return;
 
-            const clienteResponse = await axios.get(`http://192.168.1.10:3000/api/clientes/${id}`, {
+            const clienteResponse = await axios.get(`http://192.168.1.76:3000/api/clientes/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setCliente(clienteResponse.data);
 
-            const abonosResponse = await axios.get(`http://192.168.1.10:3000/api/clientes/${id}/abonos`, {
+            const abonosResponse = await axios.get(`http://192.168.1.76:3000/api/clientes/${id}/abonos`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -68,7 +66,7 @@ const ClienteDetails = ({ route }) => {
             if (!token) return;
 
             await axios.put(
-                `http://192.168.1.10:3000/api/clientes/${id}/incrementarMonto`,
+                `http://192.168.1.76:3000/api/clientes/${id}/incrementarMonto`,
                 { incremento: 10 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -93,6 +91,7 @@ const ClienteDetails = ({ route }) => {
             useNativeDriver: true,
         }).start();
     };
+
     const handleToggleAbonos = () => {
         setIsAbonosVisible(!isAbonosVisible);
         if (!isAbonosVisible) {
@@ -111,43 +110,40 @@ const ClienteDetails = ({ route }) => {
             <View style={styles.clientInfo}>
                 <Text style={styles.clientName}>{cliente?.nombre}</Text>
                 <View style={styles.divider} />
-                <Text style={styles.clientDetail}>Dirección: {cliente?.direccion}</Text>
+                <View style={styles.infoRow}>
+                    <Icon name="location-on" size={18} color="#f5c469" />
+                    <Text style={styles.clientDetail}>{cliente?.direccion}</Text>
+                </View>
                 <View style={styles.divider} />
-                <Text style={styles.clientDetail}>Teléfono: {cliente?.telefono}</Text>
+                <View style={styles.infoRow}>
+                    <Icon name="phone" size={18} color="#f5c469" />
+                    <Text style={styles.clientDetail}>{cliente?.telefono}</Text>
+                </View>
                 <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Monto inicial: {cliente?.precio_total}</Text>
                 <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Forma de pago: {cliente?.forma_pago}</Text>
                 <View style={styles.divider} />
-                <Text style={styles.clientDetail}>Por pagar: {cliente?.monto_actual}</Text>
+                <Text style={styles.clientAmountText}>Por pagar: {cliente?.monto_actual}</Text>
             </View>
 
             <View style={styles.clientInfo}>
-
                 <Text style={styles.sectionTitle}>Realizar abono</Text>
                 {cliente?.monto_actual > 0 ? (
                     <>
                         <AbonoForm clienteId={id} onAddAbono={handleAddAbono} />
                         <Animated.View style={[styles.noAbonoButton, { transform: [{ scale: scaleAnim }] }]}>
-                            <TouchableOpacity onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handleNoAbono}>
-                                <Text style={[styles.noAbonoButtonText]}>
-                                    No abonó
-                                </Text>
+                            <TouchableOpacity onPressIn={handlePressIn} onPressOut={handlePressOut} onPress={handleNoAbono} disabled={cliente?.monto_actual <= 0}>
+                                <Text style={styles.noAbonoButtonText}>No abonó</Text>
                             </TouchableOpacity>
                         </Animated.View>
                     </>
                 ) : (
-                    <TouchableOpacity >
-                        <Text style={styles.check}> El cliente ha completado todos los pagos.</Text>
-                    </TouchableOpacity>
+                    <Text style={styles.check}>El cliente ha completado todos los pagos.</Text>
                 )}
 
-                <View style={styles.buttonSpacing} />
-
-                <TouchableOpacity onPress={handleToggleAbonos}>
-                    <Text style={styles.hiddeTitle}>
-                        {isAbonosVisible ? 'Ocultar' : 'Mostrar'} Historial de Abonos
-                    </Text>
+                <TouchableOpacity onPress={handleToggleAbonos} style={styles.toggleButton}>
+                    <Text style={styles.hiddeTitle}>{isAbonosVisible ? 'Ocultar' : 'Mostrar'} Historial de Abonos</Text>
                 </TouchableOpacity>
 
                 {isAbonosVisible && (
@@ -175,7 +171,6 @@ const ClienteDetails = ({ route }) => {
     );
 };
 
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -202,29 +197,45 @@ const styles = StyleSheet.create({
     },
     clientDetail: {
         fontSize: 16,
-        color: '#d1d1d1',
-        marginBottom: 5,
+        color: '#d9d9d9',
+        marginLeft: 10,
+    },
+    infoRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
     },
     divider: {
         height: 1,
-        backgroundColor: '#333',
+        backgroundColor: '#444',
         marginVertical: 10,
     },
     sectionTitle: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        color: '#f5c469',
-        marginBottom: 30,
+        fontSize: 20,
+        color: '#fff',
+        marginBottom: 15,
         textAlign: 'center',
     },
-    hiddeTitle: {
-        fontSize: 18,
-        color: '#ecdda2',
-        paddingVertical: 12,
-        backgroundColor: '#2a2a2a',
-        borderRadius: 10,
+    clientAmountText: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#f5c469', // Color rojo suave
         textAlign: 'center',
-        elevation: 10,
+        textShadowColor: '#000', // Color de sombra
+        textShadowOffset: { width: 1, height: 1 }, // Desplazamiento de sombra
+        textShadowRadius: 5, // Radio de desenfoque de la sombra
+    },
+    noAbonosText: {
+        fontSize: 16,
+        color: '#888',
+        textAlign: 'center',
+    },
+    toggleButton: {
+        marginVertical: 15,
+        paddingVertical: 10,
+        borderRadius: 10,
+        backgroundColor: '#2a2a2a',
+        alignItems: 'center',
     },
     abonoItem: {
         padding: 15,
@@ -236,20 +247,10 @@ const styles = StyleSheet.create({
         color: '#888',
         textAlign: 'center',
         marginBottom: 12,
-        marginTop: 0
     },
     abonoText: {
         fontSize: 16,
         color: '#fff',
-    },
-    etiqueta: {
-        fontSize: 16,
-        color: '#fff',
-    },
-    noAbonosText: {
-        fontSize: 16,
-        color: '#888',
-        textAlign: 'center',
     },
     noAbonoBackground: {
         backgroundColor: '#ff4c4c',
@@ -260,7 +261,6 @@ const styles = StyleSheet.create({
     noAbonoButton: {
         backgroundColor: '#ff6347',
         paddingVertical: 10,
-        paddingHorizontal: 1,
         borderRadius: 10,
         alignItems: 'center',
         marginVertical: 15,
@@ -270,11 +270,6 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 2,
     },
-
-    buttonSpacing: {
-        height: 15,
-    },
-
     noAbonoButtonText: {
         color: '#fff',
         fontWeight: 'bold',

@@ -5,8 +5,18 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
+    const calcularDiasRestantes = (fechaProximoPago) => {
+        const hoy = new Date();
+        const proximoPago = new Date(fechaProximoPago);
+        const diferenciaTiempo = proximoPago - hoy;
+        const diasRestantes = Math.ceil(diferenciaTiempo / (1000 * 60 * 60 * 24));
+
+        if (diasRestantes === 0) return "Hoy es el día de pago"; // Si es hoy
+        if (diasRestantes === 1) return "Mañana es el día de pago"; // Si falta un día
+        return `Faltan ${diasRestantes} días para el pago`; // Para más de un día
+    };
+
     const handlePress = () => {
-        // Efecto de "pop" en el botón de "Ver Detalles"
         Animated.sequence([
             Animated.timing(scaleAnim, {
                 toValue: 1.02,
@@ -25,13 +35,31 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
 
     return (
         <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
+            {cliente.fecha_proximo_pago && (
+                <View style={styles.paymentDateTagContainer}>
+                    <View style={styles.paymentDateTagCut} />
+                    <View style={styles.paymentDateTag}>
+                        <Text style={styles.paymentDateText}>
+                            {calcularDiasRestantes(cliente.fecha_proximo_pago)}
+                        </Text>
+                    </View>
+                </View>
+            )}
+
             <Text style={styles.cardName}>{cliente.nombre}</Text>
-            <Text style={styles.cardText}>Dirección: {cliente.direccion}</Text>
-            <Text style={styles.cardText}>Teléfono: {cliente.telefono}</Text>
-            <Text style={styles.cardText}>Por pagar: {cliente.monto_actual}</Text>
-            <Text style={styles.cardText}>
-                Próximo pago: {cliente.fecha_proximo_pago ? new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES') : 'No disponible'}
-            </Text>
+
+            <View style={styles.infoContainer}>
+                <Icon name="location-on" size={18} color="#f5c469" />
+                <Text style={styles.cardText}>{cliente.direccion}</Text>
+            </View>
+            <View style={styles.infoContainer}>
+                <Icon name="phone" size={18} color="#f5c469" />
+                <Text style={styles.cardText}>{cliente.telefono}</Text>
+            </View>
+            <View style={styles.infoContainer}>
+                <Icon name="attach-money" size={18} color="#f5c469" />
+                <Text style={styles.cardAmountText}>Por pagar: {cliente.monto_actual}</Text>
+            </View>
 
             <TouchableOpacity onPress={handlePress} style={styles.detailsButton}>
                 <Text style={styles.detailsButtonText}>Ver Detalles</Text>
@@ -65,19 +93,59 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         shadowOffset: { width: 0, height: 4 },
         elevation: 5,
+        position: 'relative',
+    },
+    paymentDateTagContainer: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    paymentDateTagCut: {
+        width: 0,
+        height: 0,
+        borderTopWidth: 10,
+        borderTopColor: 'transparent',
+        borderBottomWidth: 10,
+        borderBottomColor: 'transparent',
+        borderRightWidth: 10,
+        borderRightColor: '#f5c469',
+    },
+    paymentDateTag: {
+        backgroundColor: '#f5c469',
+        borderTopRightRadius: 10,
+        borderBottomRightRadius: 10,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
+        zIndex: 1,
+    },
+    paymentDateText: {
+        color: '#000',
+        fontWeight: 'bold',
+        fontSize: 12,
     },
     cardName: {
-        fontSize: 18,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#f5c469',
         marginBottom: 12,
-        letterSpacing: 3,
+    },
+    infoContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 5,
     },
     cardText: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#d1d1d1',
-        marginBottom: 8,
+        marginLeft: 5,
+    },
+    cardAmountText: {
+        fontSize: 17,
+        color: '#d1d1d1',
         fontWeight: 'bold',
+        marginLeft: 5,
     },
     detailsButton: {
         backgroundColor: '#d4af37',
