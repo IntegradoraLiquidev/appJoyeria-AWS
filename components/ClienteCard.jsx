@@ -11,9 +11,11 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
         const diferenciaTiempo = proximoPago - hoy;
         const diasRestantes = Math.ceil(diferenciaTiempo / (1000 * 60 * 60 * 24));
 
-        if (diasRestantes === 0) return "Hoy es el día de pago"; // Si es hoy
-        if (diasRestantes === 1) return "Mañana es el día de pago"; // Si falta un día
-        return `Faltan ${diasRestantes} días para el pago`; // Para más de un día
+        if (diasRestantes === 0) return { texto: "Hoy es el día de pago", esAtrasado: false };
+        if (diasRestantes === 1) return { texto: "Mañana es el día de pago", esAtrasado: false };
+        if (diasRestantes < 0) return { texto: `Atrasado ${Math.abs(diasRestantes)} día(s)`, esAtrasado: true };
+        
+        return { texto: `Faltan ${diasRestantes} días para el pago`, esAtrasado: false };
     };
 
     const handlePress = () => {
@@ -33,14 +35,16 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
         });
     };
 
+    const { texto: etiquetaPago, esAtrasado } = calcularDiasRestantes(cliente.fecha_proximo_pago);
+
     return (
         <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
             {cliente.fecha_proximo_pago && (
                 <View style={styles.paymentDateTagContainer}>
-                    <View style={styles.paymentDateTagCut} />
-                    <View style={styles.paymentDateTag}>
-                        <Text style={styles.paymentDateText}>
-                            {calcularDiasRestantes(cliente.fecha_proximo_pago)}
+                    <View style={[styles.paymentDateTagCut, esAtrasado && styles.atrasadoTagCut]} />
+                    <View style={[styles.paymentDateTag, esAtrasado && styles.atrasadoTag]}>
+                        <Text style={[styles.paymentDateText, esAtrasado && styles.atrasadoText]}>
+                            {etiquetaPago}
                         </Text>
                     </View>
                 </View>
@@ -110,7 +114,10 @@ const styles = StyleSheet.create({
         borderBottomWidth: 10,
         borderBottomColor: 'transparent',
         borderRightWidth: 10,
-        borderRightColor: '#f5c469',
+        borderRightColor: '#f5c469', // Color por defecto
+    },
+    atrasadoTagCut: {
+        borderRightColor: '#ff4d4d', // Color rojo si está atrasado
     },
     paymentDateTag: {
         backgroundColor: '#f5c469',
@@ -120,10 +127,16 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
         zIndex: 1,
     },
+    atrasadoTag: {
+        backgroundColor: '#ff4d4d',
+    },
     paymentDateText: {
         color: '#000',
         fontWeight: 'bold',
         fontSize: 12,
+    },
+    atrasadoText: {
+        color: '#fff',
     },
     cardName: {
         fontSize: 20,

@@ -28,7 +28,7 @@ const WorkerDashboard = ({ navigation }) => {
 
                 const clientesPendientes = response.data
                     .filter(cliente => cliente.monto_actual > 0)
-                    .sort((a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago)); // Ordenar por proximidad de pago
+                    .sort((a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago));
 
                 setClientes(clientesPendientes);
                 setFilteredClientes(clientesPendientes);
@@ -43,7 +43,6 @@ const WorkerDashboard = ({ navigation }) => {
                 console.error(error);
             }
         };
-
 
         if (isFocused) {
             setLoading(true);
@@ -89,21 +88,21 @@ const WorkerDashboard = ({ navigation }) => {
         }).start();
     };
 
-    const today = new Date().toLocaleDateString('es-ES');
-    const clientesConPagoHoy = filteredClientes.filter(
-        (cliente) =>
-            cliente.fecha_proximo_pago &&
-            new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES') === today
-    );
-    const clientesSinPagoHoy = filteredClientes.filter(
-        (cliente) =>
-            !cliente.fecha_proximo_pago ||
-            new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES') !== today
-    );
-
     const rotateIcon = rotateAnim.interpolate({
         inputRange: [0, 1],
         outputRange: ['0deg', '180deg'],
+    });
+
+    const today = new Date().toLocaleDateString('es-ES');
+
+    const clientesConPagoHoy = filteredClientes.filter((cliente) => {
+        const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
+        return proximoPago === today || new Date(cliente.fecha_proximo_pago) < new Date();
+    });
+
+    const clientesSinPagoHoy = filteredClientes.filter((cliente) => {
+        const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
+        return proximoPago !== today && new Date(cliente.fecha_proximo_pago) >= new Date();
     });
 
     return (
@@ -112,22 +111,24 @@ const WorkerDashboard = ({ navigation }) => {
                 <Text style={styles.title}>Clientes</Text>
                 <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                     <Ionicons
-                        name={'exit-outline'}
+                        name="exit-outline"
                         size={32}
-                        color={'#ff6347'}
+                        color="#ff6347"
                         onPress={handleLogout}
                         style={styles.logoutIcon}
                     />
                 </Animated.View>
             </View>
 
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Buscar cliente"
-                value={searchText}
-                onChangeText={setSearchText}
-                placeholderTextColor="#d1a980"
-            />
+            <Animated.View style={[styles.searchInputContainer, { transform: [{ scale: fadeAnim }] }]}>
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Buscar cliente"
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    placeholderTextColor="#d1a980"
+                />
+            </Animated.View>
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 {clientesConPagoHoy.length === 0 ? (
@@ -150,45 +151,42 @@ const WorkerDashboard = ({ navigation }) => {
                     </Animated.View>
                 )}
             </ScrollView>
+
             <TouchableOpacity style={styles.accordionHeader} onPress={toggleAccordion}>
                 <Text style={styles.accordionTitle}>Clientes sin pago hoy</Text>
                 <Animated.View style={{ transform: [{ rotate: rotateIcon }] }}>
-                    <Ionicons name={'chevron-down'} size={18} color="#fff" />
+                    <Ionicons name="chevron-down" size={18} color="#fff" />
                 </Animated.View>
             </TouchableOpacity>
-
 
             {isAccordionOpen && (
                 clientesSinPagoHoy.length === 0 ? (
                     <Text style={styles.emptyMessage}>No hay clientes sin pago hoy</Text>
                 ) : (
-                    
-                        <FlatList
-                            style={styles.accordionContent}
-                            data={clientesSinPagoHoy}
-                            keyExtractor={(item) => item.id_cliente?.toString()}
-                            renderItem={({ item }) => (
-                                <ClienteCard
-                                    cliente={item}
-                                    onPress={() =>
-                                        navigation.navigate('Detalles del cliente', { id: item.id_cliente })
-                                    }
-                                />
-                            )}
-                            contentContainerStyle={styles.listContent}
-                        />
-
+                    <FlatList
+                        style={styles.accordionContent}
+                        data={clientesSinPagoHoy}
+                        keyExtractor={(item) => item.id_cliente?.toString()}
+                        renderItem={({ item }) => (
+                            <ClienteCard
+                                cliente={item}
+                                onPress={() =>
+                                    navigation.navigate('Detalles del cliente', { id: item.id_cliente })
+                                }
+                            />
+                        )}
+                        contentContainerStyle={styles.listContent}
+                    />
                 )
             )}
-
-
         </View>
     );
 };
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#121212',  // Cambia el fondo a un tono ligeramente más claro para contraste
+        backgroundColor: '#121212',
         padding: 20,
     },
     scrollContent: {
@@ -201,20 +199,23 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     title: {
-        fontSize: 26,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#f5c469',
-        letterSpacing: 0.5,
+        letterSpacing: 0.8,
     },
     logoutIcon: {
-        padding: 10,
-        borderRadius: 10,
-        backgroundColor: '#282828', // Un fondo más oscuro para el ícono de logout
+        padding: 12,
+        borderRadius: 12,
+        backgroundColor: '#282828',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.8,
-        shadowRadius: 4,
-        elevation: 5, // Sombra para darle profundidad
+        shadowRadius: 5,
+        elevation: 7,
+    },
+    searchInputContainer: {
+        marginBottom: 20,
     },
     searchInput: {
         height: 45,
@@ -223,8 +224,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         paddingHorizontal: 12,
         color: '#d1a980',
-        backgroundColor: '#1e1e1e', // Ligero ajuste para un fondo más suave
-        marginBottom: 20, // Un poco más de margen inferior
+        backgroundColor: '#1e1e1e',
         fontSize: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
@@ -242,12 +242,11 @@ const styles = StyleSheet.create({
         marginVertical: 20,
     },
     accordionContent: {
-        backgroundColor: '#2e2e2e', // Un color más claro o diferente para el fondo del contenido del acordeón
+        backgroundColor: '#2e2e2e',
         padding: 10,
         borderRadius: 10,
         marginTop: 10,
     },
-
     accordionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -255,46 +254,14 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 15,
         borderRadius: 10,
-        marginTop: 20, // Aumenta el margen superior para separarlo visualmente
-        backgroundColor: '#484848', // Un color más claro para diferenciar el acordeón
-
+        marginTop: 20,
+        backgroundColor: '#484848',
     },
     accordionTitle: {
         fontSize: 16,
         color: '#fff',
         fontWeight: 'bold',
     },
-    placeholderCard: {
-        height: 80,
-        backgroundColor: '#1e1e1e', // Aclara ligeramente el color para un contraste más suave
-        borderRadius: 10,
-        marginBottom: 15,
-        flexDirection: 'row',
-        padding: 10,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.7,
-        shadowRadius: 4,
-        elevation: 4,
-    },
-    placeholderImage: {
-        width: 60,
-        height: 60,
-        borderRadius: 8,
-        backgroundColor: '#2a2a2a',
-    },
-    placeholderTextContainer: {
-        marginLeft: 10,
-        justifyContent: 'center',
-        flex: 1,
-    },
-    placeholderText: {
-        height: 20,
-        backgroundColor: '#2a2a2a',
-        borderRadius: 4,
-        marginBottom: 5,
-    },
 });
-
 
 export default WorkerDashboard;

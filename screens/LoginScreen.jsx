@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, StatusBar, Animated } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -10,116 +10,151 @@ const LoginScreen = ({ navigation }) => {
     const [password, setPassword] = useState('');
     const [hidePass, setHidePass] = useState(true);
     const [alertMessage, setAlertMessage] = useState(null);
-    const [alertType, setAlertType] = useState(''); // 'success' or 'error'
+    const [alertType, setAlertType] = useState('');
+    const [loginSuccess, setLoginSuccess] = useState(false);
+    const [isUnlocked, setIsUnlocked] = useState(false); // Nuevo estado para el candado abierto
+
+    const buttonScale = useRef(new Animated.Value(1)).current;
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const lockAnim = useRef(new Animated.Value(0)).current;
+
+    React.useEffect(() => {
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+        }).start();
+    }, []);
 
     const decodeJWT = (token) => {
         try {
-            const base64Url = token.split('.')[1]; // Extraer payload
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/'); // Normalizar caracteres
-            const jsonPayload = atob(base64); // Decodificar Base64
-            return JSON.parse(jsonPayload); // Convertir a objeto JSON
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = atob(base64);
+            return JSON.parse(jsonPayload);
         } catch (error) {
             console.error('Error al decodificar el JWT:', error);
             return null;
         }
     };
-    
+
     const handleLogin = async () => {
         try {
-            console.log('Iniciando sesión con:', { email, password });
             const response = await axios.post('http://192.168.1.76:3000/api/usuarios/login', { email, password });
             const { token } = response.data;
-            console.log('Token recibido:', token);
-    
             await AsyncStorage.setItem('token', token);
-    
+
             const decoded = decodeJWT(token);
-            console.log('Token decodificado:', decoded);
-    
-            // Verifica que el token tenga el rol
             if (!decoded || !decoded.role) {
                 setAlertMessage('Error al obtener el rol del usuario.');
                 setAlertType('error');
                 setTimeout(() => setAlertMessage(null), 3000);
                 return;
             }
-    
-            setAlertMessage('Inicio de sesión exitoso');
-            setAlertType('success');
-    
-            setTimeout(() => {
-                setAlertMessage(null);
-                if (decoded.role === 'Administrador') {
-                    navigation.reset({
-                        index: 0,
-                        routes: [{ name: 'AdminDashboard' }],
-                    });
-                } else if (decoded.role === 'Trabajador') {
-                    navigation.reset({
-                        index: 0,
-                        routes: [{ name: 'WorkerDashboard' }],
-                    });
-                } else {
-                    setAlertMessage('Rol no reconocido');
-                    setAlertType('error');
-                    setTimeout(() => setAlertMessage(null), 3000);
-                }
-            }, 2000);
+
+            setLoginSuccess(true);
+            Animated.timing(lockAnim, {
+                toValue: 1,
+                duration: 700,
+                useNativeDriver: true,
+            }).start(() => {
+                setIsUnlocked(true); // Actualizamos el estado a "abierto"
+                setTimeout(() => {
+                    if (decoded.role === 'Administrador') {
+                        navigation.reset({ index: 0, routes: [{ name: 'AdminDashboard' }] });
+                    } else if (decoded.role === 'Trabajador') {
+                        navigation.reset({ index: 0, routes: [{ name: 'WorkerDashboard' }] });
+                    }
+                }, 1500);
+            });
         } catch (error) {
-            console.error('Error al iniciar sesión:', error.response ? error.response.data : error.message);
             setAlertMessage('Error al iniciar sesión');
             setAlertType('error');
             setTimeout(() => setAlertMessage(null), 3000);
         }
     };
-    
-    
+
+    const handlePressIn = () => {
+        Animated.spring(buttonScale, {
+            toValue: 0.95,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const handlePressOut = () => {
+        Animated.spring(buttonScale, {
+            toValue: 1,
+            friction: 3,
+            useNativeDriver: true,
+        }).start();
+    };
+
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
-            <View style={styles.headerContainer}>
+            <Animated.View style={[styles.headerContainer, { opacity: fadeAnim }]}>
                 <Text style={styles.title}>Joyería</Text>
                 <Text style={styles.subtitle}>López</Text>
-            </View>
-            <View style={styles.formContainer}>
-                {alertMessage && (
-                    <View style={alertType === 'success' ? styles.successAlert : styles.errorAlert}>
-                        <Text style={styles.alertText}>{alertMessage}</Text>
+            </Animated.View>
+
+            {loginSuccess ? (
+                <Animated.View style={{
+                    transform: [
+                        {
+                            translateY: lockAnim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0, -20]
+                            })
+                        },
+                    ],
+                }}>
+                    <Ionicons name={isUnlocked ? "lock-open" : "lock-closed"} size={40} color="#d4af37" />
+                </Animated.View>
+            ) : (
+                <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
+                    {alertMessage && (
+                        <View style={alertType === 'success' ? styles.successAlert : styles.errorAlert}>
+                            <Text style={styles.alertText}>{alertMessage}</Text>
+                        </View>
+                    )}
+                    <Text style={styles.text}>Correo electrónico:</Text>
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Correo electrónico:"
+                            onChangeText={(text) => setEmail(text)}
+                            value={email}
+                            placeholderTextColor="#ccc"
+                        />
                     </View>
-                )}
-                <Text style={styles.text}>Correo electrónico:</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Correo electrónico:"
-                        onChangeText={(text) => setEmail(text)}
-                        value={email}
-                        placeholderTextColor="#ccc"
-                    />
-                </View>
-                <Text style={styles.text}>Contraseña:</Text>
-                <View style={styles.inputContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Contraseña:"
-                        secureTextEntry={hidePass}
-                        onChangeText={(text) => setPassword(text)}
-                        value={password}
-                        placeholderTextColor="#ccc"
-                    />
-                    <TouchableOpacity
-                        style={styles.icon}
-                        onPress={() => setHidePass(!hidePass)}
-                    >
-                        <Ionicons name={hidePass ? "eye-off" : "eye"} size={20} color="gray" />
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.buttonContainer}>
-                    <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-                        <Text style={styles.loginButtonText}>Iniciar sesión</Text>
-                    </TouchableOpacity>
-                </View>
-            </View>
+                    <Text style={styles.text}>Contraseña:</Text>
+                    <View style={styles.inputContainer}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Contraseña:"
+                            secureTextEntry={hidePass}
+                            onChangeText={(text) => setPassword(text)}
+                            value={password}
+                            placeholderTextColor="#ccc"
+                        />
+                        <TouchableOpacity style={styles.icon} onPress={() => setHidePass(!hidePass)}>
+                            <Ionicons name={hidePass ? "eye-off" : "eye"} size={20} color="gray" />
+                        </TouchableOpacity>
+                    </View>
+                    <View style={styles.buttonContainer}>
+                        <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
+                            <TouchableOpacity
+                                style={styles.loginButton}
+                                onPressIn={handlePressIn}
+                                onPressOut={handlePressOut}
+                                onPress={handleLogin}
+                            >
+                                <Text style={styles.loginButtonText}>Iniciar sesión</Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </View>
+                </Animated.View>
+            )}
         </View>
     );
 };
@@ -127,7 +162,7 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#020202', // Fondo negro
+        backgroundColor: '#0d0d0d',
         justifyContent: 'center',
         alignItems: 'center',
     },
@@ -140,47 +175,47 @@ const styles = StyleSheet.create({
         fontSize: 48,
         marginRight: 50,
         fontStyle: 'italic',
-        color: '#ecdda2', // Cobre
+        color: '#f5c469',
     },
     subtitle: {
         fontSize: 36,
         marginLeft: 50,
         fontStyle: 'italic',
-        color: '#ecdda2', // Cobre
+        color: '#f5c469',
     },
     formContainer: {
         width: '85%',
-        backgroundColor: '#373739',
-        borderRadius: 5,
+        backgroundColor: '#1a1a1a',
+        borderRadius: 15,
         padding: 20,
         shadowColor: '#000',
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.6,
+        shadowRadius: 20,
+        elevation: 12,
     },
     text: {
-        color: '#ecdda2', // Dorado
+        color: '#f5c469',
         fontSize: 16,
         fontWeight: 'bold',
         marginTop: 10,
-        marginBottom: 10,   
+        marginBottom: 2,
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        borderColor: '#d1a980', // Dorado
+        borderColor: '#444',
         borderWidth: 1,
         borderRadius: 8,
         marginTop: 10,
         width: '100%',
         padding: 5,
-        backgroundColor: '#19191a', // Verde oliva
+        backgroundColor: '#1a1a1a',
     },
     input: {
         flex: 1,
         height: 40,
         paddingHorizontal: 10,
-        color: '#d1a980', // Dorado
+        color: '#d9d9d9',
     },
     icon: {
         padding: 10,
@@ -192,27 +227,37 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     loginButton: {
-        backgroundColor: '#c9b977', // Cobre
+        backgroundColor: '#d4af37',
         padding: 14,
         width: '50%',
-        borderRadius: 8,
+        borderRadius: 10,
         justifyContent: 'center',
         alignItems: 'center',
+        shadowColor: '#ff6347',
+        shadowOpacity: 1,
+        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 5 },
+        elevation: 2,
     },
     loginButtonText: {
-        color: '#FFF', // Blanco
+        color: '#000',
         fontWeight: 'bold',
     },
     successAlert: {
-        backgroundColor: '#4caf50',
+        backgroundColor: '#1db954',
         padding: 10,
         borderRadius: 5,
         marginBottom: 20,
         width: '100%',
         alignItems: 'center',
     },
+    welcomeText: {
+        color: '#d4af37',
+        fontSize: 18,
+        marginTop: 10,
+    },
     errorAlert: {
-        backgroundColor: '#f44336',
+        backgroundColor: '#ff4c4c',
         padding: 10,
         borderRadius: 5,
         marginBottom: 20,
@@ -220,7 +265,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     alertText: {
-        color: '#FFF',
+        color: '#fff',
         fontWeight: 'bold',
     },
 });
