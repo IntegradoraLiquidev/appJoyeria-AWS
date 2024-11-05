@@ -36,12 +36,12 @@ const ClienteDetails = ({ route }) => {
             const token = await AsyncStorage.getItem('token');
             if (!token) return;
 
-            const clienteResponse = await axios.get(`http://192.168.1.76:3000/api/clientes/${id}`, {
+            const clienteResponse = await axios.get(`http://192.168.1.21:3000/api/clientes/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setCliente(clienteResponse.data);
 
-            const abonosResponse = await axios.get(`http://192.168.1.76:3000/api/clientes/${id}/abonos`, {
+            const abonosResponse = await axios.get(`http://192.168.1.21:3000/api/clientes/${id}/abonos`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -74,7 +74,7 @@ const ClienteDetails = ({ route }) => {
             }
     
             await axios.put(
-                `http://192.168.1.76:3000/api/clientes/${id}/incrementarMonto`,
+                `http://192.168.1.21:3000/api/clientes/${id}/incrementarMonto`,
                 { incremento: 10 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

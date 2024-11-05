@@ -12,7 +12,8 @@ const LoginScreen = ({ navigation }) => {
     const [alertMessage, setAlertMessage] = useState(null);
     const [alertType, setAlertType] = useState('');
     const [loginSuccess, setLoginSuccess] = useState(false);
-    const [isUnlocked, setIsUnlocked] = useState(false); // Nuevo estado para el candado abierto
+    const [isUnlocked, setIsUnlocked] = useState(false);
+    const [userName, setUserName] = useState(''); // Nuevo estado para el nombre del usuario
 
     const buttonScale = useRef(new Animated.Value(1)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -40,11 +41,12 @@ const LoginScreen = ({ navigation }) => {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post('http://192.168.1.76:3000/api/usuarios/login', { email, password });
+            const response = await axios.post('http://192.168.1.21:3000/api/usuarios/login', { email, password });
             const { token } = response.data;
             await AsyncStorage.setItem('token', token);
 
             const decoded = decodeJWT(token);
+            console.log('Decoded JWT:', decoded); // Agrega este log
             if (!decoded || !decoded.role) {
                 setAlertMessage('Error al obtener el rol del usuario.');
                 setAlertType('error');
@@ -52,13 +54,16 @@ const LoginScreen = ({ navigation }) => {
                 return;
             }
 
+            // Almacenar el nombre del usuario en el estado
+            setUserName(decoded.nombre || "Usuario"); // Cambia 'nombre' según cómo lo tengas en el JWT
+
             setLoginSuccess(true);
             Animated.timing(lockAnim, {
                 toValue: 1,
                 duration: 700,
                 useNativeDriver: true,
             }).start(() => {
-                setIsUnlocked(true); // Actualizamos el estado a "abierto"
+                setIsUnlocked(true);
                 setTimeout(() => {
                     if (decoded.role === 'Administrador') {
                         navigation.reset({ index: 0, routes: [{ name: 'AdminDashboard' }] });
@@ -98,18 +103,21 @@ const LoginScreen = ({ navigation }) => {
             </Animated.View>
 
             {loginSuccess ? (
-                <Animated.View style={{
-                    transform: [
-                        {
-                            translateY: lockAnim.interpolate({
-                                inputRange: [0, 1],
-                                outputRange: [0, -20]
-                            })
-                        },
-                    ],
-                }}>
-                    <Ionicons name={isUnlocked ? "lock-open" : "lock-closed"} size={40} color="#d4af37" />
-                </Animated.View>
+                <View style={styles.lockContainer}>
+                    <Animated.View style={{
+                        transform: [
+                            {
+                                translateY: lockAnim.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0, -20]
+                                })
+                            },
+                        ],
+                    }}>
+                        <Ionicons name={isUnlocked ? "lock-open" : "lock-closed"} size={40} color="#d4af37" />
+                    </Animated.View>
+                    <Text style={styles.welcomeText}>Bienvenido, {userName}</Text>
+                </View>
             ) : (
                 <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>
                     {alertMessage && (
@@ -158,7 +166,6 @@ const LoginScreen = ({ navigation }) => {
         </View>
     );
 };
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -168,20 +175,32 @@ const styles = StyleSheet.create({
     },
     headerContainer: {
         alignItems: 'center',
-        marginBottom: 40,
-        marginTop: -90,
+        marginBottom: 60, // Se eleva el título más arriba en la pantalla
+        marginTop: -120,  // Ajuste adicional para mayor altura
     },
     title: {
-        fontSize: 48,
+        fontSize: 54,  // Tamaño más grande para el título
         marginRight: 50,
         fontStyle: 'italic',
         color: '#f5c469',
     },
     subtitle: {
-        fontSize: 36,
+        fontSize: 42,  // Tamaño más grande para el subtítulo
         marginLeft: 50,
         fontStyle: 'italic',
         color: '#f5c469',
+    },
+    lockContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        marginBottom: 20,
+    },
+    welcomeText: {
+        color: '#d4af37',
+        fontSize: 22,
+        marginTop: 10,
+        textAlign: 'center',
     },
     formContainer: {
         width: '85%',
@@ -251,11 +270,6 @@ const styles = StyleSheet.create({
         width: '100%',
         alignItems: 'center',
     },
-    welcomeText: {
-        color: '#d4af37',
-        fontSize: 18,
-        marginTop: 10,
-    },
     errorAlert: {
         backgroundColor: '#ff4c4c',
         padding: 10,
@@ -269,5 +283,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
     },
 });
+
 
 export default LoginScreen;
