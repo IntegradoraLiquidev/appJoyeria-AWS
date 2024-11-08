@@ -1,24 +1,17 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ClienteCard from './ClienteCard';
+import axios from 'axios';
 
-const TrabajadorCard = ({ trabajador, navigation }) => {
+const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
     const [showClientes, setShowClientes] = useState(false);
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const handlePress = () => {
         Animated.sequence([
-            Animated.timing(scaleAnim, {
-                toValue: 1.05,
-                duration: 150,
-                useNativeDriver: true,
-            }),
-            Animated.timing(scaleAnim, {
-                toValue: 1,
-                duration: 150,
-                useNativeDriver: true,
-            }),
+            Animated.timing(scaleAnim, { toValue: 1.05, duration: 150, useNativeDriver: true }),
+            Animated.timing(scaleAnim, { toValue: 1, duration: 150, useNativeDriver: true }),
         ]).start(() => {
             setShowClientes(!showClientes);
             if (!showClientes) {
@@ -27,10 +20,58 @@ const TrabajadorCard = ({ trabajador, navigation }) => {
         });
     };
 
+    const handleEdit = () => {
+        console.log(`Editando trabajador con id: ${trabajador.id}`);
+    };
+
+    const handleDelete = () => {
+        Alert.alert(
+            "Eliminar Trabajador",
+            "¿Estás seguro de que deseas eliminar a este trabajador?",
+            [
+                { text: "Cancelar", style: "cancel" },
+                {
+                    text: "Eliminar",
+                    onPress: () => {
+                        axios.delete(`http://192.168.1.21:3000/api/trabajadores/eliminar/${trabajador.id_usuario}`)
+                            .then(response => {
+                                console.log(response.data.message);
+                                Alert.alert("Éxito", "Trabajador eliminado exitosamente");
+                                onDelete(trabajador.id_usuario); // Actualiza la lista
+                            })
+                            .catch(error => {
+                                const errorMessage = error.response?.data?.message || 'Error desconocido al eliminar el trabajador';
+                                console.error("Error al eliminar el trabajador:", errorMessage);
+                                Alert.alert("Error", errorMessage);
+                            });
+                    },
+                    style: "destructive"
+                }
+            ]
+        );
+    };
+    
+    
+
+    const handleExport = () => {
+        console.log(`Exportando datos del trabajador con id: ${trabajador.id}`);
+    };
+
     return (
         <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
-            <View style={styles.row}>
+            <View style={styles.header}>
                 <Text style={styles.cardName}>{trabajador.nombre}</Text>
+                <View style={styles.iconContainer}>
+                    <TouchableOpacity style={styles.iconButton} onPress={handleEdit}>
+                        <Ionicons name="pencil" size={23} color="#4a90e2" /> 
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.iconButton} onPress={handleDelete}>
+                        <Ionicons name="trash" size={23} color="#e74c3c" /> 
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.iconButton} onPress={handleExport}>
+                        <Ionicons name="download" size={23} color="#27ae60" /> 
+                    </TouchableOpacity>
+                </View>
             </View>
             <View style={styles.row}>
                 <Ionicons name="briefcase" size={24} color="#f5c469" />
@@ -60,6 +101,7 @@ const TrabajadorCard = ({ trabajador, navigation }) => {
     );
 };
 
+
 const styles = StyleSheet.create({
     card: {
         backgroundColor: '#1a1a1a',
@@ -73,16 +115,26 @@ const styles = StyleSheet.create({
         elevation: 5,
         position: 'relative',
     },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    iconContainer: {
+        flexDirection: 'row',
+    },
+    iconButton: {
+        marginLeft: 10,
+    },
     row: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 10,
     },
     cardName: {
-        fontSize: 18,
+        fontSize: 23,
         fontWeight: 'bold',
         color: '#f5c469',
-        marginLeft: 8,
     },
     cardText: {
         fontSize: 16,

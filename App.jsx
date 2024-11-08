@@ -12,6 +12,7 @@ import EstadisticasScreen from './screens/Estadisticas';
 import AdminDashboard from './screens/AdminDashboard';
 import TrabajadoresDetails from './screens/TrabajadorClientes';
 import NuevoTrabajador from './screens/NuevoTrabajador';
+import EliminarTrabajador from './components/EliminarTrabajador';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

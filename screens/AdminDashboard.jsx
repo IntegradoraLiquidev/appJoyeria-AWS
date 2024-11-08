@@ -47,16 +47,6 @@ const AdminDashboard = ({ navigation }) => {
         });
     };
 
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerRight: () => (
-                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                    <Text style={styles.logoutButtonText}>Cerrar sesión</Text>
-                </TouchableOpacity>
-            ),
-        });
-    }, [navigation]);
-
     const handleSearch = (text) => {
         setSearchText(text);
         if (text === '') {
@@ -67,6 +57,11 @@ const AdminDashboard = ({ navigation }) => {
             );
             setFilteredTrabajadores(filtered);
         }
+    };
+
+    const handleDeleteTrabajador = (id) => {
+        setTrabajadores(trabajadores.filter(trabajador => trabajador.id_usuario !== id));
+        setFilteredTrabajadores(filteredTrabajadores.filter(trabajador => trabajador.id_usuario !== id));
     };
 
     return (
@@ -83,7 +78,7 @@ const AdminDashboard = ({ navigation }) => {
                 data={filteredTrabajadores.length > 0 ? filteredTrabajadores : []}
                 keyExtractor={item => item.id_usuario?.toString() || item.id.toString()}
                 renderItem={({ item }) => (
-                    <TrabajadorCard trabajador={item} navigation={navigation} />
+                    <TrabajadorCard trabajador={item} navigation={navigation} onDelete={handleDeleteTrabajador} />
                 )}
                 contentContainerStyle={styles.listContent}
             />
