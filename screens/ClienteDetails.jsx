@@ -66,6 +66,19 @@ const ClienteDetails = ({ route }) => {
             if (!token) return;
     
             const today = new Date().toISOString().split('T')[0]; // Obtén solo la fecha en formato "YYYY-MM-DD"
+    
+            // Obtén la fecha del próximo pago del cliente
+            const fechaProximoPago = cliente?.fecha_proximo_pago;
+    
+            // Verifica si hoy es antes de la fecha de pago
+            if (new Date(today) < new Date(fechaProximoPago)) {
+                Alert.alert(
+                    'Acción no permitida',
+                    `No se puede realizar esta acción hasta la fecha de pago: ${new Date(fechaProximoPago).toLocaleDateString()}.`
+                );
+                return;
+            }
+    
             const lastNoAbonoDate = await AsyncStorage.getItem(`lastNoAbonoDate_${id}`);
     
             if (lastNoAbonoDate === today) {
@@ -73,21 +86,16 @@ const ClienteDetails = ({ route }) => {
                 return;
             }
     
-            await axios.put(
-                `http://192.168.1.21:3000/api/clientes/${id}/incrementarMonto`,
-                { incremento: 10 },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-    
             await AsyncStorage.setItem(`lastNoAbonoDate_${id}`, today); // Guarda la fecha actual
     
+            // Llama a fetchDetails para obtener los detalles actualizados después del intento de no abonar
             fetchDetails();
-            Alert.alert('Monto incrementado', 'Se ha añadido 10 pesos al monto actual.');
         } catch (error) {
-            console.error('Error incrementing monto_actual:', error);
+            console.error('Error en la lógica de "No abonó":', error);
         }
     };
     
+
 
     const handlePressIn = () => {
         Animated.spring(scaleAnim, {
@@ -222,10 +230,12 @@ const styles = StyleSheet.create({
         marginVertical: 10,
     },
     sectionTitle: {
-        fontSize: 20,
-        color: '#fff',
-        marginBottom: 15,
+        fontSize: 26,
+        fontWeight: 'bold',
+        color: '#f5c469',
+        marginBottom: 12,
         textAlign: 'center',
+
     },
     clientAmountText: {
         fontSize: 20,
@@ -261,18 +271,19 @@ const styles = StyleSheet.create({
     },
     abonoText: {
         fontSize: 16,
-        color: '#fff',
+        color: '#f9f9f9',
     },
     noAbonoBackground: {
-        backgroundColor: '#ff4c4c',
+        backgroundColor: '#8b0000',
     },
     pagadoBackground: {
-        backgroundColor: '#1db954',
+        backgroundColor: '#006400',
     },
     noAbonoButton: {
         backgroundColor: '#ff6347',
         paddingVertical: 10,
         borderRadius: 10,
+        justifyContent: 'center',
         alignItems: 'center',
         marginVertical: 15,
         shadowColor: '#ff6347',
@@ -285,6 +296,9 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
     },
+    hiddeTitle: {
+        color: '#b1b1b1'
+    }
 });
 
 export default ClienteDetails;

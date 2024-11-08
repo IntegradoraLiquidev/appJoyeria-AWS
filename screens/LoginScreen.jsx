@@ -41,7 +41,7 @@ const LoginScreen = ({ navigation }) => {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post('http://192.168.1.21:3000/api/usuarios/login', { email, password });
+            const response = await axios.post('http://192.168.1.21:3000/api/auth/login', { email, password });
             const { token } = response.data;
             await AsyncStorage.setItem('token', token);
 
@@ -116,7 +116,7 @@ const LoginScreen = ({ navigation }) => {
                     }}>
                         <Ionicons name={isUnlocked ? "lock-open" : "lock-closed"} size={40} color="#d4af37" />
                     </Animated.View>
-                    <Text style={styles.welcomeText}>Bienvenido, {userName}</Text>
+                    <Text style={styles.welcomeText}>Hola, {userName}</Text>
                 </View>
             ) : (
                 <Animated.View style={[styles.formContainer, { opacity: fadeAnim }]}>

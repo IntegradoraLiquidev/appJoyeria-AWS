@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
         letterSpacing: 0.8,
     },
     logoutIcon: {
-        padding: 12,
+        padding: 5,
         borderRadius: 12,
         backgroundColor: '#282828',
         shadowColor: '#000',

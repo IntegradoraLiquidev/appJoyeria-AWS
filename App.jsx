@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { Animated, TouchableOpacity, StyleSheet } from 'react-native';
+import { Animated, TouchableOpacity, StyleSheet, Text } from 'react-native';
 import LoginScreen from './screens/LoginScreen';
 import WorkerDashboard from './screens/WorkerDashboard';
 import NuevoCliente from './screens/NuevoCliente';
@@ -12,11 +12,6 @@ import EstadisticasScreen from './screens/Estadisticas';
 import AdminDashboard from './screens/AdminDashboard';
 import TrabajadoresDetails from './screens/TrabajadorClientes';
 import NuevoTrabajador from './screens/NuevoTrabajador';
-import EditarTrabajador from './components/EditarTrabajador';
-import EliminarTrabajador from './components/EliminarTrabajador';
-import EditarClientes from './components/EditarClientes';
-import EstadisticasGraficas from './components/EstadisticasGraficas';
-import EstadisticasTablas from './components/EstadisticasTablas';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -24,7 +19,7 @@ const Tab = createBottomTabNavigator();
 function TabIcon({ name, color, size, animatedValue }) {
     const scale = animatedValue.interpolate({
         inputRange: [0, 1],
-        outputRange: [1, 1.5],
+        outputRange: [1, 1.3],
     });
 
     return (
@@ -36,8 +31,8 @@ function TabIcon({ name, color, size, animatedValue }) {
 
 function WorkerTabs() {
     const animatedValues = useRef({
-        Inicio: new Animated.Value(0),
-        'Agregar Cliente': new Animated.Value(0),
+        Home: new Animated.Value(0),
+        'Add Client': new Animated.Value(0),
     }).current;
 
     const handleTabPress = (routeName) => {
@@ -55,15 +50,20 @@ function WorkerTabs() {
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ color, size }) => {
                     let iconName;
-                    if (route.name === 'Inicio') {
+                    if (route.name === 'Home') {
                         iconName = 'home';
-                    } else if (route.name === 'Agregar Cliente') {
-                        iconName = 'add-circle';
+                    } else if (route.name === 'Add Client') {
+                        iconName = 'person-add';
                     }
                     return <TabIcon name={iconName} color={color} size={size} animatedValue={animatedValues[route.name]} />;
                 },
-                tabBarActiveTintColor: '#FFD700', // Color dorado
-                tabBarInactiveTintColor: '#B0C4DE', // Color de texto inactivo
+                tabBarLabel: ({ focused, color }) => (
+                    <Text style={{ color, fontSize: focused ? 12 : 10 }}>
+                        {route.name === 'Home' ? 'Inicio' : 'Nuevo Cliente'}
+                    </Text>
+                ),
+                tabBarActiveTintColor: '#FFD700',
+                tabBarInactiveTintColor: '#B0C4DE',
                 tabBarStyle: styles.tabBar,
                 tabBarButton: (props) => (
                     <TouchableOpacity
@@ -72,12 +72,13 @@ function WorkerTabs() {
                             handleTabPress(route.name);
                             props.onPress();
                         }}
-                        style={styles.tabButton} // Estilo para el botón de la pestaña
+                        style={styles.tabButton}
                     />
                 ),
-            })}>
-            <Tab.Screen name="Inicio" component={WorkerDashboard} />
-            <Tab.Screen name="Agregar Cliente" component={NuevoCliente} />
+            })}
+        >
+            <Tab.Screen name="Home" component={WorkerDashboard} options={{ headerShown: false }} />
+            <Tab.Screen name="Add Client" component={NuevoCliente} options={{ headerShown: false }} />
         </Tab.Navigator>
     );
 }
@@ -88,22 +89,28 @@ function AdminTabs() {
             screenOptions={({ route }) => ({
                 tabBarIcon: ({ color, size }) => {
                     let iconName;
-                    if (route.name === 'Inicio') {
+                    if (route.name === 'Home') {
                         iconName = 'home';
-                    } else if (route.name === 'Agregar Trabajador') {
-                        iconName = 'add-circle';
-                    } else if (route.name === 'Estadisticas') {
-                        iconName = 'stats-chart';
+                    } else if (route.name === 'Add Worker') {
+                        iconName = 'person-add';
+                    } else if (route.name === 'Statistics') {
+                        iconName = 'bar-chart';
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
-                tabBarActiveTintColor: '#FFD700', // Color dorado
-                tabBarInactiveTintColor: '#B0C4DE', // Color de texto inactivo
+                tabBarLabel: ({ focused, color }) => (
+                    <Text style={{ color, fontSize: focused ? 12 : 10 }}>
+                        {route.name === 'Home' ? 'Inicio' : route.name === 'Add Worker' ? 'Nuevo Trabajador' : 'Estadísticas'}
+                    </Text>
+                ),
+                tabBarActiveTintColor: '#FFD700',
+                tabBarInactiveTintColor: '#B0C4DE',
                 tabBarStyle: styles.tabBar,
-            })}>
-            <Tab.Screen name="Inicio" component={AdminDashboard} />
-            <Tab.Screen name="Agregar Trabajador" component={NuevoTrabajador} />
-            <Tab.Screen name="Estadisticas" component={EstadisticasScreen} />
+            })}
+        >
+            <Tab.Screen name="Home" component={AdminDashboard} options={{ headerShown: false }} />
+            <Tab.Screen name="Add Worker" component={NuevoTrabajador} options={{ headerShown: false }} />
+            <Tab.Screen name="Statistics" component={EstadisticasScreen} options={{ headerShown: false }} />
         </Tab.Navigator>
     );
 }
@@ -111,15 +118,16 @@ function AdminTabs() {
 const styles = StyleSheet.create({
     tabBar: {
         backgroundColor: '#1c1c1e',
-        height: 60,
-        borderTopWidth: 0, // Eliminar el borde superior
-        elevation: 5, // Sombra
+        height: 65,
+        paddingTop: 5,
+        borderTopWidth: 0,
+        elevation: 5,
     },
     tabButton: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 10,
+        paddingVertical: 8,
     },
 });
 
@@ -127,48 +135,15 @@ export default function App() {
     return (
         <NavigationContainer>
             <Stack.Navigator initialRouteName="Login">
-                <Stack.Screen
-                    name="Login"
-                    component={LoginScreen}
-                    options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                    name="AdminDashboard"
-                    component={AdminTabs}
-                    options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                    name="WorkerDashboard"
-                    component={WorkerTabs}
-                    options={{ headerShown: false }}
-                />
-                <Stack.Screen
-                    name="Detalles del cliente"
-                    component={ClienteDetails}
-                    options={{ headerShown: true }}
-                />
-                <Stack.Screen
-                    name="TrabajadorClientes"
-                    component={TrabajadoresDetails}
-                    options={{ headerShown: true }}
-                />
-                <Stack.Screen
-                    name="EditarTrabajador"
-                    component={EditarTrabajador}
-                    options={{ headerShown: true }}
-                />
-                <Stack.Screen
-                    name="EliminarTrabajador"
-                    component={EliminarTrabajador}
-                    options={{ headerShown: true }}
-                />
-                <Stack.Screen
-                    name="EditarClientes"
-                    component={EditarClientes}
-                    options={{ headerShown: true }}
-                />
-                <Stack.Screen name="EstadisticasTablas" component={EstadisticasTablas} options={{ title: 'Estadísticas en Tablas' }} />
-                <Stack.Screen name="EstadisticasGraficas" component={EstadisticasGraficas} options={{ title: 'Estadísticas en Gráficas' }} />
+                <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+                <Stack.Screen name="AdminDashboard" component={AdminTabs} options={{ headerShown: false }} />
+                <Stack.Screen name="WorkerDashboard" component={WorkerTabs} options={{ headerShown: false }} />
+                <Stack.Screen name="Detalles del cliente" component={ClienteDetails} options={{
+                    headerStyle: { backgroundColor: '#0d0d0d' },
+                    headerTintColor: '#fff',
+                }} />
+                <Stack.Screen name="TrabajadorClientes" component={TrabajadoresDetails} options={{ headerShown: true }} />
+                <Stack.Screen name="EstadisticasTablas" component={EstadisticasScreen} options={{ title: 'Estadísticas' }} />
             </Stack.Navigator>
         </NavigationContainer>
     );

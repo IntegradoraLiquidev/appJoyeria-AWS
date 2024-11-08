@@ -83,13 +83,15 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     label: {
-        fontSize: 18,
+        fontSize: 17,
         fontWeight: '600',
         marginBottom: 12,
+        marginTop: 12,
+        
         color: '#fff', // Dorado elegante
     },
     input: {
-        height: 50,
+        height: 45,
         borderWidth: 1,
         borderRadius: 10,
         borderColor: '#d1a980',
