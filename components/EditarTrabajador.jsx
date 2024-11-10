@@ -1,58 +1,84 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
+import axios from 'axios';
 
-const EditarTrabajador = () => {
-  
+const EditarTrabajador = ({ route, navigation }) => {
+    const { trabajador, onEdit } = route.params;
+    const [editedTrabajador, setEditedTrabajador] = useState({ ...trabajador });
+    const [role, setRole] = useState(editedTrabajador.rol);
+    const [open, setOpen] = useState(false);
+    const [items, setItems] = useState([
+        { label: 'Administrador', value: 'Administrador' },
+        { label: 'Trabajador', value: 'Trabajador' }
+    ]);
+
+    const handleSaveChanges = () => {
+        axios.put(`http://192.168.1.68:3000/api/trabajadores/editar/${trabajador.id_usuario}`, {
+            ...editedTrabajador,
+            rol: role
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    Alert.alert("Éxito", "Trabajador actualizado correctamente");
+                    onEdit({ ...editedTrabajador, rol: role });
+                    navigation.goBack();
+                }
+            })
+            .catch(error => {
+                const errorMessage = error.response?.data?.message || 'Error desconocido al actualizar el trabajador';
+                Alert.alert("Error", errorMessage);
+            });
+    };
 
     return (
         <View style={styles.container}>
-            <View style={styles.formContainer}>
-                <Text style={styles.header}>Editar Trabajador</Text>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Nombre:</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={name}
-                        onChangeText={setName}
-                    />
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Apellido:</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={name}
-                        onChangeText={setApellido}
-                    />
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Rol:</Text>
-                    <DropDownPicker
-                        open={open}
-                        value={role}
-                        items={items}
-                        setOpen={setOpen}
-                        setValue={setRole}
-                        setItems={setItems}
-                        style={styles.input}
-                        dropDownContainerStyle={styles.dropdown}
-                    />
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Email:</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={email}
-                        onChangeText={setEmail}
-                    />
-                </View>
-                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                    <Text style={styles.saveButtonText}>Guardar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                    <Text style={styles.cancelButtonText}>Cerrar</Text>
-                </TouchableOpacity>
-            </View>
+            <TextInput
+                style={styles.input}
+                placeholder="Nombre"
+                value={editedTrabajador.nombre}
+                onChangeText={(text) => setEditedTrabajador({ ...editedTrabajador, nombre: text })}
+                placeholderTextColor="#999"
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Apellidos"
+                value={editedTrabajador.apellidos}
+                onChangeText={(text) => setEditedTrabajador({ ...editedTrabajador, apellidos: text })}
+                placeholderTextColor="#999"
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Correo Electrónico"
+                value={editedTrabajador.email}
+                onChangeText={(text) => setEditedTrabajador({ ...editedTrabajador, email: text })}
+                keyboardType="email-address"
+                placeholderTextColor="#999"
+            />
+            <TextInput
+                style={styles.input}
+                placeholder="Contraseña"
+                secureTextEntry
+                value={editedTrabajador.password}
+                onChangeText={(text) => setEditedTrabajador({ ...editedTrabajador, password: text })}
+                placeholderTextColor="#999"
+            />
+
+            <DropDownPicker
+                open={open}
+                value={role}
+                items={items}
+                setOpen={setOpen}
+                setValue={setRole}
+                setItems={setItems}
+                placeholder="Selecciona el rol"
+                style={styles.dropdown}
+                dropDownContainerStyle={styles.dropdownContainer}
+            />
+
+            <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+                <Text style={styles.saveButtonText}>Guardar Cambios</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -60,66 +86,41 @@ const EditarTrabajador = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo oscuro y transparente
+        padding: 16,
+        backgroundColor: '#101010',
     },
-    formContainer: {
-        width: '90%',
-        padding: 20,
-        backgroundColor: '#2c2c2e', // Fondo del formulario
-        borderRadius: 10,
-        shadowColor: '#000',
-        shadowOpacity: 0.2,
-        shadowRadius: 5,
-        elevation: 5,
-    },
-    header: {
-        fontSize: 24,
-        marginBottom: 20,
-        color: '#fff', // Color de texto
+    title: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#f5c469',
         textAlign: 'center',
-    },
-    inputContainer: {
-        marginBottom: 15,
-    },
-    label: {
-        color: '#fff', // Color de texto
-        marginBottom: 5,
+        marginBottom: 20,
     },
     input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
-        borderRadius: 5,
-        backgroundColor: '#444', // Fondo de entrada
-        color: '#fff', // Color de texto
+        backgroundColor: '#1c1c1e',
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 15,
+        color: '#fff',
     },
     dropdown: {
-        backgroundColor: '#444', // Fondo del dropdown
-        borderColor: '#ccc',
+        marginBottom: 15,
+        borderRadius: 10,
+    },
+    dropdownContainer: {
+        borderRadius: 10,
     },
     saveButton: {
-        backgroundColor: '#ff4757', // Color de fondo del botón
-        padding: 10,
-        borderRadius: 5,
+        backgroundColor: '#d4af37',
+        paddingVertical: 12,
+        borderRadius: 10,
         alignItems: 'center',
         marginTop: 20,
     },
     saveButtonText: {
-        color: '#fff', // Color del texto del botón
+        color: '#000',
         fontWeight: 'bold',
-    },
-    cancelButton: {
-        backgroundColor: '#ccc', // Color de fondo del botón de cerrar
-        padding: 10,
-        borderRadius: 5,
-        alignItems: 'center',
-        marginTop: 10,
-    },
-    cancelButtonText: {
-        color: '#000', // Color del texto del botón de cerrar
-        fontWeight: 'bold',
+        fontSize: 18,
     },
 });
 

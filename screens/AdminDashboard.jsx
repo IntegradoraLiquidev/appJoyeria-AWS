@@ -16,7 +16,7 @@ const AdminDashboard = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (token) {
-                const response = await axios.get('http://192.168.1.68:3000/api/trabajadores', {
+                const response = await axios.get('http://192.168.1.68:3000/api/trabajadores/conteo', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
