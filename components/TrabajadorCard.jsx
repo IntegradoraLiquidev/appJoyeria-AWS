@@ -1,11 +1,20 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Animated, Modal, TextInput, Alert, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import ClienteCard from './ClienteCard';
 import axios from 'axios';
+import DropDownPicker from 'react-native-dropdown-picker';
 
-const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
+const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
     const [showClientes, setShowClientes] = useState(false);
+    const [isEditModalVisible, setEditModalVisible] = useState(false);
+    const [editedTrabajador, setEditedTrabajador] = useState({ ...trabajador });
+    const [open, setOpen] = useState(false);
+    const [role, setRole] = useState(editedTrabajador.rol);
+    const [items, setItems] = useState([
+        { label: 'Administrador', value: 'Administrador' },
+        { label: 'Trabajador', value: 'Trabajador' }
+    ]);
+
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     const handlePress = () => {
@@ -21,7 +30,8 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
     };
 
     const handleEdit = () => {
-        console.log(`Editando trabajador con id: ${trabajador.id}`);
+        setEditedTrabajador({ ...trabajador });
+        setEditModalVisible(true);
     };
 
     const handleDelete = () => {
@@ -33,15 +43,13 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
                 {
                     text: "Eliminar",
                     onPress: () => {
-                        axios.delete(`http://192.168.1.21:3000/api/trabajadores/eliminar/${trabajador.id_usuario}`)
+                        axios.delete(`http://192.168.1.68:3000/api/trabajadores/eliminar/${trabajador.id_usuario}`)
                             .then(response => {
-                                console.log(response.data.message);
                                 Alert.alert("Éxito", "Trabajador eliminado exitosamente");
-                                onDelete(trabajador.id_usuario); // Actualiza la lista
+                                onDelete(trabajador.id_usuario);
                             })
                             .catch(error => {
                                 const errorMessage = error.response?.data?.message || 'Error desconocido al eliminar el trabajador';
-                                console.error("Error al eliminar el trabajador:", errorMessage);
                                 Alert.alert("Error", errorMessage);
                             });
                     },
@@ -50,8 +58,26 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
             ]
         );
     };
-    
-    
+
+    const handleSaveChanges = () => {
+        axios.put(`http://192.168.1.68:3000/api/trabajadores/editar/${trabajador.id_usuario}`, {
+            ...editedTrabajador,
+            rol: role
+        })
+            .then(response => {
+                if (response.status === 200) {
+                    Alert.alert("Éxito", "Trabajador actualizado correctamente");
+                    if (onEdit) {
+                        onEdit({ ...editedTrabajador, rol: role });
+                    }
+                    setEditModalVisible(false);
+                }
+            })
+            .catch(error => {
+                const errorMessage = error.response?.data?.message || 'Error desconocido al actualizar el trabajador';
+                Alert.alert("Error", errorMessage);
+            });
+    };
 
     const handleExport = () => {
         console.log(`Exportando datos del trabajador con id: ${trabajador.id}`);
@@ -63,13 +89,13 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
                 <Text style={styles.cardName}>{trabajador.nombre}</Text>
                 <View style={styles.iconContainer}>
                     <TouchableOpacity style={styles.iconButton} onPress={handleEdit}>
-                        <Ionicons name="pencil" size={23} color="#4a90e2" /> 
+                        <Ionicons name="pencil" size={23} color="#4a90e2" />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.iconButton} onPress={handleDelete}>
-                        <Ionicons name="trash" size={23} color="#e74c3c" /> 
+                        <Ionicons name="trash" size={23} color="#e74c3c" />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.iconButton} onPress={handleExport}>
-                        <Ionicons name="download" size={23} color="#27ae60" /> 
+                        <Ionicons name="download" size={23} color="#27ae60" />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -97,6 +123,62 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete }) => {
                     ))}
                 </View>
             )}
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isEditModalVisible}
+                onRequestClose={() => setEditModalVisible(false)}
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={styles.modalView}>
+                        <Text style={styles.modalTitle}>Editar Trabajador</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Nombre"
+                            value={editedTrabajador.nombre}
+                            onChangeText={(text) => setEditedTrabajador({ ...editedTrabajador, nombre: text })}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Apellidos"
+                            value={editedTrabajador.apellidos}
+                            onChangeText={(text) => setEditedTrabajador({ ...editedTrabajador, apellidos: text })}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Email"
+                            value={editedTrabajador.email}
+                            onChangeText={(text) => setEditedTrabajador({ ...editedTrabajador, email: text })}
+                        />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Password"
+                            secureTextEntry
+                            value={editedTrabajador.password}
+                            onChangeText={(text) => setEditedTrabajador({ ...editedTrabajador, password: text })}
+                        />
+
+                        <DropDownPicker
+                            open={open}
+                            value={role}
+                            items={items}
+                            setOpen={setOpen}
+                            setValue={setRole}
+                            setItems={setItems}
+                            placeholder="Selecciona el rol"
+                            style={styles.dropdown}
+                        />
+
+                        <TouchableOpacity style={styles.saveButton} onPress={handleSaveChanges}>
+                            <Text style={styles.saveButtonText}>Guardar Cambios</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.cancelButton} onPress={() => setEditModalVisible(false)}>
+                            <Text style={styles.cancelButtonText}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
         </Animated.View>
     );
 };
@@ -157,6 +239,45 @@ const styles = StyleSheet.create({
     },
     clientesContainer: {
         marginTop: 10,
+    },
+    modalView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalTitle: {
+        fontSize: 20,
+        marginBottom: 20,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
+    input: {
+        width: 250,
+        height: 40,
+        backgroundColor: '#fff',
+        marginBottom: 15,
+        borderRadius: 5,
+        paddingHorizontal: 10,
+    },
+    saveButton: {
+        backgroundColor: '#4a90e2',
+        padding: 10,
+        borderRadius: 5,
+        marginBottom: 10,
+    },
+    saveButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
+    cancelButton: {
+        backgroundColor: '#e74c3c',
+        padding: 10,
+        borderRadius: 5,
+    },
+    cancelButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
     },
 });
 

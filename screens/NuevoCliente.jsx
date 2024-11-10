@@ -30,7 +30,7 @@ const NuevoCliente = ({ navigation }) => {
     useEffect(() => {
         const fetchCategorias = async () => {
             try {
-                const response = await axios.get('http://192.168.1.21:3000/api/categorias');
+                const response = await axios.get('http://192.168.1.68:3000/api/categorias');
                 const categorias = response.data.map((cat) => ({
                     label: cat.nombre,
                     value: cat.id_categoria,
@@ -47,7 +47,7 @@ const NuevoCliente = ({ navigation }) => {
     const fetchProductosPorCategoria = async (categoriaId) => {
         try {
             const response = await axios.get(
-                `http://192.168.1.21:3000/api/productos?categoria=${categoriaId}`
+                `http://192.168.1.68:3000/api/productos?categoria=${categoriaId}`
             );
             const productos = response.data.map((prod) => ({
                 label: prod.nombre,
@@ -76,7 +76,7 @@ const NuevoCliente = ({ navigation }) => {
             if (!token) throw new Error('No se encontró un token de autenticación');
 
             await axios.post(
-                'http://192.168.1.21:3000/api/clientes',
+                'http://192.168.1.68:3000/api/clientes',
                 {
                     nombre,
                     direccion,

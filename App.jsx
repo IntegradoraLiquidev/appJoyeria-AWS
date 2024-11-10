@@ -13,6 +13,7 @@ import AdminDashboard from './screens/AdminDashboard';
 import TrabajadoresDetails from './screens/TrabajadorClientes';
 import NuevoTrabajador from './screens/NuevoTrabajador';
 import EliminarTrabajador from './components/EliminarTrabajador';
+import EditarTrabajador from './components/EditarTrabajador';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();

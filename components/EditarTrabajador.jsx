@@ -2,27 +2,8 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 
-const EditarTrabajador = ({ worker, onSave, onClose }) => {
-    const [name, setName] = useState(worker.nombre);
-    const [role, setRole] = useState(worker.role);
-    const [email, setEmail] = useState(worker.email);
-
-    const [open, setOpen] = useState(false);
-    const [items, setItems] = useState([
-        { label: 'Admin', value: 'admin' },
-        { label: 'Trabajador', value: 'trabajador' },
-    ]);
-
-    const handleSave = () => {
-        const updatedWorker = {
-            ...worker,
-            nombre: name,
-            role,
-            email,
-        };
-        onSave(updatedWorker);
-        onClose();
-    };
+const EditarTrabajador = () => {
+  
 
     return (
         <View style={styles.container}>
@@ -34,6 +15,14 @@ const EditarTrabajador = ({ worker, onSave, onClose }) => {
                         style={styles.input}
                         value={name}
                         onChangeText={setName}
+                    />
+                </View>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Apellido:</Text>
+                    <TextInput
+                        style={styles.input}
+                        value={name}
+                        onChangeText={setApellido}
                     />
                 </View>
                 <View style={styles.inputContainer}>
