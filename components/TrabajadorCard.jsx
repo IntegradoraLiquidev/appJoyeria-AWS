@@ -16,7 +16,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
         ]).start(() => {
             setShowClientes(!showClientes);
             if (!showClientes) {
-                navigation.navigate('TrabajadorClientes', { id: trabajador.id });
+                navigation.navigate('TrabajadorClientes', { id: trabajador.id_usuario });
             }
         });
     };
@@ -37,7 +37,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
     };
 
     const confirmDelete = () => {
-        axios.delete(`http://192.168.1.68:3000/api/trabajadores/eliminar/${trabajador.id_usuario}`)
+        axios.delete(`http://192.168.1.16:3000/api/trabajadores/eliminar/${trabajador.id_usuario}`)
             .then(response => {
                 handleDeleteModalClose();
                 onDelete(trabajador.id_usuario);
@@ -55,7 +55,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
     return (
         <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
             <View style={styles.header}>
-                <Text style={styles.cardName}>{trabajador.nombre}</Text>
+                <Text style={styles.cardName}>{trabajador.nombre} {trabajador.apellidos}</Text>
                 <View style={styles.iconContainer}>
                     <TouchableOpacity style={styles.iconButton} onPress={handleEdit}>
                         <Ionicons name="pencil" size={23} color="#4a90e2" />
@@ -81,7 +81,6 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
                 <Text style={styles.detailsButtonText}> Ver clientes</Text>
             </TouchableOpacity>
 
-            {/* Modal de eliminación con animación de "pop" */}
             <Modal
                 transparent
                 visible={isDeleteModalVisible}
@@ -136,7 +135,7 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     cardName: {
-        fontSize: 23,
+        fontSize: 20,
         fontWeight: 'bold',
         color: '#f5c469',
     },

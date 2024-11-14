@@ -14,7 +14,7 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
         if (diasRestantes === 0) return { texto: "Hoy es el día de pago", esAtrasado: false };
         if (diasRestantes === 1) return { texto: "Mañana es el día de pago", esAtrasado: false };
         if (diasRestantes < 0) return { texto: `Atrasado ${Math.abs(diasRestantes)} día(s)`, esAtrasado: true };
-        
+
         return { texto: `Faltan ${diasRestantes} días para el pago`, esAtrasado: false };
     };
 
@@ -35,6 +35,22 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
         });
     };
 
+    // Handlers for ClienteCard actions
+    const handleEdit = (cliente) => {
+        console.log(`Editando cliente con ID: ${cliente.id_cliente}`);
+        // Implementa la lógica para editar el cliente
+    };
+
+    const handleDelete = () => {
+        onDelete(cliente.id_cliente); // Pasa solo el ID
+    };
+
+    const handleExport = (cliente) => {
+        console.log(`Exportando datos de cliente con ID: ${cliente.id_cliente}`);
+        // Implementa la lógica para exportar los datos del cliente
+    };
+
+
     const { texto: etiquetaPago, esAtrasado } = calcularDiasRestantes(cliente.fecha_proximo_pago);
 
     return (
@@ -51,7 +67,6 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
             )}
 
             <Text style={styles.cardName}>{cliente.nombre}</Text>
-
             <View style={styles.infoContainer}>
                 <Icon name="location-on" size={18} color="#f5c469" />
                 <Text style={styles.cardText}>{cliente.direccion}</Text>
@@ -71,15 +86,18 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
 
             {isAdmin && (
                 <View style={styles.actionsContainer}>
-                    <TouchableOpacity onPress={onEdit} style={styles.actionButton}>
-                        <Icon name="edit" size={28} color="#8ecae6" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => onDelete(cliente)} style={styles.actionButton}>
-                        <Icon name="delete" size={28} color="#e63946" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => onExport(cliente)} style={styles.actionButton}>
-                        <Icon name="download" size={28} color="#06d6a0" />
-                    </TouchableOpacity>
+                    <View style={styles.actionsContainer}>
+                        <TouchableOpacity onPress={() => handleEdit(cliente)} style={styles.actionButton}>
+                            <Icon name="edit" size={28} color="#8ecae6" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={handleDelete} style={styles.actionButton}>
+                            <Icon name="delete" size={28} color="#e63946" />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => handleExport(cliente)} style={styles.actionButton}>
+                            <Icon name="download" size={28} color="#06d6a0" />
+                        </TouchableOpacity>
+                    </View>
+
                 </View>
             )}
         </Animated.View>

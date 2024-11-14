@@ -22,7 +22,7 @@ const WorkerDashboard = ({ navigation }) => {
         const fetchClientes = async () => {
             try {
                 const token = await AsyncStorage.getItem('token');
-                const response = await axios.get('http://192.168.1.68:3000/api/clientes', {
+                const response = await axios.get('http://192.168.1.16:3000/api/clientes', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -258,7 +258,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#484848',
     },
     accordionTitle: {
-        fontSize: 16,
+        fontSize: 18,
         color: '#fff',
         fontWeight: 'bold',
     },
