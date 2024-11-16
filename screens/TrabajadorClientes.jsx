@@ -17,29 +17,29 @@ const TrabajadorClientes = ({ route }) => {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const rotateAnim = useRef(new Animated.Value(0)).current;
 
+    const fetchClientes = async () => {
+        try {
+            const response = await axios.get(`http://192.168.1.73:3000/api/clientes/clientes/${id}`);
+            const clientesPendientes = response.data
+                .filter(cliente => cliente.monto_actual > 0)
+                .sort((a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago));
+
+            setClientes(clientesPendientes);
+            setFilteredClientes(clientesPendientes);
+
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 500,
+                useNativeDriver: true,
+            }).start();
+        } catch (error) {
+            console.error('Error al obtener los clientes:', error);
+        }
+    };
+
     useEffect(() => {
-        const fetchClientes = async () => {
-            try {
-                const response = await axios.get(`http://192.168.1.73:3000/api/clientes/clientes/${id}`);
-                const clientesPendientes = response.data
-                    .filter(cliente => cliente.monto_actual > 0)
-                    .sort((a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago));
-
-                setClientes(clientesPendientes);
-                setFilteredClientes(clientesPendientes);
-
-                Animated.timing(fadeAnim, {
-                    toValue: 1,
-                    duration: 500,
-                    useNativeDriver: true,
-                }).start();
-            } catch (error) {
-                console.error('Error al obtener los clientes:', error);
-            }
-        };
-
         fetchClientes();
-    }, [id, fadeAnim]);
+    }, [id]);
 
     useEffect(() => {
         const filtered = clientes.filter((cliente) =>
@@ -76,9 +76,8 @@ const TrabajadorClientes = ({ route }) => {
     });
 
     const handleEdit = (cliente) => {
-        navigation.navigate('EditarClientes', { cliente });
+        navigation.navigate('EditarClientes', { cliente, refreshClientes: fetchClientes });
     };
-
 
 
     const handleDelete = async (clienteId) => {

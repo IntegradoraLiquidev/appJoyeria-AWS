@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import DropDownPicker from 'react-native-dropdown-picker';
 
 const EditarClientes = ({ route }) => {
-    const { cliente } = route.params || {}; // Obtén el cliente de route.params
+    const { cliente, refreshClientes } = route.params || {};
 
     const [nombre, setNombre] = useState(cliente?.nombre || '');
     const [direccion, setDireccion] = useState(cliente?.direccion || '');
@@ -13,9 +14,11 @@ const EditarClientes = ({ route }) => {
     const [formaPago, setFormaPago] = useState(cliente?.forma_pago || '');
     const [montoActual, setMontoActual] = useState(cliente?.monto_actual?.toString() || '0');
 
+    const [open, setOpen] = useState(false);
+
     const handleUpdateCliente = async () => {
         try {
-            const token = await AsyncStorage.getItem('token'); // Obtén el token de AsyncStorage
+            const token = await AsyncStorage.getItem('token');
             if (!token) {
                 alert('Error: no se encontró el token de autenticación');
                 return;
@@ -40,44 +43,157 @@ const EditarClientes = ({ route }) => {
 
             const data = await response.json();
             if (response.ok) {
-                alert('Cliente actualizado con éxito');
+                Alert.alert('Éxito', 'Cliente actualizado con éxito');
+                if (refreshClientes) refreshClientes();
             } else {
-                alert(`Error: ${data.error || 'No se pudo actualizar el cliente'}`);
+                alert(data.error);
             }
         } catch (error) {
             console.error('Error al actualizar el cliente:', error);
-            alert(`Error al actualizar el cliente: ${error.message}`);
+            Alert.alert('Error', `Error al actualizar el cliente: ${error.message}`);
         }
     };
 
     return cliente ? (
+
         <View style={styles.container}>
-            <Text>Editar cliente: {nombre}</Text>
-            <TextInput placeholder="Nombre" value={nombre} onChangeText={setNombre} style={styles.input} />
-            <TextInput placeholder="Dirección" value={direccion} onChangeText={setDireccion} style={styles.input} />
-            <TextInput placeholder="Teléfono" value={telefono} onChangeText={setTelefono} style={styles.input} />
-            <TextInput placeholder="Quilates" value={quilates} onChangeText={setQuilates} style={styles.input} keyboardType="numeric" />
-            <TextInput placeholder="Precio Total" value={precioTotal} onChangeText={setPrecioTotal} style={styles.input} keyboardType="numeric" />
-            <TextInput placeholder="Forma de Pago" value={formaPago} onChangeText={setFormaPago} style={styles.input} />
-            <TextInput placeholder="Monto Actual" value={montoActual} onChangeText={setMontoActual} style={styles.input} keyboardType="numeric" />
-            <Button title="Actualizar Cliente" onPress={handleUpdateCliente} />
+            <ScrollView>
+                <Text style={styles.label}>Nombre del Cliente:</Text>
+                <TextInput
+                    placeholder="Nombre"
+                    value={nombre}
+                    onChangeText={setNombre}
+                    style={styles.input}
+                    placeholderTextColor="#999"
+                />
+
+                <Text style={styles.label}>Dirección del Cliente:</Text>
+                <TextInput
+                    placeholder="Dirección"
+                    value={direccion}
+                    onChangeText={setDireccion}
+                    style={styles.input}
+                    placeholderTextColor="#999"
+                />
+
+                <Text style={styles.label}>Teléfono del Cliente:</Text>
+                <TextInput
+                    placeholder="Teléfono"
+                    value={telefono}
+                    onChangeText={setTelefono}
+                    style={styles.input}
+                    keyboardType="phone-pad"
+                    placeholderTextColor="#999"
+                />
+
+                <Text style={styles.label}>Quilates del Producto:</Text>
+                <TextInput
+                    placeholder="Quilates"
+                    value={quilates}
+                    onChangeText={setQuilates}
+                    style={styles.input}
+                    keyboardType="numeric"
+                    placeholderTextColor="#999"
+                />
+
+                <Text style={styles.label}>Precio Total del Producto:</Text>
+                <TextInput
+                    placeholder="Precio Total"
+                    value={precioTotal}
+                    onChangeText={setPrecioTotal}
+                    style={styles.input}
+                    keyboardType="numeric"
+                    placeholderTextColor="#999"
+                />
+
+                <Text style={styles.label}>Forma de Pago:</Text>
+                <DropDownPicker
+                    open={open}
+                    value={formaPago}
+                    items={[
+                        { label: 'Diario', value: 'Diario' },
+                        { label: 'Semanal', value: 'Semanal' },
+                    ]}
+                    setOpen={setOpen}
+                    setValue={setFormaPago}
+                    style={styles.dropdown}
+                    dropDownContainerStyle={styles.dropdownContainer}
+                    placeholder="Selecciona una opción"
+                    placeholderTextColor="#999"
+                />
+
+                <Text style={styles.label}>Monto Actual a Pagar:</Text>
+                <TextInput
+                    placeholder="Monto Actual"
+                    value={montoActual}
+                    onChangeText={setMontoActual}
+                    style={styles.input}
+                    keyboardType="numeric"
+                    placeholderTextColor="#999"
+                />
+
+                <TouchableOpacity style={styles.saveButton} onPress={handleUpdateCliente}>
+                    <Text style={styles.saveButtonText}>Actualizar Cliente</Text>
+                </TouchableOpacity>
+            </ScrollView>
         </View>
     ) : (
-        <Text>Cargando cliente...</Text>
+        <Text style={styles.loadingText}>Cargando cliente...</Text>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        padding: 16
+        flex: 1,
+        paddingHorizontal: 24,
+        paddingVertical: 16,
+        backgroundColor: '#101010',
+    },
+    label: {
+        fontSize: 16,
+        color: '#f5c469',
+        marginBottom: 8,
+        fontWeight: '600',
     },
     input: {
-        height: 40,
-        borderColor: 'gray',
-        borderWidth: 1,
-        marginBottom: 10,
-        paddingHorizontal: 10
-    }
+        backgroundColor: '#1c1c1e',
+        borderRadius: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        marginBottom: 20,
+        color: '#fff',
+        fontSize: 14,
+    },
+    dropdown: {
+        marginBottom: 20,
+        borderRadius: 12,
+        backgroundColor: '#fff',
+    },
+    dropdownContainer: {
+        borderRadius: 12,
+        backgroundColor: '#fff',
+        borderColor: '#fff',
+    },
+    saveButton: {
+        backgroundColor: '#d4af37',
+        paddingVertical: 14,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 30,
+        marginBottom: 20,
+    },
+    saveButtonText: {
+        color: '#000',
+        fontWeight: 'bold',
+        fontSize: 18,
+    },
+    loadingText: {
+        fontSize: 18,
+        color: '#f5c469',
+        textAlign: 'center',
+        marginTop: 20,
+    },
 });
+
 
 export default EditarClientes;

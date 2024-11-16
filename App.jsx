@@ -15,6 +15,7 @@ import NuevoTrabajador from './screens/NuevoTrabajador';
 import EliminarTrabajador from './components/EliminarTrabajador';
 import EditarTrabajador from './components/EditarTrabajador';
 import EditarClientes from './components/EditarClientes';
+import AgregarProducto from './screens/AgregarProducto';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -114,6 +115,7 @@ function AdminTabs() {
             <Tab.Screen name="Home" component={AdminDashboard} options={{ headerShown: false }} />
             <Tab.Screen name="Add Worker" component={NuevoTrabajador} options={{ headerShown: false }} />
             <Tab.Screen name="Statistics" component={EstadisticasScreen} options={{ headerShown: false }} />
+            <Tab.Screen name="AgregarProductos" component={AgregarProducto} options={{ headerShown: false }} />
         </Tab.Navigator>
     );
 }
