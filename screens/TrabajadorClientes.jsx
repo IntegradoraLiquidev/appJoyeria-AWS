@@ -20,7 +20,7 @@ const TrabajadorClientes = ({ route }) => {
     useEffect(() => {
         const fetchClientes = async () => {
             try {
-                const response = await axios.get(`http://192.168.1.16:3000/api/clientes/clientes/${id}`);
+                const response = await axios.get(`http://192.168.1.73:3000/api/clientes/clientes/${id}`);
                 const clientesPendientes = response.data
                     .filter(cliente => cliente.monto_actual > 0)
                     .sort((a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago));
@@ -75,17 +75,17 @@ const TrabajadorClientes = ({ route }) => {
         return proximoPago !== today && new Date(cliente.fecha_proximo_pago) >= new Date();
     });
 
-    // Handlers for ClienteCard actions
     const handleEdit = (cliente) => {
-        console.log(`Editando cliente: ${cliente.nombre}`);
-        // Implementa la lógica para editar el cliente
+        navigation.navigate('EditarClientes', { cliente });
     };
+
+
 
     const handleDelete = async (clienteId) => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (token) {
-                const response = await axios.delete(`http://192.168.1.16:3000/api/clientes/${clienteId}`, {
+                const response = await axios.delete(`http://192.168.1.73:3000/api/clientes/${clienteId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
@@ -106,7 +106,7 @@ const TrabajadorClientes = ({ route }) => {
 
     const handleExport = (cliente) => {
         console.log(`Exportando datos de cliente: ${cliente.nombre}`);
-        // Implementa la lógica para exportar los datos del cliente
+        // Implementar la lógica para exportar los datos del cliente
     };
 
     return (
@@ -135,7 +135,7 @@ const TrabajadorClientes = ({ route }) => {
                                     navigation.navigate('Detalles del cliente', { id: item.id_cliente })
                                 }
                                 isAdmin={true}
-                                onEdit={(cliente) => console.log(`Editando cliente: ${cliente.nombre}`)}
+                                onEdit={() => handleEdit(item)}
                                 onDelete={handleDelete}
                                 onExport={(cliente) => console.log(`Exportando cliente: ${cliente.nombre}`)}
                             />

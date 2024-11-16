@@ -87,7 +87,7 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
             {isAdmin && (
                 <View style={styles.actionsContainer}>
                     <View style={styles.actionsContainer}>
-                        <TouchableOpacity onPress={() => handleEdit(cliente)} style={styles.actionButton}>
+                        <TouchableOpacity onPress={() => onEdit(cliente)} style={styles.actionButton}>
                             <Icon name="edit" size={28} color="#8ecae6" />
                         </TouchableOpacity>
                         <TouchableOpacity onPress={handleDelete} style={styles.actionButton}>

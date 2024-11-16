@@ -14,6 +14,7 @@ import TrabajadoresDetails from './screens/TrabajadorClientes';
 import NuevoTrabajador from './screens/NuevoTrabajador';
 import EliminarTrabajador from './components/EliminarTrabajador';
 import EditarTrabajador from './components/EditarTrabajador';
+import EditarClientes from './components/EditarClientes';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -144,6 +145,7 @@ export default function App() {
                 <Stack.Screen name="TrabajadorClientes" component={TrabajadoresDetails} options={{ headerShown: true }} />
                 <Stack.Screen name="EstadisticasTablas" component={EstadisticasScreen} options={{ title: 'Estadísticas' }} />
                 <Stack.Screen name="EditarTrabajador" component={EditarTrabajador} options={{headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: 'Editar Trabajador'}} />
+                <Stack.Screen name="EditarClientes" component={EditarClientes} options={{headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: `Editar cliente`}} />
             </Stack.Navigator>
         </NavigationContainer>
     );

@@ -37,7 +37,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
     };
 
     const confirmDelete = () => {
-        axios.delete(`http://192.168.1.16:3000/api/trabajadores/eliminar/${trabajador.id_usuario}`)
+        axios.delete(`http://192.168.1.73:3000/api/trabajadores/eliminar/${trabajador.id_usuario}`)
             .then(response => {
                 handleDeleteModalClose();
                 onDelete(trabajador.id_usuario);

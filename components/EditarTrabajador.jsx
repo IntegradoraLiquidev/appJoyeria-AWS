@@ -14,7 +14,7 @@ const EditarTrabajador = ({ route, navigation }) => {
     ]);
 
     const handleSaveChanges = () => {
-        axios.put(`http://192.168.1.16:3000/api/trabajadores/editar/${trabajador.id_usuario}`, {
+        axios.put(`http://192.168.1.73:3000/api/trabajadores/editar/${trabajador.id_usuario}`, {
             ...editedTrabajador,
             rol: role
         })
