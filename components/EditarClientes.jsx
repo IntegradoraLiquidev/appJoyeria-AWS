@@ -24,7 +24,7 @@ const EditarClientes = ({ route }) => {
                 return;
             }
 
-            const response = await fetch(`http://192.168.1.73:3000/api/clientes/${cliente.id_cliente}`, {
+            const response = await fetch(`http://192.168.1.65:3000/api/clientes/${cliente.id_cliente}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -83,16 +83,6 @@ const EditarClientes = ({ route }) => {
                     onChangeText={setTelefono}
                     style={styles.input}
                     keyboardType="phone-pad"
-                    placeholderTextColor="#999"
-                />
-
-                <Text style={styles.label}>Quilates del Producto:</Text>
-                <TextInput
-                    placeholder="Quilates"
-                    value={quilates}
-                    onChangeText={setQuilates}
-                    style={styles.input}
-                    keyboardType="numeric"
                     placeholderTextColor="#999"
                 />
 

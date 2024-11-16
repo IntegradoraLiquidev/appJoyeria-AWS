@@ -99,12 +99,14 @@ function AdminTabs() {
                         iconName = 'person-add';
                     } else if (route.name === 'Statistics') {
                         iconName = 'bar-chart';
+                    } else if (route.name === 'AgregarProductos') {
+                        iconName = 'bag-add';
                     }
                     return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarLabel: ({ focused, color }) => (
                     <Text style={{ color, fontSize: focused ? 12 : 10 }}>
-                        {route.name === 'Home' ? 'Inicio' : route.name === 'Add Worker' ? 'Nuevo Trabajador' : 'Estadísticas'}
+                        {route.name === 'Home' ? 'Inicio' : route.name === 'Add Worker' ? 'Nuevo Trabajador' : route.name === 'AgregarProductos' ? 'Agregar productos' : 'Estadísticas'}
                     </Text>
                 ),
                 tabBarActiveTintColor: '#FFD700',
@@ -114,8 +116,8 @@ function AdminTabs() {
         >
             <Tab.Screen name="Home" component={AdminDashboard} options={{ headerShown: false }} />
             <Tab.Screen name="Add Worker" component={NuevoTrabajador} options={{ headerShown: false }} />
-            <Tab.Screen name="Statistics" component={EstadisticasScreen} options={{ headerShown: false }} />
             <Tab.Screen name="AgregarProductos" component={AgregarProducto} options={{ headerShown: false }} />
+            <Tab.Screen name="Statistics" component={EstadisticasScreen} options={{ headerShown: false }} />
         </Tab.Navigator>
     );
 }
@@ -143,11 +145,11 @@ export default function App() {
                 <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
                 <Stack.Screen name="AdminDashboard" component={AdminTabs} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkerDashboard" component={WorkerTabs} options={{ headerShown: false }} />
-                <Stack.Screen name="Detalles del cliente" component={ClienteDetails} options={{headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469'}} />
+                <Stack.Screen name="Detalles del cliente" component={ClienteDetails} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469' }} />
                 <Stack.Screen name="TrabajadorClientes" component={TrabajadoresDetails} options={{ headerShown: true }} />
                 <Stack.Screen name="EstadisticasTablas" component={EstadisticasScreen} options={{ title: 'Estadísticas' }} />
-                <Stack.Screen name="EditarTrabajador" component={EditarTrabajador} options={{headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: 'Editar Trabajador'}} />
-                <Stack.Screen name="EditarClientes" component={EditarClientes} options={{headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: `Editar cliente`}} />
+                <Stack.Screen name="EditarTrabajador" component={EditarTrabajador} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: 'Editar Trabajador' }} />
+                <Stack.Screen name="EditarClientes" component={EditarClientes} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: `Editar cliente` }} />
             </Stack.Navigator>
         </NavigationContainer>
     );

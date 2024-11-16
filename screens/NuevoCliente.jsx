@@ -1,10 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, ScrollView, ActivityIndicator, TouchableOpacity, Animated, Platform,
+    View,
+    Text,
+    TextInput,
+    StyleSheet,
+    Alert,
+    KeyboardAvoidingView,
+    ScrollView,
+    ActivityIndicator,
+    TouchableOpacity,
+    Animated,
+    Platform,
+    FlatList,
+    Modal,
 } from 'react-native';
 import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import DropDownPicker from 'react-native-dropdown-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 const NuevoCliente = ({ navigation }) => {
@@ -18,11 +31,17 @@ const NuevoCliente = ({ navigation }) => {
     const [quilates, setQuilates] = useState('');
     const [precioTotal, setPrecioTotal] = useState('');
     const [formaPago, setFormaPago] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
     const [abonoInicial, setAbonoInicial] = useState('');
-    const [openCategoria, setOpenCategoria] = useState(false);
-    const [openProducto, setOpenProducto] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [filteredCategorias, setFilteredCategorias] = useState([]);
     const [openPago, setOpenPago] = useState(false);
+    const [searchProductText, setSearchProductText] = useState(''); // Nuevo estado para buscar productos
+    const [filteredProductos, setFilteredProductos] = useState([]);
+    const [modalProductosVisible, setModalProductosVisible] = useState(false);
+
+
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const opacityAnim = useRef(new Animated.Value(1)).current;
@@ -30,13 +49,11 @@ const NuevoCliente = ({ navigation }) => {
     useEffect(() => {
         const fetchCategorias = async () => {
             try {
-                const response = await axios.get('http://192.168.1.73:3000/api/categorias');
-                const categorias = response.data.map((cat) => ({
-                    label: cat.nombre,
-                    value: cat.id_categoria,
-                }));
-                setCategorias(categorias);
+                const response = await axios.get('http://192.168.1.65:3000/api/categorias');
+                setCategorias(response.data);
+                setFilteredCategorias(response.data); // Inicializar con todas las categorías
             } catch (error) {
+                console.error('Error al cargar categorías:', error);
                 Alert.alert('Error', 'No se pudieron cargar las categorías');
             }
         };
@@ -47,68 +64,96 @@ const NuevoCliente = ({ navigation }) => {
     const fetchProductosPorCategoria = async (categoriaId) => {
         try {
             const response = await axios.get(
-                `http://192.168.1.73:3000/api/productos?categoria=${categoriaId}`
+                `http://192.168.1.65:3000/api/productos?categoria=${categoriaId}`
             );
-            const productos = response.data.map((prod) => ({
-                label: prod.nombre,
-                value: prod.id_producto,
-            }));
-            setProductos(productos);
+            setProductos(response.data);
         } catch {
             Alert.alert('Error', 'No se pudieron cargar los productos');
         }
     };
 
+    const handleSelectCategoria = (id, nombre) => {
+        setCategoria(id);
+        setSearchText(nombre);
+        setModalVisible(false);
+        fetchProductosPorCategoria(id);
+    };
+
+    const handleSelectProducto = (id, nombre) => {
+        setProducto(id);  // Actualizamos el id del producto seleccionado
+        setSearchProductText(nombre);  // Actualizamos el texto del producto
+        setModalProductosVisible(false);
+    };
+
+    const handleSearch = (text) => {
+        setSearchText(text);
+        const filtered = categorias.filter((cat) =>
+            cat.nombre.toLowerCase().includes(text.toLowerCase())
+        );
+        setFilteredCategorias(filtered);
+    };
+
+    const handleSearchProduct = (text) => {
+        setSearchProductText(text);
+        const filtered = productos.filter((prod) =>
+            prod.nombre.toLowerCase().includes(text.toLowerCase())
+        );
+        setFilteredProductos(filtered);
+    };
+
+    useEffect(() => {
+        setFilteredProductos(productos); // Inicializar productos filtrados cuando se carguen
+    }, [productos]);
+
     const handleAddCliente = async () => {
         setIsLoading(true);
-        if (!nombre || !direccion || !telefono || !producto || !quilates || !precioTotal || !formaPago) {
+
+        // Verifica si los datos están completos
+        if (!nombre || !direccion || !telefono || !producto  || !precioTotal || !formaPago) {
             Alert.alert('Error', 'Por favor, complete todos los campos');
             setIsLoading(false);
             return;
         }
-
+    
         const montoActual = abonoInicial
             ? Math.max(0, parseFloat(precioTotal) - parseFloat(abonoInicial))
             : parseFloat(precioTotal);
-
-        try {
-            const token = await AsyncStorage.getItem('token');
-            if (!token) throw new Error('No se encontró un token de autenticación');
-
-            await axios.post(
-                'http://192.168.1.73:3000/api/clientes',
-                {
-                    nombre,
-                    direccion,
-                    telefono,
-                    producto_id: producto,
-                    quilates: parseFloat(quilates),
-                    precio_total: parseFloat(precioTotal),
-                    forma_pago: formaPago,
-                    monto_actual: montoActual,
-                },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-
-            Alert.alert('Éxito', 'Cliente agregado exitosamente');
-
-            setNombre('');
-            setDireccion('');
-            setTelefono('');
-            setProducto(null);
-            setCategoria(null);
-            setQuilates('');
-            setPrecioTotal('');
-            setFormaPago('');
-            setAbonoInicial('');
-            setProductos([]);
-
-            navigation.goBack();
-        } catch (error) {
-            Alert.alert('Error', 'Hubo un problema al agregar el cliente');
-        } finally {
-            setIsLoading(false);
-        }
+    
+            try {
+                const token = await AsyncStorage.getItem('token');
+                if (!token) throw new Error('No se encontró un token de autenticación');
+            
+                await axios.post(
+                    'http://192.168.1.65:3000/api/clientes',
+                    {
+                        nombre,
+                        direccion,
+                        telefono,
+                        producto_id: producto,
+                        precio_total: parseFloat(precioTotal),
+                        forma_pago: formaPago,
+                        monto_actual: montoActual,
+                    },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+            
+                Alert.alert('Éxito', 'Cliente agregado exitosamente');
+                setNombre('');
+                setDireccion('');
+                setTelefono('');
+                setProducto(null);
+                setCategoria(null);
+                setPrecioTotal('');
+                setFormaPago('');
+                setAbonoInicial('');
+                setProductos([]);
+                navigation.goBack();
+            } catch (error) {
+                console.error('Error al agregar cliente:', error);  // Muestra el error real
+                Alert.alert('Error', 'Hubo un problema al agregar el cliente');
+            } finally {
+                setIsLoading(false);
+            }
     };
 
     const handlePressIn = () => {
@@ -179,42 +224,68 @@ const NuevoCliente = ({ navigation }) => {
                             placeholderTextColor="#999"
                         />
 
-                        <View style={{ zIndex: 100 }}>
-                            <DropDownPicker
-                                open={openCategoria}
-                                value={categoria}
-                                items={categorias}
-                                setOpen={setOpenCategoria}
-                                setValue={setCategoria}
-                                onChangeValue={fetchProductosPorCategoria}
-                                placeholder="Categoría"
-                                style={styles.dropdown}
-                                dropDownContainerStyle={styles.dropdownContainer}
-                            />
-                        </View>
+                        <TouchableOpacity style={styles.inputPicker} onPress={() => setModalVisible(true)}>
+                            <Text>{searchText || 'Selecciona una categoría'}</Text>
+                        </TouchableOpacity>
+                        <Modal visible={modalVisible} animationType="slide">
+                            <View style={styles.modalContainer}>
+                                <TextInput
+                                    style={styles.inputBuscador}
+                                    placeholder="Buscar categoría"
+                                    value={searchText}
+                                    onChangeText={handleSearch}
+                                    placeholderTextColor="#d1a980"
+                                />
+                                <FlatList
+                                    data={filteredCategorias}
+                                    keyExtractor={(item) => item.id_categoria.toString()}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={styles.item}
+                                            onPress={() => handleSelectCategoria(item.id_categoria, item.nombre)}
+                                        >
+                                            <Text style={styles.itemText}>{item.nombre}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                                <TouchableOpacity onPress={() => setModalVisible(false)} style={styles.closeButton}>
+                                    <Text style={styles.closeButtonText}>Cerrar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Modal>
 
-                        <View style={{ zIndex: 90 }}>
-                            <DropDownPicker
-                                open={openProducto}
-                                value={producto}
-                                items={productos}
-                                setOpen={setOpenProducto}
-                                setValue={setProducto}
-                                placeholder="Producto"
-                                style={styles.dropdown}
-                                dropDownContainerStyle={styles.dropdownContainer}
-                            />
-                        </View>
 
-                        <TextInput
-                            style={styles.input}
-                            value={quilates}
-                            onChangeText={setQuilates}
-                            placeholder="Quilates"
-                            keyboardType="numeric"
-                            placeholderTextColor="#999"
-                        />
+                        <TouchableOpacity style={styles.inputPicker} onPress={() => setModalProductosVisible(true)}>
+                            <Text>{producto ? productos.find((p) => p.id_producto === producto)?.nombre : 'Selecciona un producto'}</Text>
+                        </TouchableOpacity>
 
+                        <Modal visible={modalProductosVisible} animationType="slide">
+                            <View style={styles.modalContainer}>
+                                <TextInput
+                                    style={styles.inputBuscador}
+                                    placeholder="Buscar producto"
+                                    value={searchProductText}
+                                    onChangeText={handleSearchProduct}
+                                    placeholderTextColor="#d1a980"
+                                />
+                                <FlatList
+                                    data={filteredProductos}
+                                    keyExtractor={(item) => item.id_producto.toString()}
+                                    renderItem={({ item }) => (
+                                        <TouchableOpacity
+                                            style={styles.item}
+                                            onPress={() => handleSelectProducto(item.id_producto, item.nombre)}
+                                        >
+                                            <Text style={styles.itemText}>{item.nombre}</Text>
+                                        </TouchableOpacity>
+                                    )}
+                                />
+                                <TouchableOpacity onPress={() => setModalProductosVisible(false)} style={styles.closeButton}>
+                                    <Text style={styles.closeButtonText}>Cerrar</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </Modal>
+                        
                         <TextInput
                             style={styles.input}
                             value={precioTotal}
@@ -265,7 +336,7 @@ const NuevoCliente = ({ navigation }) => {
                     </View>
                 </View>
             </ScrollView>
-        </KeyboardAvoidingView>
+        </KeyboardAvoidingView >
     );
 };
 
@@ -289,12 +360,61 @@ const styles = StyleSheet.create({
         marginBottom: 15,
         color: '#fff',
     },
+    inputPicker: {
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        padding: 12,
+        marginBottom: 15,
+        color: '#fff',
+    },
+    inputBuscador: {
+        height: 45,
+        borderColor: '#707070',
+        borderWidth: 1,
+        borderRadius: 10,
+        paddingHorizontal: 12,
+        color: '#d1a980',
+        backgroundColor: '#1e1e1e',
+        fontSize: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.6,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    modalContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: '#101010', // Fondo oscuro para el modal
+    },
+    item: {
+        padding: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
+        color: '#fff', // Cambiado a blanco
+    },
+    itemText: {
+        color: '#fff'// Cambiado a blanco
+    },
+    closeButton: {
+        padding: 10,
+        backgroundColor: '#d32f2f', // Rojo oscuro
+        borderRadius: 5,
+        marginTop: 20,
+    },
+    closeButtonText: {
+        color: '#fff', // Cambiado a blanco
+        textAlign: 'center',
+    },
     dropdown: {
         marginBottom: 15,
         borderRadius: 10,
+        backgroundColor: '#fff',
+        color: '#fff',
     },
     dropdownContainer: {
         borderRadius: 10,
+        backgroundColor: '#fff',
     },
     buttonContainer: {
         marginTop: 20,
@@ -311,5 +431,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
     },
 });
+
 
 export default NuevoCliente;

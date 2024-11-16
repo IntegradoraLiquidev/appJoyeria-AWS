@@ -27,7 +27,7 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
             }
 
             const fecha = new Date().toISOString().split('T')[0];
-            const response = await axios.post(`http://192.168.1.73:3000/api/clientes/${clienteId}/abonos`, { monto: parsedMonto, fecha });
+            const response = await axios.post(`http://192.168.1.65:3000/api/clientes/${clienteId}/abonos`, { monto: parsedMonto, fecha });
 
             if (response.status === 201) {
                 console.log('Abono added successfully:', response.data);

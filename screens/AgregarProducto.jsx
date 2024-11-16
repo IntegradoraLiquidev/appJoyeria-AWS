@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import {View, Text, TextInput, Button, StyleSheet, Alert, FlatList, TouchableOpacity, Modal} from 'react-native';
 
 const AgregarProductoScreen = () => {
     const [categorias, setCategorias] = useState([]);
@@ -9,11 +8,17 @@ const AgregarProductoScreen = () => {
     const [precio, setPrecio] = useState('');
     const [idCategoria, setIdCategoria] = useState('');
     const [nombreCategoria, setNombreCategoria] = useState('');
+    const [modalVisible, setModalVisible] = useState(false);
+    const [searchText, setSearchText] = useState('');
+    const [filteredCategorias, setFilteredCategorias] = useState([]);
 
     useEffect(() => {
-        fetch('http://192.168.1.73:3000/api/categorias/') // Cambia por tu URL real
+        fetch('http://192.168.1.65:3000/api/categorias/')
             .then((response) => response.json())
-            .then((data) => setCategorias(data))
+            .then((data) => {
+                setCategorias(data);
+                setFilteredCategorias(data);
+            })
             .catch((error) => console.error('Error al obtener las categorías:', error));
     }, []);
 
@@ -23,7 +28,7 @@ const AgregarProductoScreen = () => {
             return;
         }
 
-        fetch('http://192.168.1.73:3000/api/productos/agregarProducto', {
+        fetch('http://192.168.1.65:3000/api/productos/agregarProducto', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -50,7 +55,7 @@ const AgregarProductoScreen = () => {
             return;
         }
 
-        fetch('http://192.168.1.73:3000/api/categorias/agregarCategoria', {
+        fetch('http://192.168.1.65:3000/api/categorias/agregarCategoria', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre: nombreCategoria }),
@@ -59,9 +64,24 @@ const AgregarProductoScreen = () => {
             .then((data) => {
                 Alert.alert('Éxito', 'Categoría agregada exitosamente.');
                 setCategorias((prevCategorias) => [...prevCategorias, data]);
+                setFilteredCategorias((prevCategorias) => [...prevCategorias, data]);
                 setNombreCategoria('');
             })
             .catch((error) => console.error('Error al agregar la categoría:', error));
+    };
+
+    const handleSearch = (text) => {
+        setSearchText(text);
+        const filtered = categorias.filter((categoria) =>
+            categoria.nombre.toLowerCase().includes(text.toLowerCase())
+        );
+        setFilteredCategorias(filtered);
+    };
+
+    const handleSelectCategoria = (id, nombre) => {
+        setIdCategoria(id);
+        setSearchText(nombre);
+        setModalVisible(false);
     };
 
     return (
@@ -87,16 +107,37 @@ const AgregarProductoScreen = () => {
                 onChangeText={setPrecio}
                 keyboardType="numeric"
             />
-            <Picker
-                selectedValue={idCategoria}
-                onValueChange={(itemValue) => setIdCategoria(itemValue)}
+            <TouchableOpacity
                 style={styles.input}
+                onPress={() => setModalVisible(true)}
             >
-                <Picker.Item label="Selecciona una categoría" value="" />
-                {categorias.map((categoria) => (
-                    <Picker.Item key={categoria.id_categoria} label={categoria.nombre} value={categoria.id_categoria} />
-                ))}
-            </Picker>
+                <Text>{searchText || 'Selecciona una categoría'}</Text>
+            </TouchableOpacity>
+
+            <Modal visible={modalVisible} animationType="slide">
+                <View style={styles.modalContainer}>
+                    <TextInput
+                        style={styles.input}
+                        placeholder="Buscar categoría"
+                        value={searchText}
+                        onChangeText={handleSearch}
+                    />
+                    <FlatList
+                        data={filteredCategorias}
+                        keyExtractor={(item) => item.id_categoria.toString()}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity
+                                style={styles.item}
+                                onPress={() => handleSelectCategoria(item.id_categoria, item.nombre)}
+                            >
+                                <Text>{item.nombre}</Text>
+                            </TouchableOpacity>
+                        )}
+                    />
+                    <Button title="Cerrar" onPress={() => setModalVisible(false)} />
+                </View>
+            </Modal>
+
             <Button title="Agregar Producto" onPress={handleAgregarProducto} />
 
             <Text style={styles.subtitle}>Agregar Nueva Categoría</Text>
@@ -116,6 +157,8 @@ const styles = StyleSheet.create({
     title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
     subtitle: { fontSize: 18, fontWeight: 'bold', marginTop: 30, marginBottom: 10 },
     input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 5, padding: 10, marginBottom: 15 },
+    modalContainer: { flex: 1, padding: 20 },
+    item: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' },
 });
 
 export default AgregarProductoScreen;
