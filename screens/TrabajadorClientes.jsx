@@ -61,10 +61,16 @@ const TrabajadorClientes = ({ route }) => {
         fetchIndex();
     }, []);
 
-    const handleIndexChange = async (newIndex) => {
-        setIndex(newIndex);
-        await AsyncStorage.setItem('tabIndex', newIndex.toString());
-    };
+   const handleIndexChange = async (newIndex) => {
+    setIndex(newIndex);
+    await AsyncStorage.setItem('tabIndex', newIndex.toString());
+
+    // Opcional: Actualiza datos solo si es necesario
+    if (newIndex === 0 || newIndex === 1 || newIndex === 2) {
+        fetchClientes();
+    }
+};
+
 
     // Filtrar clientes según búsqueda
     useEffect(() => {
@@ -114,17 +120,16 @@ const TrabajadorClientes = ({ route }) => {
     );
 
     const renderScene = ({ route }) => {
-        switch (route.key) {
-            case 'pagosHoy':
-                return renderClienteList(clientesConPagoHoy);
-            case 'sinPagosHoy':
-                return renderClienteList(clientesSinPagoHoy);
-            case 'montoCero':
-                return renderClienteList(clientesMontoCero);
-            default:
-                return null;
+        if (route.key === 'pagosHoy' && index === 0) {
+            return renderClienteList(clientesConPagoHoy);
+        } else if (route.key === 'sinPagosHoy' && index === 1) {
+            return renderClienteList(clientesSinPagoHoy);
+        } else if (route.key === 'montoCero' && index === 2) {
+            return renderClienteList(clientesMontoCero);
         }
+        return null;
     };
+    
 
     return (
         <View style={styles.container}>
