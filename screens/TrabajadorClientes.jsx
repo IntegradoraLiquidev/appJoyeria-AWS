@@ -1,37 +1,33 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, FlatList, StyleSheet, Animated, TextInput, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, FlatList, StyleSheet, Text, Animated, TextInput, Dimensions } from 'react-native';
+import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import axios from 'axios';
 import ClienteCard from '../components/ClienteCard';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
 
 const TrabajadorClientes = ({ route }) => {
     const { id } = route.params;
     const [clientes, setClientes] = useState([]);
     const [searchText, setSearchText] = useState('');
     const [filteredClientes, setFilteredClientes] = useState([]);
-    const [isAccordionOpen, setIsAccordionOpen] = useState(false);
+    const [trabajadorNombre, setTrabajadorNombre] = useState('');
 
     const navigation = useNavigation();
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const rotateAnim = useRef(new Animated.Value(0)).current;
 
     const fetchClientes = async () => {
         try {
             const response = await axios.get(`http://192.168.1.65:3000/api/clientes/clientes/${id}`);
             const clientesPendientes = response.data
-                .filter(cliente => cliente.monto_actual > 0)
                 .sort((a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago));
 
             setClientes(clientesPendientes);
             setFilteredClientes(clientesPendientes);
 
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 500,
-                useNativeDriver: true,
-            }).start();
+            // Asignar el nombre del trabajador
+            if (response.data.length > 0) {
+                setTrabajadorNombre(response.data[0].nombre_trabajador);
+            }
         } catch (error) {
             console.error('Error al obtener los clientes:', error);
         }
@@ -48,21 +44,6 @@ const TrabajadorClientes = ({ route }) => {
         setFilteredClientes(filtered);
     }, [searchText, clientes]);
 
-    const toggleAccordion = () => {
-        setIsAccordionOpen(!isAccordionOpen);
-
-        Animated.timing(rotateAnim, {
-            toValue: isAccordionOpen ? 0 : 1,
-            duration: 300,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const rotateIcon = rotateAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '180deg'],
-    });
-
     const today = new Date().toLocaleDateString('es-ES');
 
     const clientesConPagoHoy = filteredClientes.filter((cliente) => {
@@ -72,14 +53,19 @@ const TrabajadorClientes = ({ route }) => {
 
     const clientesSinPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
-        return proximoPago !== today && new Date(cliente.fecha_proximo_pago) >= new Date();
+        return proximoPago !== today && new Date(cliente.fecha_proximo_pago) >= new Date() && parseFloat(cliente.monto_actual) > 0;
+    });
+    
+    const clientesMontoCero = filteredClientes.filter((cliente) => {
+        return parseFloat(cliente.monto_actual) === 0;
     });
 
+    // Función para manejar la edición del cliente
     const handleEdit = (cliente) => {
         navigation.navigate('EditarClientes', { cliente, refreshClientes: fetchClientes });
     };
 
-
+    // Función para manejar la eliminación del cliente
     const handleDelete = async (clienteId) => {
         try {
             const token = await AsyncStorage.getItem('token');
@@ -103,88 +89,82 @@ const TrabajadorClientes = ({ route }) => {
         }
     };
 
-    const handleExport = (cliente) => {
-        console.log(`Exportando datos de cliente: ${cliente.nombre}`);
-        // Implementar la lógica para exportar los datos del cliente
-    };
+    const renderClienteList = (clientes) => (
+        <FlatList
+            data={clientes}
+            keyExtractor={(item) => item.id_cliente.toString()}
+            renderItem={({ item }) => (
+                <ClienteCard
+                    cliente={item}
+                    onPress={() =>
+                        navigation.navigate('Detalles del cliente', { id: item.id_cliente })
+                    }
+                    isAdmin={true}
+                    onEdit={() => handleEdit(item)}
+                    onDelete={() => handleDelete(item.id_cliente)}
+                />
+            )}
+            ListEmptyComponent={
+                <Text style={styles.emptyMessage}>No hay clientes disponibles.</Text>
+            }
+            contentContainerStyle={styles.listContent}
+        />
+    );
+
+    const renderScene = SceneMap({
+        pagosHoy: () => renderClienteList(clientesConPagoHoy),
+        sinPagosHoy: () => renderClienteList(clientesSinPagoHoy),
+        montoCero: () => renderClienteList(clientesMontoCero),
+    });
+
+    const [index, setIndex] = useState(0);
+    const [routes] = useState([
+        { key: 'pagosHoy', title: 'Con Pago Hoy' },
+        { key: 'sinPagosHoy', title: 'Sin Pago Hoy' },
+        { key: 'montoCero', title: 'Finalizados' },
+    ]);
 
     return (
         <View style={styles.container}>
-            <Animated.View style={[styles.searchInputContainer, { opacity: fadeAnim }]}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Buscar cliente"
-                    value={searchText}
-                    onChangeText={setSearchText}
-                    placeholderTextColor="#d1a980"
-                />
-            </Animated.View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                {clientesConPagoHoy.length === 0 ? (
-                    <Text style={styles.emptyMessage}>No hay clientes con pago hoy</Text>
-                ) : (
-                    <FlatList
-                        data={clientesConPagoHoy}
-                        keyExtractor={(item) => item.id_cliente.toString()}
-                        renderItem={({ item }) => (
-                            <ClienteCard
-                                cliente={item}
-                                onPress={() =>
-                                    navigation.navigate('Detalles del cliente', { id: item.id_cliente })
-                                }
-                                isAdmin={true}
-                                onEdit={() => handleEdit(item)}
-                                onDelete={handleDelete}
-                                onExport={(cliente) => console.log(`Exportando cliente: ${cliente.nombre}`)}
-                            />
-                        )}
-                        contentContainerStyle={styles.listContent}
+            <Text style={styles.title}>Clientes de {trabajadorNombre}</Text>
+            <TextInput
+                style={styles.searchInput}
+                placeholder="Buscar cliente"
+                value={searchText}
+                onChangeText={setSearchText}
+                placeholderTextColor="#d1a980"
+            />
+            <TabView
+                navigationState={{ index, routes }}
+                renderScene={renderScene}
+                onIndexChange={setIndex}
+                initialLayout={{ width: Dimensions.get('window').width }}
+                renderTabBar={(props) => (
+                    <TabBar
+                        {...props}
+                        indicatorStyle={styles.tabIndicator}
+                        style={styles.tabBar}
+                        labelStyle={styles.tabLabel}
                     />
                 )}
-            </ScrollView>
-
-            <TouchableOpacity style={styles.accordionHeader} onPress={toggleAccordion}>
-                <Text style={styles.accordionTitle}>Clientes sin pago hoy</Text>
-                <Animated.View style={{ transform: [{ rotate: rotateIcon }] }}>
-                    <Ionicons name="chevron-down" size={18} color="#fff" />
-                </Animated.View>
-            </TouchableOpacity>
-
-            {isAccordionOpen && (
-                clientesSinPagoHoy.length === 0 ? (
-                    <Text style={styles.emptyMessage}>No hay clientes sin pago hoy</Text>
-                ) : (
-                    <FlatList
-                        style={styles.accordionContent}
-                        data={clientesSinPagoHoy}
-                        keyExtractor={(item) => item.id_cliente.toString()}
-                        renderItem={({ item }) => (
-                            <ClienteCard
-                                cliente={item}
-                                onPress={() =>
-                                    navigation.navigate('Detalles del cliente', { id: item.id_cliente })
-                                }
-                                isAdmin={true}
-                                onEdit={() => handleEdit(item)}
-                                onDelete={handleDelete}
-                                onExport={() => handleExport(item)}
-                            />
-                        )}
-                        contentContainerStyle={styles.listContent}
-                    />
-                )
-            )}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#121212' },
-    scrollContent: { paddingBottom: 20 },
-    searchInputContainer: { marginBottom: 20 },
+    container: { flex: 1, backgroundColor: '#121212' },
+    title: {
+        fontSize: 20,
+        marginHorizontal: 20,
+        marginTop: 15,
+        fontWeight: 'bold',
+        color: '#f5c469',
+        letterSpacing: 0.8,
+    },
     searchInput: {
         height: 45,
+        margin: 15,
         borderColor: '#707070',
         borderWidth: 1,
         borderRadius: 10,
@@ -193,29 +173,15 @@ const styles = StyleSheet.create({
         backgroundColor: '#1e1e1e',
         fontSize: 16,
     },
+    listContent: { paddingBottom: 20 },
+    tabBar: { backgroundColor: '#1c1c1e' },
+    tabIndicator: { backgroundColor: '#FFD700' },
+    tabLabel: { color: '#fff', fontWeight: 'bold' },
     emptyMessage: {
         textAlign: 'center',
-        color: '#d1a980',
-        fontSize: 16,
-        marginVertical: 20,
-    },
-    listContent: { paddingBottom: 20 },
-    accordionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 10,
+        color: '#fff',
         marginTop: 20,
-        backgroundColor: '#484848',
-    },
-    accordionTitle: { fontSize: 16, color: '#fff', fontWeight: 'bold' },
-    accordionContent: {
-        backgroundColor: '#2e2e2e',
-        padding: 10,
-        borderRadius: 10,
-        marginTop: 10,
+        fontSize: 16,
     },
 });
 

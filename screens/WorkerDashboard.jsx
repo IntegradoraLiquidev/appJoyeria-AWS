@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, ScrollView, FlatList, StyleSheet, TextInput, Text, TouchableOpacity, Animated } from 'react-native';
-import axios from 'axios';
+import { View, TextInput, StyleSheet, Dimensions, FlatList, Text, Animated } from 'react-native';
+import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 import { useIsFocused } from '@react-navigation/native';
+
 import ClienteCard from '../components/ClienteCard';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -11,12 +13,15 @@ const WorkerDashboard = ({ navigation }) => {
     const [searchText, setSearchText] = useState('');
     const [filteredClientes, setFilteredClientes] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [isAccordionOpen, setIsAccordionOpen] = useState(false);
     const isFocused = useIsFocused();
 
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const rotateAnim = useRef(new Animated.Value(0)).current;
+    const [index, setIndex] = useState(0);
+    const [routes] = useState([
+        { key: 'pagosHoy', title: 'Con Pago Hoy' },
+        { key: 'sinPagosHoy', title: 'Sin Pago Hoy' },
+    ]);
     const scaleAnim = useRef(new Animated.Value(1)).current;
+    const fadeAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         const fetchClientes = async () => {
@@ -50,8 +55,10 @@ const WorkerDashboard = ({ navigation }) => {
         }
     }, [isFocused, fadeAnim]);
 
+
+
     useEffect(() => {
-        const filtered = clientes.filter((cliente) =>
+        const filtered = clientes.filter(cliente =>
             cliente.nombre.toLowerCase().includes(searchText.toLowerCase())
         );
         setFilteredClientes(filtered);
@@ -78,36 +85,46 @@ const WorkerDashboard = ({ navigation }) => {
         });
     };
 
-    const toggleAccordion = () => {
-        setIsAccordionOpen(!isAccordionOpen);
-
-        Animated.timing(rotateAnim, {
-            toValue: isAccordionOpen ? 0 : 1,
-            duration: 300,
-            useNativeDriver: true,
-        }).start();
-    };
-
-    const rotateIcon = rotateAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '180deg'],
-    });
-
     const today = new Date().toLocaleDateString('es-ES');
 
-    const clientesConPagoHoy = filteredClientes.filter((cliente) => {
+    const clientesConPagoHoy = filteredClientes.filter(cliente => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
         return proximoPago === today || new Date(cliente.fecha_proximo_pago) < new Date();
     });
 
-    const clientesSinPagoHoy = filteredClientes.filter((cliente) => {
+    const clientesSinPagoHoy = filteredClientes.filter(cliente => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
         return proximoPago !== today && new Date(cliente.fecha_proximo_pago) >= new Date();
     });
 
+    const renderClienteList = clientes => (
+        <FlatList
+            data={clientes}
+            keyExtractor={item => item.id_cliente.toString()}
+            renderItem={({ item }) => (
+                <ClienteCard
+                    cliente={item}
+                    onPress={() =>
+                        navigation.navigate('Detalles del cliente', { id: item.id_cliente })
+                    }
+                />
+            )}
+            ListEmptyComponent={
+                <Text style={styles.emptyMessage}>No hay clientes disponibles.</Text>
+            }
+            contentContainerStyle={styles.listContent}
+        />
+    );
+
+    const renderScene = SceneMap({
+        pagosHoy: () => renderClienteList(clientesConPagoHoy),
+        sinPagosHoy: () => renderClienteList(clientesSinPagoHoy),
+    });
+
     return (
         <View style={styles.container}>
-            <View style={styles.headerContainer}>
+
+            <View style={styles.header}>
                 <Text style={styles.title}>Clientes</Text>
                 <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                     <Ionicons
@@ -119,84 +136,39 @@ const WorkerDashboard = ({ navigation }) => {
                     />
                 </Animated.View>
             </View>
-
-            <Animated.View style={[styles.searchInputContainer, { transform: [{ scale: fadeAnim }] }]}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Buscar cliente"
-                    value={searchText}
-                    onChangeText={setSearchText}
-                    placeholderTextColor="#d1a980"
-                />
-            </Animated.View>
-
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                {clientesConPagoHoy.length === 0 ? (
-                    <Text style={styles.emptyMessage}>No hay clientes con pago hoy</Text>
-                ) : (
-                    <Animated.View style={{ opacity: fadeAnim }}>
-                        <FlatList
-                            data={clientesConPagoHoy}
-                            keyExtractor={(item) => item.id_cliente?.toString()}
-                            renderItem={({ item }) => (
-                                <ClienteCard
-                                    cliente={item}
-                                    onPress={() =>
-                                        navigation.navigate('Detalles del cliente', { id: item.id_cliente })
-                                    }
-                                />
-                            )}
-                            contentContainerStyle={styles.listContent}
-                        />
-                    </Animated.View>
-                )}
-            </ScrollView>
-
-            <TouchableOpacity style={styles.accordionHeader} onPress={toggleAccordion}>
-                <Text style={styles.accordionTitle}>Clientes sin pago hoy</Text>
-                <Animated.View style={{ transform: [{ rotate: rotateIcon }] }}>
-                    <Ionicons name="chevron-down" size={18} color="#fff" />
-                </Animated.View>
-            </TouchableOpacity>
-
-            {isAccordionOpen && (
-                clientesSinPagoHoy.length === 0 ? (
-                    <Text style={styles.emptyMessage}>No hay clientes sin pago hoy</Text>
-                ) : (
-                    <FlatList
-                        style={styles.accordionContent}
-                        data={clientesSinPagoHoy}
-                        keyExtractor={(item) => item.id_cliente?.toString()}
-                        renderItem={({ item }) => (
-                            <ClienteCard
-                                cliente={item}
-                                onPress={() =>
-                                    navigation.navigate('Detalles del cliente', { id: item.id_cliente })
-                                }
-                            />
-                        )}
-                        contentContainerStyle={styles.listContent}
+            <TextInput
+                style={styles.searchInput}
+                placeholder="Buscar cliente"
+                value={searchText}
+                onChangeText={setSearchText}
+                placeholderTextColor="#d1a980"
+            />
+            <TabView
+                navigationState={{ index, routes }}
+                renderScene={renderScene}
+                onIndexChange={setIndex}
+                initialLayout={{ width: Dimensions.get('window').width }}
+                renderTabBar={props => (
+                    <TabBar
+                        {...props}
+                        indicatorStyle={styles.tabIndicator}
+                        style={styles.tabBar}
+                        labelStyle={styles.tabLabel}
                     />
-                )
-            )}
+                )}
+            />
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#121212',
-        padding: 20,
-    },
-    scrollContent: {
-        paddingBottom: 20,
-    },
-    headerContainer: {
+    container: { flex: 2, backgroundColor: '#121212' },
+    header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        paddingHorizontal: 16,
+        marginVertical: 10,
     },
     title: {
         fontSize: 28,
@@ -214,11 +186,9 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 7,
     },
-    searchInputContainer: {
-        marginBottom: 20,
-    },
     searchInput: {
         height: 45,
+        margin: 15,
         borderColor: '#707070',
         borderWidth: 1,
         borderRadius: 10,
@@ -226,41 +196,16 @@ const styles = StyleSheet.create({
         color: '#d1a980',
         backgroundColor: '#1e1e1e',
         fontSize: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.6,
-        shadowRadius: 4,
-        elevation: 3,
     },
-    listContent: {
-        paddingBottom: 20,
-    },
+    listContent: { paddingBottom: 20 },
+    tabBar: { backgroundColor: '#1c1c1e' },
+    tabIndicator: { backgroundColor: '#FFD700' },
+    tabLabel: { color: '#fff', fontWeight: 'bold' },
     emptyMessage: {
         textAlign: 'center',
-        color: '#d1a980',
-        fontSize: 16,
-        marginVertical: 20,
-    },
-    accordionContent: {
-        backgroundColor: '#2e2e2e',
-        padding: 10,
-        borderRadius: 10,
-        marginTop: 10,
-    },
-    accordionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 10,
-        paddingHorizontal: 15,
-        borderRadius: 10,
-        marginTop: 20,
-        backgroundColor: '#484848',
-    },
-    accordionTitle: {
-        fontSize: 18,
         color: '#fff',
-        fontWeight: 'bold',
+        marginTop: 20,
+        fontSize: 16,
     },
 });
 

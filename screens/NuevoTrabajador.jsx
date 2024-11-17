@@ -1,10 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import {
-    View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Animated, Platform, ScrollView, KeyboardAvoidingView
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform, KeyboardAvoidingView } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DropDownPicker from 'react-native-dropdown-picker'; // Importa el Dropdown Picker
+import DropDownPicker from 'react-native-dropdown-picker';
+import FloatingLabelInput from '../components/FloatingLabelInput'; // Importa el componente reutilizable
 
 const NuevoTrabajador = ({ navigation }) => {
     const [nombre, setNombre] = useState('');
@@ -12,16 +11,14 @@ const NuevoTrabajador = ({ navigation }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('trabajador');
-    const [token, setToken] = useState(null);
     const [open, setOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const scaleAnim = useRef(new Animated.Value(1)).current;
-    const opacityAnim = useRef(new Animated.Value(1)).current;
+
+    const token = useRef(null);
 
     useEffect(() => {
         const getToken = async () => {
-            const token = await AsyncStorage.getItem('token');
-            setToken(token);
+            token.current = await AsyncStorage.getItem('token');
         };
         getToken();
     }, []);
@@ -34,7 +31,7 @@ const NuevoTrabajador = ({ navigation }) => {
         setIsLoading(true);
 
         try {
-            const config = { headers: { Authorization: `Bearer ${token}` } };
+            const config = { headers: { Authorization: `Bearer ${token.current}` } };
             const data = { nombre, apellidos, email, password, role };
             const response = await axios.post('http://192.168.1.65:3000/api/trabajadores/agregar', data, config);
 
@@ -52,95 +49,62 @@ const NuevoTrabajador = ({ navigation }) => {
         }
     };
 
-    const handlePressIn = () => {
-        Animated.parallel([
-            Animated.timing(scaleAnim, { toValue: 0.95, duration: 100, useNativeDriver: true }),
-            Animated.timing(opacityAnim, { toValue: 0.8, duration: 100, useNativeDriver: true }),
-        ]).start();
-    };
-
-    const handlePressOut = () => {
-        Animated.parallel([
-            Animated.timing(scaleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-            Animated.timing(opacityAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
-        ]).start(() => handleAddTrabajador());
-    };
-
     return (
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
-                <View style={{ paddingBottom: 20 }}>
-                    <Text style={styles.header}>Agregar Nuevo Trabajador</Text>
+            <View style={{ paddingBottom: 20 }}>
+                <Text style={styles.header}>Agregar Nuevo Trabajador</Text>
 
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Nombre"
-                        value={nombre}
-                        onChangeText={setNombre}
-                        placeholderTextColor="#999"
+                <FloatingLabelInput
+                    label="Nombre"
+                    value={nombre}
+                    onChangeText={setNombre}
+                />
+                <FloatingLabelInput
+                    label="Apellidos"
+                    value={apellidos}
+                    onChangeText={setApellidos}
+                />
+                <FloatingLabelInput
+                    label="Correo Electrónico"
+                    value={email}
+                    onChangeText={setEmail}
+                />
+                <FloatingLabelInput
+                    label="Contraseña"
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                />
+
+                <View style={{ zIndex: 100 }}>
+                    <DropDownPicker
+                        open={open}
+                        value={role}
+                        items={[
+                            { label: 'Trabajador', value: 'trabajador' },
+                            { label: 'Admin', value: 'admin' },
+                        ]}
+                        setOpen={setOpen}
+                        setValue={setRole}
+                        placeholder="Rol"
+                        style={styles.dropdown}
+                        dropDownContainerStyle={styles.dropdownContainer}
                     />
-
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Apellidos"
-                        value={apellidos}
-                        onChangeText={setApellidos}
-                        placeholderTextColor="#999"
-                    />
-
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Correo Electrónico"
-                        value={email}
-                        onChangeText={setEmail}
-                        keyboardType="email-address"
-                        placeholderTextColor="#999"
-                    />
-
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Contraseña"
-                        value={password}
-                        onChangeText={setPassword}
-                        secureTextEntry
-                        placeholderTextColor="#999"
-                    />
-
-                    <View style={{ zIndex: 100 }}>
-                        <DropDownPicker
-                            open={open}
-                            value={role}
-                            items={[
-                                { label: 'Trabajador', value: 'trabajador' },
-                                { label: 'Admin', value: 'admin' },
-                            ]}
-                            setOpen={setOpen}
-                            setValue={setRole}
-                            placeholder="Rol"
-                            style={styles.dropdown}
-                            dropDownContainerStyle={styles.dropdownContainer}
-                        />
-                    </View>
-
-                    <View style={styles.buttonContainer}>
-                        {isLoading ? (
-                            <ActivityIndicator size="large" color="#0f0" />
-                        ) : (
-                            <Animated.View style={{ transform: [{ scale: scaleAnim }], opacity: opacityAnim }}>
-                                <TouchableOpacity
-                                    style={styles.button}
-                                    onPressIn={handlePressIn}
-                                    onPressOut={handlePressOut}
-                                >
-                                    <Text style={styles.buttonText}>Agregar Trabajador</Text>
-                                </TouchableOpacity>
-                            </Animated.View>
-                        )}
-                    </View>
                 </View>
 
+                <View style={styles.buttonContainer}>
+                    {isLoading ? (
+                        <ActivityIndicator size="large" color="#0f0" />
+                    ) : (
+                        <TouchableOpacity style={styles.button} onPress={handleAddTrabajador}>
+                            <Text style={styles.buttonText}>Agregar Trabajador</Text>
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </View>
         </KeyboardAvoidingView>
     );
 };
@@ -157,13 +121,6 @@ const styles = StyleSheet.create({
         color: '#f5c469',
         textAlign: 'center',
         marginBottom: 20,
-    },
-    input: {
-        backgroundColor: '#1c1c1e',
-        borderRadius: 10,
-        padding: 12,
-        marginBottom: 15,
-        color: '#fff',
     },
     dropdown: {
         marginBottom: 15,

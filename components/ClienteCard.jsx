@@ -55,16 +55,26 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
 
     return (
         <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
-            {cliente.fecha_proximo_pago && (
+            {cliente.monto_actual > 0 ? (
+                cliente.fecha_proximo_pago && (
+                    <View style={styles.paymentDateTagContainer}>
+                        <View style={[styles.paymentDateTagCut, esAtrasado && styles.atrasadoTagCut]} />
+                        <View style={[styles.paymentDateTag, esAtrasado && styles.atrasadoTag]}>
+                            <Text style={[styles.paymentDateText, esAtrasado && styles.atrasadoText]}>
+                                {etiquetaPago}
+                            </Text>
+                        </View>
+                    </View>
+                )
+            ) : (
                 <View style={styles.paymentDateTagContainer}>
-                    <View style={[styles.paymentDateTagCut, esAtrasado && styles.atrasadoTagCut]} />
-                    <View style={[styles.paymentDateTag, esAtrasado && styles.atrasadoTag]}>
-                        <Text style={[styles.paymentDateText, esAtrasado && styles.atrasadoText]}>
-                            {etiquetaPago}
-                        </Text>
+                    <View style={[styles.paymentDateTagCut, { borderRightColor: '#06d6a0' }]} />
+                    <View style={[styles.paymentDateTag, { backgroundColor: '#06d6a0' }]}>
+                        <Text style={[styles.paymentDateText, { color: '#000' }]}>Completado</Text>
                     </View>
                 </View>
             )}
+
 
             <Text style={styles.cardName}>{cliente.nombre}</Text>
             <View style={styles.infoContainer}>
@@ -86,18 +96,15 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
 
             {isAdmin && (
                 <View style={styles.actionsContainer}>
-                    <View style={styles.actionsContainer}>
-                        <TouchableOpacity onPress={() => onEdit(cliente)} style={styles.actionButton}>
-                            <Icon name="edit" size={28} color="#8ecae6" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleDelete} style={styles.actionButton}>
-                            <Icon name="delete" size={28} color="#e63946" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => handleExport(cliente)} style={styles.actionButton}>
-                            <Icon name="download" size={28} color="#06d6a0" />
-                        </TouchableOpacity>
-                    </View>
-
+                    <TouchableOpacity onPress={() => onEdit(cliente)} style={styles.actionButton}>
+                        <Icon name="edit" size={28} color="#8ecae6" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleDelete} style={styles.actionButton}>
+                        <Icon name="delete" size={28} color="#e63946" />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => handleExport(cliente)} style={styles.actionButton}>
+                        <Icon name="download" size={28} color="#06d6a0" />
+                    </TouchableOpacity>
                 </View>
             )}
         </Animated.View>
@@ -129,11 +136,19 @@ const styles = StyleSheet.create({
         height: 0,
         borderTopWidth: 10,
         borderTopColor: 'transparent',
-        borderBottomWidth: 10,
+        borderBottomWidth: 8,
         borderBottomColor: 'transparent',
-        borderRightWidth: 10,
+        borderRightWidth: 8,
         borderRightColor: '#f5c469', // Color por defecto
     },
+    completedText: {
+        color: '#06d6a0', // Color verde
+        fontWeight: 'bold',
+        fontSize: 14,
+        alignSelf: 'flex-end',
+        marginBottom: 10,
+    },
+
     atrasadoTagCut: {
         borderRightColor: '#ff4d4d', // Color rojo si está atrasado
     },

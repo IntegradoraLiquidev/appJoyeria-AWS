@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import {View, Text, TextInput, Button, StyleSheet, Alert, FlatList, TouchableOpacity, Modal} from 'react-native';
+import { View, Text, Button, StyleSheet, Alert, FlatList, TouchableOpacity, Modal } from 'react-native';
+import FloatingLabelInput from '../components/FloatingLabelInput'; // Importa el componente reutilizable
+import Icon from 'react-native-vector-icons/MaterialIcons'; // Importar el ícono
 
 const AgregarProductoScreen = () => {
     const [categorias, setCategorias] = useState([]);
@@ -86,39 +88,41 @@ const AgregarProductoScreen = () => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Agregar Producto</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Nombre del producto"
+            <Text style={styles.header}>Agregar Producto</Text>
+
+            <FloatingLabelInput
+                label="Nombre del producto"
                 value={nombreProducto}
                 onChangeText={setNombreProducto}
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Quilates"
+            <FloatingLabelInput
+                label="Quilates"
                 value={quilates}
                 onChangeText={setQuilates}
                 keyboardType="numeric"
             />
-            <TextInput
-                style={styles.input}
-                placeholder="Precio"
+            <FloatingLabelInput
+                label="Precio"
                 value={precio}
                 onChangeText={setPrecio}
                 keyboardType="numeric"
             />
             <TouchableOpacity
-                style={styles.input}
+                style={[styles.input, styles.dropdown]}
                 onPress={() => setModalVisible(true)}
             >
-                <Text>{searchText || 'Selecciona una categoría'}</Text>
+                <View style={styles.dropdownContainer}>
+                    <Text style={styles.dropdownText}>
+                        {searchText || 'Selecciona una categoría'}
+                    </Text>
+                    <Icon name="keyboard-arrow-down" size={24} color="#ccc" />
+                </View>
             </TouchableOpacity>
 
             <Modal visible={modalVisible} animationType="slide">
                 <View style={styles.modalContainer}>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Buscar categoría"
+                    <FloatingLabelInput
+                        label="Buscar categoría"
                         value={searchText}
                         onChangeText={handleSearch}
                     />
@@ -130,35 +134,66 @@ const AgregarProductoScreen = () => {
                                 style={styles.item}
                                 onPress={() => handleSelectCategoria(item.id_categoria, item.nombre)}
                             >
-                                <Text>{item.nombre}</Text>
+                                <Text style={styles.itemText}>{item.nombre}</Text>
                             </TouchableOpacity>
                         )}
                     />
-                    <Button title="Cerrar" onPress={() => setModalVisible(false)} />
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={() => setModalVisible(false)}
+                    >
+                        <Text style={styles.buttonText}>Cerrar</Text>
+                    </TouchableOpacity>
                 </View>
             </Modal>
 
-            <Button title="Agregar Producto" onPress={handleAgregarProducto} />
+            <TouchableOpacity style={styles.button} onPress={handleAgregarProducto}>
+                <Text style={styles.buttonText}>Agregar Producto</Text>
+            </TouchableOpacity>
 
             <Text style={styles.subtitle}>Agregar Nueva Categoría</Text>
-            <TextInput
-                style={styles.input}
-                placeholder="Nombre de la categoría"
+            <FloatingLabelInput
+                label="Nombre de la categoría"
                 value={nombreCategoria}
                 onChangeText={setNombreCategoria}
             />
-            <Button title="Agregar Categoría" onPress={handleAgregarCategoria} />
+            <TouchableOpacity style={styles.button} onPress={handleAgregarCategoria}>
+                <Text style={styles.buttonText}>Agregar Categoría</Text>
+            </TouchableOpacity>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#fff' },
-    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-    subtitle: { fontSize: 18, fontWeight: 'bold', marginTop: 30, marginBottom: 10 },
-    input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 5, padding: 10, marginBottom: 15 },
-    modalContainer: { flex: 1, padding: 20 },
-    item: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc' },
+    container: { flex: 1, padding: 16, backgroundColor: '#101010' },
+    header: { fontSize: 28, fontWeight: 'bold', color: '#f5c469', textAlign: 'center', marginBottom: 20 },
+    dropdown: { justifyContent: 'center' },
+    dropdownText: { color: '#ccc' },
+    button: { backgroundColor: '#d4af37', padding: 12, borderRadius: 10, alignItems: 'center', marginVertical: 10 },
+    buttonText: { color: '#000', fontWeight: 'bold', fontSize: 18 },
+    subtitle: { fontSize: 20, fontWeight: 'bold', color: '#f5c469', marginTop: 20, textAlign: 'center' },
+    modalContainer: { flex: 1, padding: 20, backgroundColor: '#101010' },
+    item: { padding: 10, borderBottomWidth: 1, borderBottomColor: '#303030' },
+    itemText: { color: '#fff' },
+    dropdown: {
+        justifyContent: 'center',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        borderColor: '#404040',
+        borderRadius: 8,
+        padding: 12,
+        marginVertical: 8,
+    },
+    dropdownContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    dropdownText: {
+        color: '#000',
+        fontSize: 16,
+    },
+    
 });
 
 export default AgregarProductoScreen;

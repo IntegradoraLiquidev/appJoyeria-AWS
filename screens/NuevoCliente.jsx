@@ -1,22 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    View,
-    Text,
-    TextInput,
-    StyleSheet,
-    Alert,
-    KeyboardAvoidingView,
-    ScrollView,
-    ActivityIndicator,
-    TouchableOpacity,
-    Animated,
-    Platform,
-    FlatList,
-    Modal,
+    View, Text, TextInput, StyleSheet, Alert, KeyboardAvoidingView, ScrollView, ActivityIndicator, TouchableOpacity, Animated, Platform, FlatList, Modal,
 } from 'react-native';
 import axios from 'axios';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import FloatingLabelInput from '../components/FloatingLabelInput'; // Ajusta la ruta según tu estructura de proyecto
+
 
 
 
@@ -28,7 +18,6 @@ const NuevoCliente = ({ navigation }) => {
     const [categoria, setCategoria] = useState(null);
     const [categorias, setCategorias] = useState([]);
     const [productos, setProductos] = useState([]);
-    const [quilates, setQuilates] = useState('');
     const [precioTotal, setPrecioTotal] = useState('');
     const [formaPago, setFormaPago] = useState('');
     const [abonoInicial, setAbonoInicial] = useState('');
@@ -109,51 +98,51 @@ const NuevoCliente = ({ navigation }) => {
         setIsLoading(true);
 
         // Verifica si los datos están completos
-        if (!nombre || !direccion || !telefono || !producto  || !precioTotal || !formaPago) {
+        if (!nombre || !direccion || !telefono || !producto || !precioTotal || !formaPago) {
             Alert.alert('Error', 'Por favor, complete todos los campos');
             setIsLoading(false);
             return;
         }
-    
+
         const montoActual = abonoInicial
             ? Math.max(0, parseFloat(precioTotal) - parseFloat(abonoInicial))
             : parseFloat(precioTotal);
-    
-            try {
-                const token = await AsyncStorage.getItem('token');
-                if (!token) throw new Error('No se encontró un token de autenticación');
-            
-                await axios.post(
-                    'http://192.168.1.65:3000/api/clientes',
-                    {
-                        nombre,
-                        direccion,
-                        telefono,
-                        producto_id: producto,
-                        precio_total: parseFloat(precioTotal),
-                        forma_pago: formaPago,
-                        monto_actual: montoActual,
-                    },
-                    { headers: { Authorization: `Bearer ${token}` } }
-                );
-            
-                Alert.alert('Éxito', 'Cliente agregado exitosamente');
-                setNombre('');
-                setDireccion('');
-                setTelefono('');
-                setProducto(null);
-                setCategoria(null);
-                setPrecioTotal('');
-                setFormaPago('');
-                setAbonoInicial('');
-                setProductos([]);
-                navigation.goBack();
-            } catch (error) {
-                console.error('Error al agregar cliente:', error);  // Muestra el error real
-                Alert.alert('Error', 'Hubo un problema al agregar el cliente');
-            } finally {
-                setIsLoading(false);
-            }
+
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) throw new Error('No se encontró un token de autenticación');
+
+            await axios.post(
+                'http://192.168.1.65:3000/api/clientes',
+                {
+                    nombre,
+                    direccion,
+                    telefono,
+                    producto_id: producto,
+                    precio_total: parseFloat(precioTotal),
+                    forma_pago: formaPago,
+                    monto_actual: montoActual,
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            Alert.alert('Éxito', 'Cliente agregado exitosamente');
+            setNombre('');
+            setDireccion('');
+            setTelefono('');
+            setProducto(null);
+            setCategoria(null);
+            setPrecioTotal('');
+            setFormaPago('');
+            setAbonoInicial('');
+            setProductos([]);
+            navigation.goBack();
+        } catch (error) {
+            console.error('Error al agregar cliente:', error);  // Muestra el error real
+            Alert.alert('Error', 'Hubo un problema al agregar el cliente');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handlePressIn = () => {
@@ -199,29 +188,23 @@ const NuevoCliente = ({ navigation }) => {
                     <View>
                         <Text style={styles.title}>Agregar Cliente</Text>
 
-                        <TextInput
-                            style={styles.input}
+                        <FloatingLabelInput
+                            label="Nombre"
                             value={nombre}
                             onChangeText={setNombre}
-                            placeholder="Nombre"
-                            placeholderTextColor="#999"
                         />
-
-                        <TextInput
-                            style={styles.input}
+                        <FloatingLabelInput
+                            label="Dirección"
                             value={direccion}
                             onChangeText={setDireccion}
-                            placeholder="Dirección"
-                            placeholderTextColor="#999"
-                        />
 
-                        <TextInput
-                            style={styles.input}
+                        />
+                        <FloatingLabelInput
+                            label="Teléfono"
                             value={telefono}
                             onChangeText={setTelefono}
-                            placeholder="Teléfono"
                             keyboardType="phone-pad"
-                            placeholderTextColor="#999"
+
                         />
 
                         <TouchableOpacity style={styles.inputPicker} onPress={() => setModalVisible(true)}>
@@ -285,23 +268,21 @@ const NuevoCliente = ({ navigation }) => {
                                 </TouchableOpacity>
                             </View>
                         </Modal>
-                        
-                        <TextInput
-                            style={styles.input}
+
+                        <FloatingLabelInput
+                            label="Precio Total"
                             value={precioTotal}
                             onChangeText={setPrecioTotal}
-                            placeholder="Precio Total"
                             keyboardType="numeric"
-                            placeholderTextColor="#999"
-                        />
 
-                        <TextInput
-                            style={styles.input}
+                            
+                        />
+                        <FloatingLabelInput
+                            label="Abono Inicial (Opcional)"
                             value={abonoInicial}
                             onChangeText={setAbonoInicial}
-                            placeholder="Abono Inicial (Opcional)"
                             keyboardType="numeric"
-                            placeholderTextColor="#999"
+
                         />
 
                         <DropDownPicker

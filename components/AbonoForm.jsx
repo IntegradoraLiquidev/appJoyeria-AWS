@@ -6,7 +6,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const AbonoForm = ({ clienteId, onAddAbono }) => {
     const [monto, setMonto] = useState('');
     const [loading, setLoading] = useState(false);
-    const [fechaProximoPago, setFechaProximoPago] = useState(null); // Nuevo estado para la fecha
+    const [fechaProximoPago, setFechaProximoPago] = useState(null);
 
     const handleAddAbono = async () => {
         if (loading) return;
@@ -31,8 +31,8 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
 
             if (response.status === 201) {
                 console.log('Abono added successfully:', response.data);
-                setFechaProximoPago(response.data.fecha_proximo_pago); // Actualiza la fecha de próximo pago en el estado
-                onAddAbono(response.data.fecha_proximo_pago); // Llama a la función de callback si es necesario
+                setFechaProximoPago(response.data.fecha_proximo_pago); 
+                onAddAbono(response.data.fecha_proximo_pago); 
             }
         } catch (error) {
             console.error('Error en la solicitud de agregar abono:', error);

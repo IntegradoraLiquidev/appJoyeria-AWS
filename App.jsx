@@ -146,7 +146,7 @@ export default function App() {
                 <Stack.Screen name="AdminDashboard" component={AdminTabs} options={{ headerShown: false }} />
                 <Stack.Screen name="WorkerDashboard" component={WorkerTabs} options={{ headerShown: false }} />
                 <Stack.Screen name="Detalles del cliente" component={ClienteDetails} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469' }} />
-                <Stack.Screen name="TrabajadorClientes" component={TrabajadoresDetails} options={{ headerShown: true }} />
+                <Stack.Screen name="TrabajadorClientes" component={TrabajadoresDetails} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: 'Lista de clientes' , headerShown: true  }} />
                 <Stack.Screen name="EstadisticasTablas" component={EstadisticasScreen} options={{ title: 'Estadísticas' }} />
                 <Stack.Screen name="EditarTrabajador" component={EditarTrabajador} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: 'Editar Trabajador' }} />
                 <Stack.Screen name="EditarClientes" component={EditarClientes} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: `Editar cliente` }} />
