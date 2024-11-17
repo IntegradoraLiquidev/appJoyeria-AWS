@@ -87,7 +87,9 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
             </View>
             <View style={styles.infoContainer}>
                 <Icon name="attach-money" size={18} color="#f5c469" />
-                <Text style={styles.cardAmountText}>Por pagar: {cliente.monto_actual}</Text>
+                {cliente.monto_actual == 0 ? <Text style={[styles.cardAmountText]}>Completado</Text> :
+                    <Text style={styles.cardAmountText}>Por pagar: {cliente.monto_actual}</Text>
+                }
             </View>
 
             <TouchableOpacity onPress={handlePress} style={styles.detailsButton}>

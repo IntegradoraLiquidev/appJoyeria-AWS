@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, TextInput, StyleSheet, Dimensions, FlatList, Text, Animated } from 'react-native';
-import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
+import { TabView, TabBar } from 'react-native-tab-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useIsFocused } from '@react-navigation/native';
@@ -16,10 +16,10 @@ const WorkerDashboard = ({ navigation }) => {
     const isFocused = useIsFocused();
 
     const [index, setIndex] = useState(0);
-    const [routes] = useState([
+    const routes = [
         { key: 'pagosHoy', title: 'Con Pago Hoy' },
         { key: 'sinPagosHoy', title: 'Sin Pago Hoy' },
-    ]);
+    ];
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -54,8 +54,6 @@ const WorkerDashboard = ({ navigation }) => {
             fetchClientes();
         }
     }, [isFocused, fadeAnim]);
-
-
 
     useEffect(() => {
         const filtered = clientes.filter(cliente =>
@@ -97,10 +95,10 @@ const WorkerDashboard = ({ navigation }) => {
         return proximoPago !== today && new Date(cliente.fecha_proximo_pago) >= new Date();
     });
 
-    const renderClienteList = clientes => (
+    const renderClienteList = (clientes) => (
         <FlatList
             data={clientes}
-            keyExtractor={item => item.id_cliente.toString()}
+            keyExtractor={(item) => item.id_cliente.toString()}
             renderItem={({ item }) => (
                 <ClienteCard
                     cliente={item}
@@ -116,14 +114,19 @@ const WorkerDashboard = ({ navigation }) => {
         />
     );
 
-    const renderScene = SceneMap({
-        pagosHoy: () => renderClienteList(clientesConPagoHoy),
-        sinPagosHoy: () => renderClienteList(clientesSinPagoHoy),
-    });
+    const renderScene = ({ route }) => {
+        switch (route.key) {
+            case 'pagosHoy':
+                return renderClienteList(clientesConPagoHoy);
+            case 'sinPagosHoy':
+                return renderClienteList(clientesSinPagoHoy);
+            default:
+                return null;
+        }
+    };
 
     return (
         <View style={styles.container}>
-
             <View style={styles.header}>
                 <Text style={styles.title}>Clientes</Text>
                 <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
@@ -148,7 +151,7 @@ const WorkerDashboard = ({ navigation }) => {
                 renderScene={renderScene}
                 onIndexChange={setIndex}
                 initialLayout={{ width: Dimensions.get('window').width }}
-                renderTabBar={props => (
+                renderTabBar={(props) => (
                     <TabBar
                         {...props}
                         indicatorStyle={styles.tabIndicator}
@@ -162,7 +165,7 @@ const WorkerDashboard = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 2, backgroundColor: '#121212' },
+    container: { flex: 1, backgroundColor: '#121212' },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',

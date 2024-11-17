@@ -1,10 +1,17 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, FlatList, StyleSheet, Text, Animated, TextInput, Dimensions } from 'react-native';
-import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
+import React, { useEffect, useState } from 'react';
+import {
+    View,
+    FlatList,
+    StyleSheet,
+    Text,
+    TextInput,
+    Dimensions,
+} from 'react-native';
+import { TabView, TabBar } from 'react-native-tab-view';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import ClienteCard from '../components/ClienteCard';
 import { useNavigation } from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const TrabajadorClientes = ({ route }) => {
     const { id } = route.params;
@@ -12,19 +19,25 @@ const TrabajadorClientes = ({ route }) => {
     const [searchText, setSearchText] = useState('');
     const [filteredClientes, setFilteredClientes] = useState([]);
     const [trabajadorNombre, setTrabajadorNombre] = useState('');
+    const [index, setIndex] = useState(0);
+    const routes = [
+        { key: 'pagosHoy', title: 'Con Pago Hoy' },
+        { key: 'sinPagosHoy', title: 'Sin Pago Hoy' },
+        { key: 'montoCero', title: 'Finalizados' },
+    ];
 
     const navigation = useNavigation();
 
+    // Fetch inicial de los clientes
     const fetchClientes = async () => {
         try {
             const response = await axios.get(`http://192.168.1.65:3000/api/clientes/clientes/${id}`);
-            const clientesPendientes = response.data
-                .sort((a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago));
-
+            const clientesPendientes = response.data.sort(
+                (a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago)
+            );
             setClientes(clientesPendientes);
             setFilteredClientes(clientesPendientes);
 
-            // Asignar el nombre del trabajador
             if (response.data.length > 0) {
                 setTrabajadorNombre(response.data[0].nombre_trabajador);
             }
@@ -37,6 +50,23 @@ const TrabajadorClientes = ({ route }) => {
         fetchClientes();
     }, [id]);
 
+    // Persistencia del índice de pestañas
+    useEffect(() => {
+        const fetchIndex = async () => {
+            const savedIndex = await AsyncStorage.getItem('tabIndex');
+            if (savedIndex !== null) {
+                setIndex(parseInt(savedIndex, 10));
+            }
+        };
+        fetchIndex();
+    }, []);
+
+    const handleIndexChange = async (newIndex) => {
+        setIndex(newIndex);
+        await AsyncStorage.setItem('tabIndex', newIndex.toString());
+    };
+
+    // Filtrar clientes según búsqueda
     useEffect(() => {
         const filtered = clientes.filter((cliente) =>
             cliente.nombre.toLowerCase().includes(searchText.toLowerCase())
@@ -44,51 +74,25 @@ const TrabajadorClientes = ({ route }) => {
         setFilteredClientes(filtered);
     }, [searchText, clientes]);
 
+    // Categorías de clientes
     const today = new Date().toLocaleDateString('es-ES');
-
     const clientesConPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
         return proximoPago === today || new Date(cliente.fecha_proximo_pago) < new Date();
     });
-
     const clientesSinPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
-        return proximoPago !== today && new Date(cliente.fecha_proximo_pago) >= new Date() && parseFloat(cliente.monto_actual) > 0;
+        return (
+            proximoPago !== today &&
+            new Date(cliente.fecha_proximo_pago) >= new Date() &&
+            parseFloat(cliente.monto_actual) > 0
+        );
     });
-    
-    const clientesMontoCero = filteredClientes.filter((cliente) => {
-        return parseFloat(cliente.monto_actual) === 0;
-    });
+    const clientesMontoCero = filteredClientes.filter(
+        (cliente) => parseFloat(cliente.monto_actual) === 0
+    );
 
-    // Función para manejar la edición del cliente
-    const handleEdit = (cliente) => {
-        navigation.navigate('EditarClientes', { cliente, refreshClientes: fetchClientes });
-    };
-
-    // Función para manejar la eliminación del cliente
-    const handleDelete = async (clienteId) => {
-        try {
-            const token = await AsyncStorage.getItem('token');
-            if (token) {
-                const response = await axios.delete(`http://192.168.1.65:3000/api/clientes/${clienteId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (response.status === 200) {
-                    setClientes((prevClientes) => prevClientes.filter((cliente) => cliente.id_cliente !== clienteId));
-                    alert('Cliente eliminado correctamente');
-                } else {
-                    alert('Error al eliminar el cliente');
-                }
-            }
-        } catch (error) {
-            console.error('Error al eliminar el cliente:', error);
-            alert('Error al eliminar el cliente');
-        }
-    };
-
+    // Renderizar lista de clientes
     const renderClienteList = (clientes) => (
         <FlatList
             data={clientes}
@@ -100,8 +104,6 @@ const TrabajadorClientes = ({ route }) => {
                         navigation.navigate('Detalles del cliente', { id: item.id_cliente })
                     }
                     isAdmin={true}
-                    onEdit={() => handleEdit(item)}
-                    onDelete={() => handleDelete(item.id_cliente)}
                 />
             )}
             ListEmptyComponent={
@@ -111,25 +113,25 @@ const TrabajadorClientes = ({ route }) => {
         />
     );
 
-    const renderScene = SceneMap({
-        pagosHoy: () => renderClienteList(clientesConPagoHoy),
-        sinPagosHoy: () => renderClienteList(clientesSinPagoHoy),
-        montoCero: () => renderClienteList(clientesMontoCero),
-    });
-
-    const [index, setIndex] = useState(0);
-    const [routes] = useState([
-        { key: 'pagosHoy', title: 'Con Pago Hoy' },
-        { key: 'sinPagosHoy', title: 'Sin Pago Hoy' },
-        { key: 'montoCero', title: 'Finalizados' },
-    ]);
+    const renderScene = ({ route }) => {
+        switch (route.key) {
+            case 'pagosHoy':
+                return renderClienteList(clientesConPagoHoy);
+            case 'sinPagosHoy':
+                return renderClienteList(clientesSinPagoHoy);
+            case 'montoCero':
+                return renderClienteList(clientesMontoCero);
+            default:
+                return null;
+        }
+    };
 
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Clientes de {trabajadorNombre}</Text>
             <TextInput
                 style={styles.searchInput}
-                placeholder="Buscar cliente"
+                placeholder="Buscar clientes"
                 value={searchText}
                 onChangeText={setSearchText}
                 placeholderTextColor="#d1a980"
@@ -137,8 +139,9 @@ const TrabajadorClientes = ({ route }) => {
             <TabView
                 navigationState={{ index, routes }}
                 renderScene={renderScene}
-                onIndexChange={setIndex}
+                onIndexChange={handleIndexChange}
                 initialLayout={{ width: Dimensions.get('window').width }}
+                lazy
                 renderTabBar={(props) => (
                     <TabBar
                         {...props}
