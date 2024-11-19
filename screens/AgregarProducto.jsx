@@ -13,6 +13,8 @@ const AgregarProductoScreen = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [searchText, setSearchText] = useState('');
     const [filteredCategorias, setFilteredCategorias] = useState([]);
+    const [cantidad, setCantidad] = useState('');
+
 
     useEffect(() => {
         fetch('http://192.168.1.65:3000/api/categorias/')
@@ -38,6 +40,7 @@ const AgregarProductoScreen = () => {
                 quilates: parseInt(quilates),
                 precio: parseFloat(precio),
                 id_categoria: parseInt(idCategoria),
+                cantidad: parseInt(cantidad),
             }),
         })
             .then((response) => response.json())
@@ -47,8 +50,10 @@ const AgregarProductoScreen = () => {
                 setQuilates('');
                 setPrecio('');
                 setIdCategoria('');
+                setCantidad(''); // Reinicia la cantidad
             })
             .catch((error) => console.error('Error al agregar el producto:', error));
+
     };
 
     const handleAgregarCategoria = () => {
@@ -107,6 +112,13 @@ const AgregarProductoScreen = () => {
                 onChangeText={setPrecio}
                 keyboardType="numeric"
             />
+            <FloatingLabelInput
+                label="Cantidad"
+                value={cantidad}
+                onChangeText={setCantidad}
+                keyboardType="numeric"
+            />
+
             <TouchableOpacity
                 style={[styles.input, styles.dropdown]}
                 onPress={() => setModalVisible(true)}
@@ -193,7 +205,7 @@ const styles = StyleSheet.create({
         color: '#000',
         fontSize: 16,
     },
-    
+
 });
 
 export default AgregarProductoScreen;
