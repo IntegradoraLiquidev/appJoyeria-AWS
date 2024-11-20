@@ -27,7 +27,7 @@ const WorkerDashboard = ({ navigation }) => {
         const fetchClientes = async () => {
             try {
                 const token = await AsyncStorage.getItem('token');
-                const response = await axios.get('http://192.168.1.65:3000/api/clientes', {
+                const response = await axios.get('http://192.168.1.18:3000/api/clientes', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 

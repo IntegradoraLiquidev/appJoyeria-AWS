@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Platform, KeyboardAvoidingView } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import DropDownPicker from 'react-native-dropdown-picker';
+import { Picker } from '@react-native-picker/picker';
 import FloatingLabelInput from '../components/FloatingLabelInput'; // Importa el componente reutilizable
 
 const NuevoTrabajador = ({ navigation }) => {
@@ -10,8 +10,7 @@ const NuevoTrabajador = ({ navigation }) => {
     const [apellidos, setApellidos] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [role, setRole] = useState('trabajador');
-    const [open, setOpen] = useState(false);
+    const [role, setRole] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
     const token = useRef(null);
@@ -33,7 +32,7 @@ const NuevoTrabajador = ({ navigation }) => {
         try {
             const config = { headers: { Authorization: `Bearer ${token.current}` } };
             const data = { nombre, apellidos, email, password, role };
-            const response = await axios.post('http://192.168.1.65:3000/api/trabajadores/agregar', data, config);
+            const response = await axios.post('http://192.168.1.18:3000/api/trabajadores/agregar', data, config);
 
             if (response.status === 201) {
                 Alert.alert('Éxito', 'Trabajador agregado exitosamente');
@@ -79,20 +78,16 @@ const NuevoTrabajador = ({ navigation }) => {
                     secureTextEntry
                 />
 
-                <View style={{ zIndex: 100 }}>
-                    <DropDownPicker
-                        open={open}
-                        value={role}
-                        items={[
-                            { label: 'Trabajador', value: 'trabajador' },
-                            { label: 'Admin', value: 'admin' },
-                        ]}
-                        setOpen={setOpen}
-                        setValue={setRole}
-                        placeholder="Rol"
-                        style={styles.dropdown}
-                        dropDownContainerStyle={styles.dropdownContainer}
-                    />
+                <View style={styles.pickerContainer}>
+                    <Text style={{color: '#fff'}}>Rol</Text>
+                    <Picker
+                        selectedValue={role}
+                        onValueChange={(itemValue) => setRole(itemValue)}
+                        style={styles.picker}
+                    >
+                        <Picker.Item label="Trabajador" value="trabajador" />
+                        <Picker.Item label="Administrador" value="Administrador" />
+                    </Picker>
                 </View>
 
                 <View style={styles.buttonContainer}>
@@ -122,12 +117,20 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 20,
     },
-    dropdown: {
+    pickerContainer: {
         marginBottom: 15,
+        backgroundColor: '#1a1a1a',
         borderRadius: 10,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
     },
-    dropdownContainer: {
-        borderRadius: 10,
+    pickerLabel: {
+        color: '#fff',
+        marginBottom: 5,
+    },
+    picker: {
+        backgroundColor: '#fff',
+        color: '#000',
     },
     buttonContainer: {
         marginTop: 20,

@@ -38,7 +38,7 @@ const NuevoCliente = ({ navigation }) => {
     useEffect(() => {
         const fetchCategorias = async () => {
             try {
-                const response = await axios.get('http://192.168.1.65:3000/api/categorias');
+                const response = await axios.get('http://192.168.1.18:3000/api/categorias');
                 setCategorias(response.data);
                 setFilteredCategorias(response.data); // Inicializar con todas las categorías
             } catch (error) {
@@ -53,7 +53,7 @@ const NuevoCliente = ({ navigation }) => {
     const fetchProductosPorCategoria = async (categoriaId) => {
         try {
             const response = await axios.get(
-                `http://192.168.1.65:3000/api/productos?categoria=${categoriaId}`
+                `http://192.168.1.18:3000/api/productos?categoria=${categoriaId}`
             );
             setProductos(response.data);
         } catch {
@@ -113,7 +113,7 @@ const NuevoCliente = ({ navigation }) => {
             if (!token) throw new Error('No se encontró un token de autenticación');
 
             await axios.post(
-                'http://192.168.1.65:3000/api/clientes',
+                'http://192.168.1.18:3000/api/clientes',
                 {
                     nombre,
                     direccion,

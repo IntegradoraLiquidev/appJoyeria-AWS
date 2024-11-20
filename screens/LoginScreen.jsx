@@ -41,7 +41,7 @@ const LoginScreen = ({ navigation }) => {
 
     const handleLogin = async () => {
         try {
-            const response = await axios.post('http://192.168.1.65:3000/api/auth/login', { email, password });
+            const response = await axios.post('http://192.168.1.18:3000/api/auth/login', { email, password });
             const { token } = response.data;
             await AsyncStorage.setItem('token', token);
 

@@ -17,7 +17,7 @@ const AgregarProductoScreen = () => {
 
 
     useEffect(() => {
-        fetch('http://192.168.1.65:3000/api/categorias/')
+        fetch('http://192.168.1.18:3000/api/categorias/')
             .then((response) => response.json())
             .then((data) => {
                 setCategorias(data);
@@ -32,7 +32,7 @@ const AgregarProductoScreen = () => {
             return;
         }
 
-        fetch('http://192.168.1.65:3000/api/productos/agregarProducto', {
+        fetch('http://192.168.1.18:3000/api/productos/agregarProducto', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -62,7 +62,7 @@ const AgregarProductoScreen = () => {
             return;
         }
 
-        fetch('http://192.168.1.65:3000/api/categorias/agregarCategoria', {
+        fetch('http://192.168.1.18:3000/api/categorias/agregarCategoria', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ nombre: nombreCategoria }),

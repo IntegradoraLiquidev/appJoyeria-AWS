@@ -31,7 +31,7 @@ const TrabajadorClientes = ({ route }) => {
     // Fetch inicial de los clientes
     const fetchClientes = async () => {
         try {
-            const response = await axios.get(`http://192.168.1.65:3000/api/clientes/clientes/${id}`);
+            const response = await axios.get(`http://192.168.1.18:3000/api/clientes/clientes/${id}`);
             const clientesPendientes = response.data.sort(
                 (a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago)
             );
@@ -61,16 +61,15 @@ const TrabajadorClientes = ({ route }) => {
         fetchIndex();
     }, []);
 
-   const handleIndexChange = async (newIndex) => {
-    setIndex(newIndex);
-    await AsyncStorage.setItem('tabIndex', newIndex.toString());
+    const handleIndexChange = async (newIndex) => {
+        setIndex(newIndex);
+        await AsyncStorage.setItem('tabIndex', newIndex.toString());
 
-    // Opcional: Actualiza datos solo si es necesario
-    if (newIndex === 0 || newIndex === 1 || newIndex === 2) {
-        fetchClientes();
-    }
-};
-
+        // Opcional: Actualiza datos solo si es necesario
+        if (newIndex === 0 || newIndex === 1 || newIndex === 2) {
+            fetchClientes();
+        }
+    };
 
     // Filtrar clientes según búsqueda
     useEffect(() => {
@@ -84,19 +83,53 @@ const TrabajadorClientes = ({ route }) => {
     const today = new Date().toLocaleDateString('es-ES');
     const clientesConPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
-        return proximoPago === today || new Date(cliente.fecha_proximo_pago) < new Date();
+        return (
+            proximoPago === today && new Date(cliente.fecha_proximo_pago) <= new Date() &&
+            parseFloat(cliente.monto_actual) >= 1
+        )
     });
     const clientesSinPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
         return (
             proximoPago !== today &&
             new Date(cliente.fecha_proximo_pago) >= new Date() &&
-            parseFloat(cliente.monto_actual) > 0
+            parseFloat(cliente.monto_actual) >= 1
         );
     });
     const clientesMontoCero = filteredClientes.filter(
         (cliente) => parseFloat(cliente.monto_actual) === 0
     );
+
+    const handleEdit = (cliente) => {
+        navigation.navigate('EditarClientes', { cliente, refreshClientes: fetchClientes });
+    };
+    const handleExport = (cliente) => {
+
+    };
+
+
+    const handleDelete = async (clienteId) => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (token) {
+                const response = await axios.delete(`http://192.168.1.18:3000/api/clientes/${clienteId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (response.status === 200) {
+                    setClientes((prevClientes) => prevClientes.filter((cliente) => cliente.id_cliente !== clienteId));
+                    alert('Cliente eliminado correctamente');
+                } else {
+                    alert('Error al eliminar el cliente');
+                }
+            }
+        } catch (error) {
+            console.error('Error al eliminar el cliente:', error);
+            alert('Error al eliminar el cliente');
+        }
+    };
 
     // Renderizar lista de clientes
     const renderClienteList = (clientes) => (
@@ -106,6 +139,9 @@ const TrabajadorClientes = ({ route }) => {
             renderItem={({ item }) => (
                 <ClienteCard
                     cliente={item}
+                    onDelete={handleDelete}
+                    onEdit={handleEdit}
+                    onExport={handleEdit}
                     onPress={() =>
                         navigation.navigate('Detalles del cliente', { id: item.id_cliente })
                     }
@@ -129,7 +165,7 @@ const TrabajadorClientes = ({ route }) => {
         }
         return null;
     };
-    
+
 
     return (
         <View style={styles.container}>

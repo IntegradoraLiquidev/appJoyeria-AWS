@@ -104,7 +104,7 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
                     <TouchableOpacity onPress={handleDelete} style={styles.actionButton}>
                         <Icon name="delete" size={28} color="#e63946" />
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleExport(cliente)} style={styles.actionButton}>
+                    <TouchableOpacity onPress={() => onExport(cliente)} style={styles.actionButton}>
                         <Icon name="download" size={28} color="#06d6a0" />
                     </TouchableOpacity>
                 </View>

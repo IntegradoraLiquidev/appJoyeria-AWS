@@ -12,7 +12,7 @@ const ListaProductos = ({ route }) => {
     useEffect(() => {
         const fetchProductos = async () => {
             try {
-                const response = await axios.get(`http://192.168.1.65:3000/api/productos/productoCategoria?id_categoria=${id_categoria}`);
+                const response = await axios.get(`http://192.168.1.18:3000/api/productos/productoCategoria?id_categoria=${id_categoria}`);
                 setProductos(response.data);
                 setFilteredProductos(response.data); // Inicialmente muestra todos
             } catch (error) {
