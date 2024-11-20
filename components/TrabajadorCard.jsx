@@ -2,6 +2,9 @@ import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Animated, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+
 
 const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
     const [showClientes, setShowClientes] = useState(false);
@@ -31,10 +34,15 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
     };
 
     const handleDeleteModalClose = () => {
-        Animated.spring(popAnim, { toValue: 0, friction: 9, useNativeDriver: true }).start(() => {
-            setDeleteModalVisible(false);
+        Animated.spring(popAnim, {
+            toValue: 0,
+            friction: 9,
+            useNativeDriver: true,
+        }).start(() => {
+            setDeleteModalVisible(false); // Evita bucles aquí
         });
     };
+    
 
     const confirmDelete = () => {
         axios.delete(`http://192.168.1.18:3000/api/trabajadores/eliminar/${trabajador.id_usuario}`)
@@ -48,9 +56,46 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
             });
     };
 
-    const handleExport = () => {
-        console.log(`Exportando datos del trabajador con id: ${trabajador.id}`);
+    const handleExport = async () => {
+        try {
+            const response = await axios.get(`http://192.168.1.18:3000/api/trabajadores/clientes/${trabajador.id_usuario}`);
+            const clientes = response.data.clientes || [];
+            
+            if (!Array.isArray(clientes)) {
+                throw new Error('La respuesta de la API no es válida');
+            }
+    
+            const conMonto = clientes.filter(cliente => parseFloat(cliente.monto_actual) > 0);
+            const sinMonto = clientes.filter(cliente => parseFloat(cliente.monto_actual) === 0);
+    
+            const formatToCSV = (data, title) => {
+                const rows = data.map(cliente => `${cliente.id_cliente},${cliente.nombre},${cliente.monto_actual}`).join('\n');
+                return `${title}\nNo.,Nombre,Por Pagar\n${rows}`;
+            };
+    
+            const csvContent = [
+                '\ufeff',
+                formatToCSV(conMonto, 'Clientes Activos'),
+                formatToCSV(sinMonto, 'Clientes Finalizados'),
+            ].join('\n\n');
+    
+            const filePath = `${FileSystem.documentDirectory}clientes_trabajador_${trabajador.nombre}_${trabajador.apellidos}.csv`;
+    
+            await FileSystem.writeAsStringAsync(filePath, csvContent, { encoding: FileSystem.EncodingType.UTF8 });
+            console.log('Archivo creado en:', filePath);
+    
+            if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(filePath);
+            } else {
+                console.error('La funcionalidad de compartir no está disponible');
+            }
+        } catch (error) {
+            console.error('Error al exportar clientes:', error.message || error);
+        }
     };
+    
+
+
 
     return (
         <Animated.View style={[styles.card, { transform: [{ scale: scaleAnim }] }]}>
@@ -66,6 +111,7 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
                     <TouchableOpacity style={styles.iconButton} onPress={handleExport}>
                         <Ionicons name="download" size={23} color="#27ae60" />
                     </TouchableOpacity>
+
                 </View>
             </View>
             <View style={styles.row}>
