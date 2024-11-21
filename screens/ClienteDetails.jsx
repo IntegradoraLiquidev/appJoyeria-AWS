@@ -12,6 +12,7 @@ const ClienteDetails = ({ route }) => {
     const [abonos, setAbonos] = useState([]);
     const [isAbonosVisible, setIsAbonosVisible] = useState(false);
     const navigation = useNavigation();
+    const [lastIncrementDate, setLastIncrementDate] = useState(null); // Nueva variable
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -61,40 +62,30 @@ const ClienteDetails = ({ route }) => {
     };
 
     const handleNoAbono = async () => {
+        const today = new Date().toISOString().split('T')[0]; // Obtener la fecha actual en formato 'YYYY-MM-DD'
+
+        if (lastIncrementDate === today) {
+            Alert.alert('Incremento ya realizado', 'El incremento ya se realizó para la fecha de hoy.');
+            return;
+        }
+
         try {
             const token = await AsyncStorage.getItem('token');
             if (!token) return;
-    
-            const today = new Date().toISOString().split('T')[0]; // Obtén solo la fecha en formato "YYYY-MM-DD"
-    
-            // Obtén la fecha del próximo pago del cliente
-            const fechaProximoPago = cliente?.fecha_proximo_pago;
-    
-            // Verifica si hoy es antes de la fecha de pago
-            if (new Date(today) < new Date(fechaProximoPago)) {
-                Alert.alert(
-                    'Acción no permitida',
-                    `No se puede realizar esta acción hasta la fecha de pago: ${new Date(fechaProximoPago).toLocaleDateString()}.`
-                );
-                return;
-            }
-    
-            const lastNoAbonoDate = await AsyncStorage.getItem(`lastNoAbonoDate_${id}`);
-    
-            if (lastNoAbonoDate === today) {
-                Alert.alert('Acción ya realizada', 'El botón de "No abonó" solo se puede presionar una vez al día.');
-                return;
-            }
-    
-            await AsyncStorage.setItem(`lastNoAbonoDate_${id}`, today); // Guarda la fecha actual
-    
-            // Llama a fetchDetails para obtener los detalles actualizados después del intento de no abonar
+
+            await axios.put(
+                `http://192.168.1.18:3000/api/clientes/${id}/incrementarMonto`,
+                { incremento: 10 },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            setLastIncrementDate(today); // Actualizar la última fecha de incremento
             fetchDetails();
+            Alert.alert('Monto incrementado', 'Se ha añadido 10 pesos al monto actual.');
         } catch (error) {
-            console.error('Error en la lógica de "No abonó":', error);
+            console.error('Error incrementing monto_actual:', error);
         }
     };
-    
 
 
     const handlePressIn = () => {

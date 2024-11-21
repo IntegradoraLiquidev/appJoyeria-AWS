@@ -6,7 +6,6 @@ import TrabajadorCard from '../components/TrabajadorCard';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-
 const AdminDashboard = ({ navigation }) => {
     const [trabajadores, setTrabajadores] = useState([]);
     const [searchText, setSearchText] = useState('');
@@ -75,35 +74,38 @@ const AdminDashboard = ({ navigation }) => {
 
     return (
         <View style={styles.container}>
-        <View style={styles.header}>
-            <Text style={styles.title}>Lista de trabajadores</Text>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-                <Ionicons name="exit-outline" size={24} color="#ff6347" />
-            </TouchableOpacity>
-        </View>
-        <TextInput
-            style={styles.searchInput}
-            placeholder="Buscar por nombre"
-            value={searchText}
-            onChangeText={setSearchText}
-            placeholderTextColor="#d1a980"
-        />
-        <FlatList
-            data={trabajadores.filter(trabajador =>
-                trabajador.nombre.toLowerCase().includes(searchText.toLowerCase())
-            )}
-            keyExtractor={(item) => item.id_usuario.toString()}
-            renderItem={({ item }) => (
-                <TrabajadorCard
-                    trabajador={item}
-                    navigation={navigation}
-                    onDelete={handleDeleteTrabajador}
-                    onEdit={handleEditTrabajador}
+            <View style={styles.header}>
+                <Text style={styles.title}>Lista de trabajadores</Text>
+                <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+                    <Ionicons name="exit-outline" size={24} color="#ff6347" />
+                </TouchableOpacity>
+            </View>
+            <View style={styles.searchContainer}>
+                <Ionicons name="search-outline" size={20} color="#d1a980" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Buscar por nombre"
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    placeholderTextColor="#d1a980"
                 />
-            )}
-            contentContainerStyle={styles.listContent}
-        />
-    </View>
+            </View>
+            <FlatList
+                data={trabajadores.filter(trabajador =>
+                    trabajador.nombre.toLowerCase().includes(searchText.toLowerCase())
+                )}
+                keyExtractor={(item) => item.id_usuario.toString()}
+                renderItem={({ item }) => (
+                    <TrabajadorCard
+                        trabajador={item}
+                        navigation={navigation}
+                        onDelete={handleDeleteTrabajador}
+                        onEdit={handleEditTrabajador}
+                    />
+                )}
+                contentContainerStyle={styles.listContent}
+            />
+        </View>
     );
 };
 
@@ -125,21 +127,29 @@ const styles = StyleSheet.create({
         color: '#f5c469',
         letterSpacing: 0.8,
     },
-    searchInput: {
-        height: 45,
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#1e1e1e',
         borderColor: '#707070',
         borderWidth: 1,
         borderRadius: 10,
         marginBottom: 20,
         paddingHorizontal: 12,
-        color: '#d1a980',
-        backgroundColor: '#1e1e1e',
-        fontSize: 16,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.6,
         shadowRadius: 4,
         elevation: 3,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        height: 45,
+        color: '#d1a980',
+        fontSize: 16,
     },
     listContent: {
         paddingBottom: 20,
@@ -154,10 +164,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.6,
         shadowRadius: 4,
         elevation: 3,
-    },
-    logoutButtonText: {
-        color: '#ff6347',
-        fontWeight: 'bold',
     },
 });
 

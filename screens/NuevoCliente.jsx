@@ -238,9 +238,19 @@ const NuevoCliente = ({ navigation }) => {
                         </Modal>
 
 
-                        <TouchableOpacity style={styles.inputPicker} onPress={() => setModalProductosVisible(true)}>
+                        <TouchableOpacity
+                            style={styles.inputPicker}
+                            onPress={() => {
+                                if (!categoria) {
+                                    Alert.alert("Aviso", "Por favor, selecciona una categoría primero.");
+                                    return;
+                                }
+                                setModalProductosVisible(true);
+                            }}
+                        >
                             <Text>{producto ? productos.find((p) => p.id_producto === producto)?.nombre : 'Selecciona un producto'}</Text>
                         </TouchableOpacity>
+
 
                         <Modal visible={modalProductosVisible} animationType="slide">
                             <View style={styles.modalContainer}>
@@ -275,7 +285,7 @@ const NuevoCliente = ({ navigation }) => {
                             onChangeText={setPrecioTotal}
                             keyboardType="numeric"
 
-                            
+
                         />
                         <FloatingLabelInput
                             label="Abono Inicial (Opcional)"

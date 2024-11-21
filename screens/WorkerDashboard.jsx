@@ -4,7 +4,7 @@ import { TabView, TabBar } from 'react-native-tab-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { useIsFocused } from '@react-navigation/native';
-
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import ClienteCard from '../components/ClienteCard';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,8 +17,9 @@ const WorkerDashboard = ({ navigation }) => {
 
     const [index, setIndex] = useState(0);
     const routes = [
-        { key: 'pagosHoy', title: 'Con Pago Hoy' },
-        { key: 'sinPagosHoy', title: 'Sin Pago Hoy' },
+        { key: 'pagosHoy', title: 'Con pago hoy' },
+        { key: 'atrasados', title: 'Atrasados' },
+        { key: 'sinPagosHoy', title: 'Sin pago hoy' },
     ];
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -84,10 +85,21 @@ const WorkerDashboard = ({ navigation }) => {
     };
 
     const today = new Date().toLocaleDateString('es-ES');
-
-    const clientesConPagoHoy = filteredClientes.filter(cliente => {
+    const clientesConPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
-        return proximoPago === today || new Date(cliente.fecha_proximo_pago) < new Date();
+        return (
+            proximoPago === today &&
+            new Date(cliente.fecha_proximo_pago) < new Date() &&
+            parseFloat(cliente.monto_actual) > 0 // Excluir clientes con monto_actual 0
+        );
+    });
+    // Clientes atrasados (fecha de pago es anterior a hoy y aún deben dinero)
+    const clientesAtrasados = filteredClientes.filter((cliente) => {
+        const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
+        return (
+            proximoPago < today &&
+            parseFloat(cliente.monto_actual) > 0 // Asegurarse de que aún deben dinero
+        );
     });
 
     const clientesSinPagoHoy = filteredClientes.filter(cliente => {
@@ -118,6 +130,8 @@ const WorkerDashboard = ({ navigation }) => {
         switch (route.key) {
             case 'pagosHoy':
                 return renderClienteList(clientesConPagoHoy);
+            case 'atrasados':
+                return renderClienteList(clientesAtrasados);
             case 'sinPagosHoy':
                 return renderClienteList(clientesSinPagoHoy);
             default:
@@ -139,13 +153,16 @@ const WorkerDashboard = ({ navigation }) => {
                     />
                 </Animated.View>
             </View>
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Buscar cliente"
-                value={searchText}
-                onChangeText={setSearchText}
-                placeholderTextColor="#d1a980"
-            />
+            <View style={styles.searchContainer}>
+                <Icon name="search" size={24} color="#d1a980" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Buscar clientes"
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    placeholderTextColor="#d1a980"
+                />
+            </View>
             <TabView
                 navigationState={{ index, routes }}
                 renderScene={renderScene}
@@ -189,16 +206,29 @@ const styles = StyleSheet.create({
         shadowRadius: 5,
         elevation: 7,
     },
-    searchInput: {
-        height: 45,
-        margin: 15,
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         borderColor: '#707070',
         borderWidth: 1,
         borderRadius: 10,
-        paddingHorizontal: 12,
-        color: '#d1a980',
+        marginHorizontal: 16,
+        marginVertical: 10,
         backgroundColor: '#1e1e1e',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.6,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    searchIcon: {
+        marginHorizontal: 10,
+    },
+    searchInput: {
+        flex: 1,
+        color: '#d1a980',
         fontSize: 16,
+        paddingVertical: 10,
     },
     listContent: { paddingBottom: 20 },
     tabBar: { backgroundColor: '#1c1c1e' },

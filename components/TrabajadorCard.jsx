@@ -69,8 +69,8 @@ const TrabajadorCard = ({ trabajador, navigation, onDelete, onEdit }) => {
             const sinMonto = clientes.filter(cliente => parseFloat(cliente.monto_actual) === 0);
     
             const formatToCSV = (data, title) => {
-                const rows = data.map(cliente => `${cliente.id_cliente},${cliente.nombre},${cliente.monto_actual}`).join('\n');
-                return `${title}\nNo.,Nombre,Por Pagar\n${rows}`;
+                const rows = data.map(cliente => `${cliente.id_cliente},${cliente.nombre},${cliente.telefono},${cliente.direccion},${cliente.email},${cliente.monto_actual}`).join('\n');
+                return `${title}\nNo.,Nombre completo,direccion,telefono,Correo,Por Pagar\n${rows}`;
             };
     
             const csvContent = [

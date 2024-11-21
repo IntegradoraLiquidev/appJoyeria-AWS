@@ -10,13 +10,13 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
 
     const handleAddAbono = async () => {
         if (loading) return;
-
+    
         const parsedMonto = parseFloat(monto);
         if (isNaN(parsedMonto) || parsedMonto <= 0) {
             Alert.alert('Error', 'Por favor ingresa un monto válido.');
             return;
         }
-
+    
         try {
             setLoading(true);
             const token = await AsyncStorage.getItem('token');
@@ -25,14 +25,15 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
                 setLoading(false);
                 return;
             }
-
+    
             const fecha = new Date().toISOString().split('T')[0];
             const response = await axios.post(`http://192.168.1.18:3000/api/clientes/${clienteId}/abonos`, { monto: parsedMonto, fecha });
-
+    
             if (response.status === 201) {
                 console.log('Abono added successfully:', response.data);
                 setFechaProximoPago(response.data.fecha_proximo_pago); 
                 onAddAbono(response.data.fecha_proximo_pago); 
+                setMonto(''); // Vaciar el input después de realizar el abono
             }
         } catch (error) {
             console.error('Error en la solicitud de agregar abono:', error);
@@ -40,6 +41,7 @@ const AbonoForm = ({ clienteId, onAddAbono }) => {
             setLoading(false);
         }
     };
+    
 
     return (
         <View>

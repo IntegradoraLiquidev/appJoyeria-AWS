@@ -11,9 +11,9 @@ const FloatingLabelInput = ({ label, value, onChangeText, keyboardType = 'defaul
         position: 'absolute',
         left: 12,
         zIndex: 1,
-        top: (isFocused || value) ? -10 : 12, // Si está enfocado o tiene valor, sube el label
-        fontSize: (isFocused || value) ? 12 : 16, // Cambia tamaño del texto según el estado
-        color: (isFocused || value) ? '#FFD700' : '#999', // Gris o dorado
+        top: (isFocused || value) ? -10 : 12, 
+        fontSize: (isFocused || value) ? 12 : 16,
+        color: (isFocused || value) ? '#FFD700' : '#999', 
     };
 
     return (

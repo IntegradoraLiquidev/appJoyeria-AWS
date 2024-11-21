@@ -45,11 +45,6 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
         onDelete(cliente.id_cliente); // Pasa solo el ID
     };
 
-    const handleExport = (cliente) => {
-        console.log(`Exportando datos de cliente con ID: ${cliente.id_cliente}`);
-        // Implementa la lógica para exportar los datos del cliente
-    };
-
 
     const { texto: etiquetaPago, esAtrasado } = calcularDiasRestantes(cliente.fecha_proximo_pago);
 
@@ -103,9 +98,6 @@ const ClienteCard = ({ cliente, onPress, isAdmin, onEdit, onDelete, onExport }) 
                     </TouchableOpacity>
                     <TouchableOpacity onPress={handleDelete} style={styles.actionButton}>
                         <Icon name="delete" size={28} color="#e63946" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => onExport(cliente)} style={styles.actionButton}>
-                        <Icon name="download" size={28} color="#06d6a0" />
                     </TouchableOpacity>
                 </View>
             )}
@@ -213,7 +205,7 @@ const styles = StyleSheet.create({
         marginTop: 10,
     },
     actionButton: {
-        padding: 8,
+        padding: 5,
         borderRadius: 8,
         backgroundColor: '#2e2e38',
     },

@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { TabView, TabBar } from 'react-native-tab-view';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 import ClienteCard from '../components/ClienteCard';
 import { useNavigation } from '@react-navigation/native';
@@ -21,8 +22,9 @@ const TrabajadorClientes = ({ route }) => {
     const [trabajadorNombre, setTrabajadorNombre] = useState('');
     const [index, setIndex] = useState(0);
     const routes = [
-        { key: 'pagosHoy', title: 'Con Pago Hoy' },
-        { key: 'sinPagosHoy', title: 'Sin Pago Hoy' },
+        { key: 'pagosHoy', title: 'Con pago hoy' },
+        { key: 'atrasados', title: 'Atrasados' },
+        { key: 'sinPagosHoy', title: 'Sin pago hoy' },
         { key: 'montoCero', title: 'Finalizados' },
     ];
 
@@ -84,29 +86,37 @@ const TrabajadorClientes = ({ route }) => {
     const clientesConPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
         return (
-            proximoPago === today && new Date(cliente.fecha_proximo_pago) <= new Date() &&
-            parseFloat(cliente.monto_actual) >= 1
-        )
+            proximoPago === today &&
+            new Date(cliente.fecha_proximo_pago) < new Date() &&
+            parseFloat(cliente.monto_actual) > 0 // Excluir clientes con monto_actual 0
+        );
     });
     const clientesSinPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
         return (
             proximoPago !== today &&
             new Date(cliente.fecha_proximo_pago) >= new Date() &&
-            parseFloat(cliente.monto_actual) >= 1
+            parseFloat(cliente.monto_actual) > 0 // Excluir clientes con monto_actual 0
         );
     });
+
+    // Clientes atrasados (fecha de pago es anterior a hoy y aún deben dinero)
+    const clientesAtrasados = filteredClientes.filter((cliente) => {
+        const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
+        return (
+            proximoPago < today &&
+            parseFloat(cliente.monto_actual) > 0 // Asegurarse de que aún deben dinero
+        );
+    });
+
     const clientesMontoCero = filteredClientes.filter(
         (cliente) => parseFloat(cliente.monto_actual) === 0
     );
 
+
     const handleEdit = (cliente) => {
         navigation.navigate('EditarClientes', { cliente, refreshClientes: fetchClientes });
     };
-    const handleExport = (cliente) => {
-
-    };
-
 
     const handleDelete = async (clienteId) => {
         try {
@@ -158,9 +168,11 @@ const TrabajadorClientes = ({ route }) => {
     const renderScene = ({ route }) => {
         if (route.key === 'pagosHoy' && index === 0) {
             return renderClienteList(clientesConPagoHoy);
-        } else if (route.key === 'sinPagosHoy' && index === 1) {
+        } else if (route.key === 'atrasados' && index === 1) {
+            return renderClienteList(clientesAtrasados);
+        } else if (route.key === 'sinPagosHoy' && index === 2) {
             return renderClienteList(clientesSinPagoHoy);
-        } else if (route.key === 'montoCero' && index === 2) {
+        } else if (route.key === 'montoCero' && index === 3) {
             return renderClienteList(clientesMontoCero);
         }
         return null;
@@ -170,13 +182,16 @@ const TrabajadorClientes = ({ route }) => {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Clientes de {trabajadorNombre}</Text>
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Buscar clientes"
-                value={searchText}
-                onChangeText={setSearchText}
-                placeholderTextColor="#d1a980"
-            />
+            <View style={styles.searchContainer}>
+                <Icon name="search" size={24} color="#d1a980" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Buscar clientes"
+                    value={searchText}
+                    onChangeText={setSearchText}
+                    placeholderTextColor="#d1a980"
+                />
+            </View>
             <TabView
                 navigationState={{ index, routes }}
                 renderScene={renderScene}
@@ -189,9 +204,11 @@ const TrabajadorClientes = ({ route }) => {
                         indicatorStyle={styles.tabIndicator}
                         style={styles.tabBar}
                         labelStyle={styles.tabLabel}
+                        tabStyle={styles.tabStyle}
                     />
                 )}
             />
+
         </View>
     );
 };
@@ -206,21 +223,47 @@ const styles = StyleSheet.create({
         color: '#f5c469',
         letterSpacing: 0.8,
     },
-    searchInput: {
-        height: 45,
-        margin: 15,
+    searchContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         borderColor: '#707070',
         borderWidth: 1,
         borderRadius: 10,
-        paddingHorizontal: 12,
-        color: '#d1a980',
+        marginHorizontal: 16,
+        marginVertical: 10,
         backgroundColor: '#1e1e1e',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.6,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    searchIcon: {
+        marginHorizontal: 10,
+    },
+    searchInput: {
+        flex: 1,
+        color: '#d1a980',
         fontSize: 16,
+        paddingVertical: 10,
     },
     listContent: { paddingBottom: 20 },
-    tabBar: { backgroundColor: '#1c1c1e' },
-    tabIndicator: { backgroundColor: '#FFD700' },
-    tabLabel: { color: '#fff', fontWeight: 'bold' },
+    tabBar: { 
+        backgroundColor: '#1c1c1e',
+        paddingVertical: 1, // Añadido para espaciar las pestañas verticalmente
+    },
+    tabIndicator: { 
+        backgroundColor: '#FFD700', 
+        height: 3, // Altura del indicador
+    },
+    tabLabel: { 
+        color: '#fff', 
+        fontWeight: 'bold',
+        fontSize: 10, // Tamaño reducido de la fuente para que no se vea apretado
+    },
+    tabStyle: { 
+        paddingHorizontal: 1, // Espaciado horizontal para cada pestaña
+    },
     emptyMessage: {
         textAlign: 'center',
         color: '#fff',
@@ -228,5 +271,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
 });
+
 
 export default TrabajadorClientes;

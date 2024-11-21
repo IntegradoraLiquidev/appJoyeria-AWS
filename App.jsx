@@ -111,7 +111,7 @@ function AdminTabs() {
                 },
                 tabBarLabel: ({ focused, color }) => (
                     <Text style={{ color, fontSize: focused ? 12 : 10 }}>
-                        {route.name === 'Home' ? 'Inicio' : route.name === 'Add Worker' ? 'Agregar Trabajador' : route.name === 'AgregarProductos' ? 'Agregar Joyeria' :  route.name === 'VerJoyeria' ? 'Joyería' : 'Estadísticas'}
+                        {route.name === 'Home' ? 'Inicio' : route.name === 'Add Worker' ? 'Agregar Trabajador' : route.name === 'AgregarProductos' ? 'Agregar Joyeria' :  route.name === 'VerJoyeria' ? 'Inventario' : 'Estadísticas'}
                     </Text>
                 ),
                 tabBarActiveTintColor: '#FFD700',
