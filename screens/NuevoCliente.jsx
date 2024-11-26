@@ -15,7 +15,7 @@ const NuevoCliente = ({ navigation }) => {
     const [categoria, setCategoria] = useState(null);
     const [categorias, setCategorias] = useState([]);
     const [productos, setProductos] = useState([]);
-    const [precioTotal, setPrecioTotal] = useState('');
+    const [precioTotal, setPrecioTotal] = useState(0);
     const [formaPago, setFormaPago] = useState('');
     const [abonoInicial, setAbonoInicial] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -47,6 +47,16 @@ const NuevoCliente = ({ navigation }) => {
         fetchCategorias();
     }, []);
 
+    useEffect(() => {
+        const total = productosSeleccionados.reduce(
+            (sum, prod) => sum + (parseFloat(prod.precio) || 0) * prod.cantidad,
+            0
+        );
+        setPrecioTotal(total.toFixed(2)); // Asegurar dos decimales
+    }, [productosSeleccionados]);
+
+
+
     const fetchProductosPorCategoria = async (categoriaId) => {
         try {
             const response = await axios.get(
@@ -66,29 +76,54 @@ const NuevoCliente = ({ navigation }) => {
         fetchProductosPorCategoria(id); // Cargar productos de la categoría seleccionada
         setModalVisible(false);
     };
-    
 
-    const handleSelectProducto = (id, nombre) => {
-        // Evita duplicados en productos seleccionados
-        if (!productosSeleccionados.some((prod) => prod.id === id)) {
-            setProductosSeleccionados([...productosSeleccionados, { id, nombre }]);
+
+    const handleSelectProducto = (id, nombre, precio) => {
+        if (!precio) {
+            Alert.alert("Error", "El producto seleccionado no tiene un precio válido.");
+            return;
+        }
+
+        const productoExistente = productosSeleccionados.find((prod) => prod.id === id);
+
+        if (productoExistente) {
+            // Incrementar cantidad si el producto ya está seleccionado
+            setProductosSeleccionados(
+                productosSeleccionados.map((prod) =>
+                    prod.id === id ? { ...prod, cantidad: prod.cantidad + 1 } : prod
+                )
+            );
+        } else {
+            // Agregar nuevo producto con cantidad inicial de 1
+            setProductosSeleccionados([...productosSeleccionados, { id, nombre, precio, cantidad: 1 }]);
         }
         setModalProductosVisible(false);
+    };
+
+    const handleChangeCantidadProducto = (id, cambio) => {
+        setProductosSeleccionados((prev) =>
+            prev
+                .map((prod) =>
+                    prod.id === id
+                        ? { ...prod, cantidad: Math.max(1, prod.cantidad + cambio) } // Asegurar que la cantidad no sea menor a 1
+                        : prod
+                )
+                .filter((prod) => prod.cantidad > 0) // Filtrar productos con cantidad cero (si se permitiera eliminar)
+        );
     };
 
     const handleRemoveProducto = (id) => {
         setProductosSeleccionados(productosSeleccionados.filter((prod) => prod.id !== id));
     };
 
-
     const handleSearch = (text) => {
         setSearchText(text);
         const filtered = categorias.filter((cat) =>
-            cat.nombre?.toLowerCase().includes(text.toLowerCase())
+            cat.nombre.toLowerCase().includes(text.toLowerCase())
         );
         setFilteredCategorias(filtered);
     };
-    
+
     const handleSearchProduct = (text) => {
         setSearchProductText(text);
         const filtered = productos.filter((prod) =>
@@ -109,9 +144,8 @@ const NuevoCliente = ({ navigation }) => {
             return;
         }
 
-        const montoActual = abonoInicial
-            ? Math.max(0, parseFloat(precioTotal) - parseFloat(abonoInicial))
-            : parseFloat(precioTotal);
+        const montoActual = Math.max(0, parseFloat(precioTotal) - (parseFloat(abonoInicial) || 0));
+
 
         try {
             const token = await AsyncStorage.getItem('token');
@@ -127,6 +161,7 @@ const NuevoCliente = ({ navigation }) => {
                     precio_total: parseFloat(precioTotal),
                     forma_pago: formaPago,
                     monto_actual: montoActual,
+                    abono_inicial: parseFloat(abonoInicial) || 0, // Envía el abono inicial
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -237,32 +272,63 @@ const NuevoCliente = ({ navigation }) => {
                                 </TouchableOpacity>
                             </View>
                         </Modal>
-                        <TouchableOpacity
-                            style={styles.inputPicker}
-                            onPress={() => {
-                                if (!categoria) {
-                                    Alert.alert("Aviso", "Por favor, selecciona una categoría primero.");
-                                    return;
-                                }
-                                setModalProductosVisible(true);
-                            }}
-                        >
-                            <View>
-                                <Text style={styles.subtitle}>Productos Seleccionados:</Text>
+                        <View>
+                            <TouchableOpacity
+                                style={styles.inputPicker}
+                                onPress={() => {
+                                    if (!categoria) {
+                                        Alert.alert("Aviso", "Por favor, selecciona una categoría primero.");
+                                        return;
+                                    }
+                                    setModalProductosVisible(true);
+                                }}
+                            >
+                                <Text style={styles.subtitle}>Seleccionar Productos</Text>
+                            </TouchableOpacity>
+
+                            {/* Productos seleccionados fuera del TouchableOpacity */}
+                            <View style={styles.selectedContainer}>
                                 {productosSeleccionados.length > 0 ? (
-                                    productosSeleccionados.map((prod) => (
-                                        <View key={prod.id} style={styles.selectedItem}>
-                                            <Text>{prod.nombre}</Text>
-                                            <TouchableOpacity onPress={() => handleRemoveProducto(prod.id)}>
-                                                <Text style={styles.removeText}>Eliminar</Text>
-                                            </TouchableOpacity>
-                                        </View>
-                                    ))
+                                    <FlatList
+                                        data={productosSeleccionados}
+                                        keyExtractor={(item) => item.id.toString()}
+                                        renderItem={({ item }) => (
+                                            <View style={styles.selectedItem}>
+                                                <Text style={styles.selectedItemText}>
+                                                    {item.nombre} - ${item.precio}
+                                                </Text>
+                                                <View style={styles.quantityControls}>
+                                                    <Text style={styles.quantity}>
+                                                        {item.cantidad}
+                                                    </Text>
+                                                    <TouchableOpacity
+                                                        style={styles.quantityButton}
+                                                        onPress={() => handleChangeCantidadProducto(item.id, -1)}
+                                                    >
+                                                        <Text style={styles.quantityButtonText}>-</Text>
+                                                    </TouchableOpacity>
+                                                    <TouchableOpacity
+                                                        style={styles.quantityButton}
+                                                        onPress={() => handleChangeCantidadProducto(item.id, 1)}
+                                                    >
+                                                        <Text style={styles.quantityButtonText}>+</Text>
+                                                    </TouchableOpacity>
+                                                </View>
+                                                <TouchableOpacity
+                                                    style={styles.removeButton}
+                                                    onPress={() => handleRemoveProducto(item.id)}
+                                                >
+                                                    <Text style={styles.removeText}>X</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        )}
+                                    />
                                 ) : (
                                     <Text>No hay productos seleccionados</Text>
                                 )}
                             </View>
-                        </TouchableOpacity>
+                        </View>
+
                         <Modal visible={modalProductosVisible} animationType="slide">
                             <View style={styles.modalContainer}>
                                 <TextInput
@@ -278,9 +344,9 @@ const NuevoCliente = ({ navigation }) => {
                                     renderItem={({ item }) => (
                                         <TouchableOpacity
                                             style={styles.item}
-                                            onPress={() => handleSelectProducto(item.id_producto, item.nombre)}
+                                            onPress={() => handleSelectProducto(item.id_producto, item.nombre, item.precio)}
                                         >
-                                            <Text style={styles.itemText}>{item.nombre}</Text>
+                                            <Text style={styles.itemText}>{item.nombre} - ${item.precio}</Text>
                                         </TouchableOpacity>
                                     )}
                                 />
@@ -289,12 +355,9 @@ const NuevoCliente = ({ navigation }) => {
                                 </TouchableOpacity>
                             </View>
                         </Modal>
-                        <FloatingLabelInput
-                            label="Precio Total"
-                            value={precioTotal}
-                            onChangeText={setPrecioTotal}
-                            keyboardType="numeric"
-                        />
+                        <View style={styles.priceContainer}>
+                            <Text style={styles.priceTotal}>Precio Total: ${precioTotal}</Text>
+                        </View>
                         <FloatingLabelInput
                             label="Abono Inicial (Opcional)"
                             value={abonoInicial}
@@ -378,29 +441,113 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 3,
     },
+    selectedContainer: {
+        backgroundColor: '#1c1c1e', // Fondo oscuro para los productos seleccionados
+        borderRadius: 10, // Bordes redondeados
+        padding: 10, // Relleno para el contenido interno
+        marginTop: 10, // Espacio superior
+    },
+    selectedItem: {
+        flexDirection: 'row', // Los elementos del producto en fila
+        alignItems: 'center', // Alineación vertical
+        justifyContent: 'space-between', // Espacio entre texto y botones
+        backgroundColor: '#2a2a2a', // Fondo oscuro para los productos seleccionados
+        borderRadius: 8, // Bordes redondeados
+        padding: 10, // Relleno interno
+        marginBottom: 8, // Espacio entre los elementos seleccionados
+    },
+    selectedItemText: {
+        flex: 1, // Ocupa todo el espacio disponible
+        color: '#fff', // Texto blanco
+        fontSize: 13, // Tamaño de fuente adecuado
+        fontWeight: '500', // Peso moderado
+        marginRight: 10, // Espacio entre texto y botones
+    },
+    removeButton: {
+        backgroundColor: '#e53935', // Rojo brillante para el botón de eliminar
+        borderRadius: 5, // Bordes redondeados
+        padding: 6, // Relleno interno
+    },
+    removeText: {
+        color: '#fff', // Texto blanco
+        fontWeight: 'bold', // Negrita para destacar
+        fontSize: 10, // Tamaño adecuado
+    },
+    quantity:{
+        color: '#fff',
+        fontSize: 16,
+        marginRight: 3
+    },
+    quantityControls: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between", // Espaciado entre los botones
+        backgroundColor: "#1c1c1e", // Fondo oscuro para contraste
+        borderRadius: 10,
+        paddingHorizontal: 10, // Margen interno
+        width: 80, // Ajustar ancho para mantener alineación
+    },
+    quantityButton: {
+        backgroundColor: "#d4af37", // Dorado para los botones
+        padding: 6, // Tamaño del botón
+        borderRadius: '100%',
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    quantityButtonText: {
+        color: "#000", // Texto oscuro para contraste
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+    priceContainer: {
+        backgroundColor: '#1c1c1e', // Fondo oscuro
+        borderRadius: 10, // Bordes redondeados
+        padding: 10, // Relleno interno
+        alignItems: 'center', // Centrar el texto
+        marginVertical: 10, // Espacio vertical
+    },
+    priceTotal: {
+        color: '#d4af37', // Dorado para destacar
+        fontSize: 18, // Tamaño de fuente más grande
+        fontWeight: 'bold', // Negrita para énfasis
+    },
     modalContainer: {
         flex: 1,
-        padding: 20,
-        backgroundColor: '#101010', // Fondo oscuro para el modal
+        backgroundColor: '#121212', // Fondo más oscuro para el modal
+        padding: 20, // Relleno interno
     },
     item: {
-        padding: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
-        color: '#fff', // Cambiado a blanco
+        padding: 15, // Espaciado interno
+        borderBottomWidth: 1, // Línea divisoria
+        borderBottomColor: '#333', // Color tenue para la línea
+        backgroundColor: '#1e1e1e', // Fondo oscuro
+        borderRadius: 5, // Bordes redondeados
+        marginVertical: 5, // Espaciado entre elementos
     },
     itemText: {
-        color: '#fff'// Cambiado a blanco
+        color: '#f5c469', // Dorado claro
+        fontSize: 16, // Tamaño adecuado
+        fontWeight: '500', // Peso moderado
+    },
+    inputBuscador: {
+        backgroundColor: '#292929', // Fondo oscuro
+        borderRadius: 8, // Bordes redondeados
+        paddingHorizontal: 10, // Relleno horizontal
+        height: 40, // Altura del input
+        color: '#fff', // Texto blanco
+        marginBottom: 10, // Espaciado inferior
     },
     closeButton: {
-        padding: 10,
-        backgroundColor: '#d32f2f', // Rojo oscuro
-        borderRadius: 5,
-        marginTop: 20,
+        backgroundColor: '#e53935', // Rojo intenso
+        borderRadius: 8, // Bordes redondeados
+        paddingVertical: 10, // Espaciado vertical
+        alignItems: 'center', // Centrar texto
+        marginTop: 20, // Espaciado superior
     },
     closeButtonText: {
-        color: '#fff', // Cambiado a blanco
-        textAlign: 'center',
+        color: '#fff', // Texto blanco
+        fontWeight: 'bold', // Negrita para énfasis
+        fontSize: 16, // Tamaño adecuado
     },
     dropdown: {
         marginBottom: 15,

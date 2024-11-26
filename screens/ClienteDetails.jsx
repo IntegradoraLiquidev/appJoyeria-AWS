@@ -13,8 +13,8 @@ const ClienteDetails = ({ route }) => {
     const [isAbonosVisible, setIsAbonosVisible] = useState(false);
     const navigation = useNavigation();
     const [lastIncrementDate, setLastIncrementDate] = useState(null);
-    const [productos, setProductos] = useState([]); 
-    const [modalVisible, setModalVisible] = useState(false); 
+    const [productos, setProductos] = useState([]);
+    const [modalVisible, setModalVisible] = useState(false);
 
     const scaleAnimModal = useRef(new Animated.Value(2)).current;
     const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -191,6 +191,8 @@ const ClienteDetails = ({ route }) => {
                                         <View key={index} style={styles.productItem}>
                                             <Text style={styles.clientDetail}>Nombre: {producto.nombre}</Text>
                                             <Text style={styles.clientDetail}>Quilates: {producto.quilates}</Text>
+                                            <Text style={styles.clientDetail}>precio: {producto.precio} </Text>
+                                            <Text style={styles.clientDetail}>Cantidad: {producto.cantidad}</Text> 
                                         </View>
                                     ))
                                 ) : (
