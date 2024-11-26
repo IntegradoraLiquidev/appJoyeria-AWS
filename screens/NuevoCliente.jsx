@@ -11,6 +11,7 @@ const NuevoCliente = ({ navigation }) => {
     const [nombre, setNombre] = useState('');
     const [direccion, setDireccion] = useState('');
     const [telefono, setTelefono] = useState('');
+    const [producto, setProducto] = useState(null);
     const [categoria, setCategoria] = useState(null);
     const [categorias, setCategorias] = useState([]);
     const [productos, setProductos] = useState([]);
@@ -58,13 +59,14 @@ const NuevoCliente = ({ navigation }) => {
     };
 
     const handleSelectCategoria = (id, nombre) => {
-        // Evita duplicados en categorías seleccionadas
+        setCategoria({ id, nombre }); // Actualizar el estado con el objeto seleccionado
         if (!categoriasSeleccionadas.some((cat) => cat.id === id)) {
             setCategoriasSeleccionadas([...categoriasSeleccionadas, { id, nombre }]);
         }
         fetchProductosPorCategoria(id); // Cargar productos de la categoría seleccionada
         setModalVisible(false);
     };
+    
 
     const handleSelectProducto = (id, nombre) => {
         // Evita duplicados en productos seleccionados
@@ -82,11 +84,11 @@ const NuevoCliente = ({ navigation }) => {
     const handleSearch = (text) => {
         setSearchText(text);
         const filtered = categorias.filter((cat) =>
-            cat.nombre.toLowerCase().includes(text.toLowerCase())
+            cat.nombre?.toLowerCase().includes(text.toLowerCase())
         );
         setFilteredCategorias(filtered);
     };
-
+    
     const handleSearchProduct = (text) => {
         setSearchProductText(text);
         const filtered = productos.filter((prod) =>
