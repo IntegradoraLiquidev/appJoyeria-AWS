@@ -12,7 +12,7 @@ const VerJoyeria = ({ navigation }) => {
     useEffect(() => {
         const fetchCategorias = async () => {
             try {
-                const response = await axios.get('http://192.168.1.18:3000/api/categorias');
+                const response = await axios.get('http://192.168.1.15:3000/api/categorias');
                 setCategorias(response.data);
                 setFilteredCategorias(response.data);
             } catch (error) {

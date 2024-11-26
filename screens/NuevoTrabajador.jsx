@@ -32,7 +32,7 @@ const NuevoTrabajador = ({ navigation }) => {
         try {
             const config = { headers: { Authorization: `Bearer ${token.current}` } };
             const data = { nombre, apellidos, email, password, role };
-            const response = await axios.post('http://192.168.1.18:3000/api/trabajadores/agregar', data, config);
+            const response = await axios.post('http://192.168.1.15:3000/api/trabajadores/agregar', data, config);
 
             if (response.status === 201) {
                 Alert.alert('Éxito', 'Trabajador agregado exitosamente');

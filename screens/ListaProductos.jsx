@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
 
@@ -14,7 +15,7 @@ const ListaProductos = ({ route }) => {
         const fetchProductos = async () => {
             try {
                 const response = await axios.get(
-                    `http://192.168.1.18:3000/api/productos/productoCategoria?id_categoria=${id_categoria}`
+                    `http://192.168.1.15:3000/api/productos/productoCategoria?id_categoria=${id_categoria}`
                 );
                 setProductos(response.data);
                 setFilteredProductos(response.data);
@@ -41,6 +42,16 @@ const ListaProductos = ({ route }) => {
         }
     };
 
+    const handleEdit = (productoId) => {
+        console.log(`Editar producto con ID: ${productoId}`);
+        // Implementa la lógica de edición aquí
+    };
+
+    const handleDelete = (productoId) => {
+        console.log(`Eliminar producto con ID: ${productoId}`);
+        // Implementa la lógica de eliminación aquí
+    };
+
     const renderProducto = ({ item }) => (
         <View style={styles.productCard}>
             <Text style={styles.productName}>{item.nombre}</Text>
@@ -48,6 +59,14 @@ const ListaProductos = ({ route }) => {
                 <Text style={styles.productDetail}>Quilates: {item.quilates}</Text>
                 <Text style={styles.productDetail}>Precio: ${item.precio}</Text>
                 <Text style={styles.productDetail}>Cantidad: {item.cantidad}</Text>
+            </View>
+            <View style={styles.iconContainer}>
+                <TouchableOpacity onPress={() => handleEdit(item.id_producto)}>
+                    <Ionicons name="create-outline" size={24} color="#f5c469" style={styles.icon} />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id_producto)}>
+                    <Ionicons name="trash-outline" size={24} color="#f54848" style={styles.icon} />
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -150,6 +169,14 @@ const styles = StyleSheet.create({
     productDetail: {
         fontSize: 16,
         color: '#fff',
+    },
+    iconContainer: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 12,
+    },
+    icon: {
+        marginLeft: 16,
     },
     loader: {
         flex: 1,

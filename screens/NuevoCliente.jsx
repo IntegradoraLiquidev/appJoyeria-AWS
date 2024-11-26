@@ -7,14 +7,10 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import FloatingLabelInput from '../components/FloatingLabelInput'; // Ajusta la ruta según tu estructura de proyecto
 
-
-
-
 const NuevoCliente = ({ navigation }) => {
     const [nombre, setNombre] = useState('');
     const [direccion, setDireccion] = useState('');
     const [telefono, setTelefono] = useState('');
-    const [producto, setProducto] = useState(null);
     const [categoria, setCategoria] = useState(null);
     const [categorias, setCategorias] = useState([]);
     const [productos, setProductos] = useState([]);
@@ -29,8 +25,8 @@ const NuevoCliente = ({ navigation }) => {
     const [searchProductText, setSearchProductText] = useState(''); // Nuevo estado para buscar productos
     const [filteredProductos, setFilteredProductos] = useState([]);
     const [modalProductosVisible, setModalProductosVisible] = useState(false);
-
-
+    const [categoriasSeleccionadas, setCategoriasSeleccionadas] = useState([]);
+    const [productosSeleccionados, setProductosSeleccionados] = useState([]);
 
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const opacityAnim = useRef(new Animated.Value(1)).current;
@@ -38,7 +34,7 @@ const NuevoCliente = ({ navigation }) => {
     useEffect(() => {
         const fetchCategorias = async () => {
             try {
-                const response = await axios.get('http://192.168.1.18:3000/api/categorias');
+                const response = await axios.get('http://192.168.1.15:3000/api/categorias');
                 setCategorias(response.data);
                 setFilteredCategorias(response.data); // Inicializar con todas las categorías
             } catch (error) {
@@ -53,7 +49,7 @@ const NuevoCliente = ({ navigation }) => {
     const fetchProductosPorCategoria = async (categoriaId) => {
         try {
             const response = await axios.get(
-                `http://192.168.1.18:3000/api/productos?categoria=${categoriaId}`
+                `http://192.168.1.15:3000/api/productos?categoria=${categoriaId}`
             );
             setProductos(response.data);
         } catch {
@@ -62,17 +58,26 @@ const NuevoCliente = ({ navigation }) => {
     };
 
     const handleSelectCategoria = (id, nombre) => {
-        setCategoria(id);
-        setSearchText(nombre);
+        // Evita duplicados en categorías seleccionadas
+        if (!categoriasSeleccionadas.some((cat) => cat.id === id)) {
+            setCategoriasSeleccionadas([...categoriasSeleccionadas, { id, nombre }]);
+        }
+        fetchProductosPorCategoria(id); // Cargar productos de la categoría seleccionada
         setModalVisible(false);
-        fetchProductosPorCategoria(id);
     };
 
     const handleSelectProducto = (id, nombre) => {
-        setProducto(id);  // Actualizamos el id del producto seleccionado
-        setSearchProductText(nombre);  // Actualizamos el texto del producto
+        // Evita duplicados en productos seleccionados
+        if (!productosSeleccionados.some((prod) => prod.id === id)) {
+            setProductosSeleccionados([...productosSeleccionados, { id, nombre }]);
+        }
         setModalProductosVisible(false);
     };
+
+    const handleRemoveProducto = (id) => {
+        setProductosSeleccionados(productosSeleccionados.filter((prod) => prod.id !== id));
+    };
+
 
     const handleSearch = (text) => {
         setSearchText(text);
@@ -96,10 +101,8 @@ const NuevoCliente = ({ navigation }) => {
 
     const handleAddCliente = async () => {
         setIsLoading(true);
-
-        // Verifica si los datos están completos
-        if (!nombre || !direccion || !telefono || !producto || !precioTotal || !formaPago) {
-            Alert.alert('Error', 'Por favor, complete todos los campos');
+        if (!nombre || !direccion || !telefono || productosSeleccionados.length === 0 || !precioTotal || !formaPago) {
+            Alert.alert('Error', 'Por favor, complete todos los campos y seleccione al menos un producto');
             setIsLoading(false);
             return;
         }
@@ -113,12 +116,12 @@ const NuevoCliente = ({ navigation }) => {
             if (!token) throw new Error('No se encontró un token de autenticación');
 
             await axios.post(
-                'http://192.168.1.18:3000/api/clientes',
+                'http://192.168.1.15:3000/api/clientes',
                 {
                     nombre,
                     direccion,
                     telefono,
-                    producto_id: producto,
+                    productos: productosSeleccionados.map((prod) => prod.id), // Enviar IDs de productos seleccionados
                     precio_total: parseFloat(precioTotal),
                     forma_pago: formaPago,
                     monto_actual: montoActual,
@@ -130,15 +133,15 @@ const NuevoCliente = ({ navigation }) => {
             setNombre('');
             setDireccion('');
             setTelefono('');
-            setProducto(null);
-            setCategoria(null);
+            setProductosSeleccionados([]);
+            setCategoriasSeleccionadas([]);
             setPrecioTotal('');
             setFormaPago('');
             setAbonoInicial('');
             setProductos([]);
             navigation.goBack();
         } catch (error) {
-            console.error('Error al agregar cliente:', error);  // Muestra el error real
+            console.error('Error al agregar cliente:', error);
             Alert.alert('Error', 'Hubo un problema al agregar el cliente');
         } finally {
             setIsLoading(false);
@@ -187,7 +190,6 @@ const NuevoCliente = ({ navigation }) => {
                 <View contentContainerStyle={{ paddingBottom: 20 }}>
                     <View>
                         <Text style={styles.title}>Agregar Cliente</Text>
-
                         <FloatingLabelInput
                             label="Nombre"
                             value={nombre}
@@ -197,16 +199,13 @@ const NuevoCliente = ({ navigation }) => {
                             label="Dirección"
                             value={direccion}
                             onChangeText={setDireccion}
-
                         />
                         <FloatingLabelInput
                             label="Teléfono"
                             value={telefono}
                             onChangeText={setTelefono}
                             keyboardType="phone-pad"
-
                         />
-
                         <TouchableOpacity style={styles.inputPicker} onPress={() => setModalVisible(true)}>
                             <Text>{searchText || 'Selecciona una categoría'}</Text>
                         </TouchableOpacity>
@@ -236,8 +235,6 @@ const NuevoCliente = ({ navigation }) => {
                                 </TouchableOpacity>
                             </View>
                         </Modal>
-
-
                         <TouchableOpacity
                             style={styles.inputPicker}
                             onPress={() => {
@@ -248,10 +245,22 @@ const NuevoCliente = ({ navigation }) => {
                                 setModalProductosVisible(true);
                             }}
                         >
-                            <Text>{producto ? productos.find((p) => p.id_producto === producto)?.nombre : 'Selecciona un producto'}</Text>
+                            <View>
+                                <Text style={styles.subtitle}>Productos Seleccionados:</Text>
+                                {productosSeleccionados.length > 0 ? (
+                                    productosSeleccionados.map((prod) => (
+                                        <View key={prod.id} style={styles.selectedItem}>
+                                            <Text>{prod.nombre}</Text>
+                                            <TouchableOpacity onPress={() => handleRemoveProducto(prod.id)}>
+                                                <Text style={styles.removeText}>Eliminar</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    ))
+                                ) : (
+                                    <Text>No hay productos seleccionados</Text>
+                                )}
+                            </View>
                         </TouchableOpacity>
-
-
                         <Modal visible={modalProductosVisible} animationType="slide">
                             <View style={styles.modalContainer}>
                                 <TextInput
@@ -278,23 +287,18 @@ const NuevoCliente = ({ navigation }) => {
                                 </TouchableOpacity>
                             </View>
                         </Modal>
-
                         <FloatingLabelInput
                             label="Precio Total"
                             value={precioTotal}
                             onChangeText={setPrecioTotal}
                             keyboardType="numeric"
-
-
                         />
                         <FloatingLabelInput
                             label="Abono Inicial (Opcional)"
                             value={abonoInicial}
                             onChangeText={setAbonoInicial}
                             keyboardType="numeric"
-
                         />
-
                         <DropDownPicker
                             open={openPago}
                             value={formaPago}
@@ -308,7 +312,6 @@ const NuevoCliente = ({ navigation }) => {
                             style={[styles.dropdown, openPago && { zIndex: 80 }]}
                             dropDownContainerStyle={[styles.dropdownContainer, { zIndex: 80 }]}
                         />
-
                         <View style={styles.buttonContainer}>
                             {isLoading ? (
                                 <ActivityIndicator size="large" color="#0f0" />

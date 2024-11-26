@@ -33,7 +33,7 @@ const TrabajadorClientes = ({ route }) => {
     // Fetch inicial de los clientes
     const fetchClientes = async () => {
         try {
-            const response = await axios.get(`http://192.168.1.18:3000/api/clientes/clientes/${id}`);
+            const response = await axios.get(`http://192.168.1.15:3000/api/clientes/clientes/${id}`);
             const clientesPendientes = response.data.sort(
                 (a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago)
             );
@@ -122,7 +122,7 @@ const TrabajadorClientes = ({ route }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (token) {
-                const response = await axios.delete(`http://192.168.1.18:3000/api/clientes/${clienteId}`, {
+                const response = await axios.delete(`http://192.168.1.15:3000/api/clientes/${clienteId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Animated, Modal } from 'react-native';
 import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -12,15 +12,20 @@ const ClienteDetails = ({ route }) => {
     const [abonos, setAbonos] = useState([]);
     const [isAbonosVisible, setIsAbonosVisible] = useState(false);
     const navigation = useNavigation();
-    const [lastIncrementDate, setLastIncrementDate] = useState(null); // Nueva variable
+    const [lastIncrementDate, setLastIncrementDate] = useState(null);
+    const [productos, setProductos] = useState([]); 
+    const [modalVisible, setModalVisible] = useState(false); 
 
+    const scaleAnimModal = useRef(new Animated.Value(2)).current;
     const scaleAnim = useRef(new Animated.Value(1)).current;
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const translateYAnim = useRef(new Animated.Value(10)).current;
 
     useEffect(() => {
         fetchDetails();
+        fetchProductos(); // Nueva función para obtener productos
     }, []);
+
 
     useEffect(() => {
         if (cliente?.estado === 'completado') {
@@ -32,17 +37,32 @@ const ClienteDetails = ({ route }) => {
         }
     }, [cliente]);
 
+    const fetchProductos = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) return;
+
+            const response = await axios.get(`http://192.168.1.15:3000/api/clientes/${id}/productos`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            setProductos(response.data);
+        } catch (error) {
+            console.error('Error fetching productos:', error);
+        }
+    };
+
     const fetchDetails = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (!token) return;
 
-            const clienteResponse = await axios.get(`http://192.168.1.18:3000/api/clientes/${id}`, {
+            const clienteResponse = await axios.get(`http://192.168.1.15:3000/api/clientes/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setCliente(clienteResponse.data);
 
-            const abonosResponse = await axios.get(`http://192.168.1.18:3000/api/clientes/${id}/abonos`, {
+            const abonosResponse = await axios.get(`http://192.168.1.15:3000/api/clientes/${id}/abonos`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -74,7 +94,7 @@ const ClienteDetails = ({ route }) => {
             if (!token) return;
 
             await axios.put(
-                `http://192.168.1.18:3000/api/clientes/${id}/incrementarMonto`,
+                `http://192.168.1.15:3000/api/clientes/${id}/incrementarMonto`,
                 { incremento: 10 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -115,6 +135,25 @@ const ClienteDetails = ({ route }) => {
         }
     };
 
+    const toggleModal = () => {
+        if (!modalVisible) {
+            // Mostrar modal con animación de "pop"
+            setModalVisible(true);
+            Animated.spring(scaleAnimModal, {
+                toValue: 1,
+                friction: 5,
+                useNativeDriver: true,
+            }).start();
+        } else {
+            // Ocultar modal
+            Animated.timing(scaleAnimModal, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+            }).start(() => setModalVisible(false));
+        }
+    };
+
     return (
         <ScrollView style={styles.container}>
             <View style={styles.clientInfo}>
@@ -134,9 +173,40 @@ const ClienteDetails = ({ route }) => {
                 <View style={styles.divider} />
                 <Text style={styles.clientDetail}>Forma de pago: {cliente?.forma_pago}</Text>
                 <View style={styles.divider} />
+                <TouchableOpacity onPress={toggleModal} style={styles.button}>
+                    <Text style={styles.buttonText}>Ver Productos</Text>
+                </TouchableOpacity>
+                <Modal
+                    visible={modalVisible}
+                    transparent={true}
+                    animationType="none" // Evitamos animaciones predeterminadas
+                    onRequestClose={toggleModal}
+                >
+                    <View style={styles.modalContainer}>
+                        <Animated.View style={[styles.modalContent, { transform: [{ scale: scaleAnimModal }] }]}>
+                            <Text style={styles.modalTitle}>Lista de Productos</Text>
+                            <ScrollView>
+                                {productos.length > 0 ? (
+                                    productos.map((producto, index) => (
+                                        <View key={index} style={styles.productItem}>
+                                            <Text style={styles.clientDetail}>Nombre: {producto.nombre}</Text>
+                                            <Text style={styles.clientDetail}>Quilates: {producto.quilates}</Text>
+                                        </View>
+                                    ))
+                                ) : (
+                                    <Text style={styles.noProductsText}>No hay productos asociados.</Text>
+                                )}
+                            </ScrollView>
+                            <TouchableOpacity onPress={toggleModal} style={styles.closeButton}>
+                                <Text style={styles.closeButtonText}>Cerrar</Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </View>
+                </Modal>
+                <View style={styles.divider} />
                 <Text style={styles.clientAmountText}>Por pagar: {cliente?.monto_actual}</Text>
-            </View>
 
+            </View>
             <View style={styles.clientInfo}>
                 <Text style={styles.sectionTitle}>Realizar abono</Text>
                 {cliente?.monto_actual > 0 ? (
@@ -289,7 +359,58 @@ const styles = StyleSheet.create({
     },
     hiddeTitle: {
         color: '#b1b1b1'
-    }
+    },
+    button: {
+        backgroundColor: '#d4af37',
+        padding: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 10,
+    },
+    buttonText: {
+        color: '#000',
+        fontWeight: 'bold',
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: '80%',
+        backgroundColor: '#1a1a1a',
+        borderRadius: 15,
+        padding: 20,
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#f5c469',
+        marginBottom: 20,
+    },
+    productItem: {
+        marginBottom: 15,
+        padding: 15,
+        backgroundColor: '#2a2a2a',
+        borderRadius: 8,
+    },
+    noProductsText: {
+        fontSize: 16,
+        color: '#888',
+        textAlign: 'center',
+    },
+    closeButton: {
+        backgroundColor: '#ff6347',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 20,
+    },
+    closeButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+    },
 });
 
 export default ClienteDetails;
