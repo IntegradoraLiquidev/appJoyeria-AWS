@@ -1,55 +1,78 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native';
 
 const ListaProductos = ({ route }) => {
     const { id_categoria, nombre } = route.params;
     const [productos, setProductos] = useState([]);
-    const [filteredProductos, setFilteredProductos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
-    useEffect(() => {
-        const fetchProductos = async () => {
-            try {
-                const response = await axios.get(
-                    `http://192.168.1.15:3000/api/productos/productoCategoria?id_categoria=${id_categoria}`
-                );
-                setProductos(response.data);
-                setFilteredProductos(response.data);
-            } catch (error) {
-                console.error('Error al obtener productos:', error.response?.data || error.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+    const navigation = useNavigation();
 
+    // Función para obtener productos
+    const fetchProductos = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get(
+                `http://192.168.1.15:3000/api/productos/productoCategoria?id_categoria=${id_categoria}`
+            );
+            setProductos(response.data);
+        } catch (error) {
+            console.error('Error al obtener productos:', error.response?.data || error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
         fetchProductos();
     }, [id_categoria]);
 
     const handleSearch = (query) => {
         setSearchQuery(query);
-
-        if (query.trim() === '') {
-            setFilteredProductos(productos);
-        } else {
-            const filtered = productos.filter((item) =>
-                item.nombre.toLowerCase().includes(query.toLowerCase())
-            );
-            setFilteredProductos(filtered);
-        }
     };
+
+    const filteredProductos = productos.filter((item) =>
+        item.nombre.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     const handleEdit = (productoId) => {
-        console.log(`Editar producto con ID: ${productoId}`);
-        // Implementa la lógica de edición aquí
+        navigation.navigate('EditarProducto', {
+            id_producto: productoId,
+            onGoBack: fetchProductos, // Recargar productos al volver
+        });
     };
 
-    const handleDelete = (productoId) => {
-        console.log(`Eliminar producto con ID: ${productoId}`);
-        // Implementa la lógica de eliminación aquí
+    const handleDeleteConfirmation = (productoId) => {
+        Alert.alert(
+            'Confirmación',
+            '¿Estás seguro de que deseas eliminar este producto?',
+            [
+                {
+                    text: 'Cancelar',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Eliminar',
+                    onPress: () => handleDelete(productoId),
+                },
+            ],
+            { cancelable: true }
+        );
+    };
+
+
+    const handleDelete = async (productoId) => {
+        try {
+            await axios.delete(`http://192.168.1.15:3000/api/productos/${productoId}/eliminarProducto`);
+            fetchProductos();
+        } catch (error) {
+            console.error('Error al eliminar producto:', error.response?.data || error.message);
+        }
     };
 
     const renderProducto = ({ item }) => (
@@ -64,9 +87,10 @@ const ListaProductos = ({ route }) => {
                 <TouchableOpacity onPress={() => handleEdit(item.id_producto)}>
                     <Ionicons name="create-outline" size={24} color="#f5c469" style={styles.icon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handleDelete(item.id_producto)}>
+                <TouchableOpacity onPress={() => handleDeleteConfirmation(item.id_producto)}>
                     <Ionicons name="trash-outline" size={24} color="#f54848" style={styles.icon} />
                 </TouchableOpacity>
+
             </View>
         </View>
     );

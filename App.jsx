@@ -12,12 +12,12 @@ import EstadisticasScreen from './screens/Estadisticas';
 import AdminDashboard from './screens/AdminDashboard';
 import TrabajadoresDetails from './screens/TrabajadorClientes';
 import NuevoTrabajador from './screens/NuevoTrabajador';
-import EliminarTrabajador from './components/EliminarTrabajador';
 import EditarTrabajador from './components/EditarTrabajador';
 import EditarClientes from './components/EditarClientes';
 import AgregarProducto from './screens/AgregarProducto';
 import VerJoyeria from './screens/VerJoyeria';
 import ListaProductos from './screens/ListaProductos';
+import EditarProducto from './components/EditarProducto';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -158,6 +158,7 @@ export default function App() {
                 <Stack.Screen name="EditarTrabajador" component={EditarTrabajador} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: 'Editar Trabajador' }} />
                 <Stack.Screen name="EditarClientes" component={EditarClientes} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: `Editar cliente` }} />
                 <Stack.Screen name="Productos" component={ListaProductos} />
+                <Stack.Screen name="EditarProducto" component={EditarProducto} />
             </Stack.Navigator>
         </NavigationContainer>
     );
