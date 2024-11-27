@@ -8,7 +8,6 @@ import LoginScreen from './screens/LoginScreen';
 import WorkerDashboard from './screens/WorkerDashboard';
 import NuevoCliente from './screens/NuevoCliente';
 import ClienteDetails from './screens/ClienteDetails';
-import EstadisticasScreen from './screens/Estadisticas';
 import AdminDashboard from './screens/AdminDashboard';
 import TrabajadoresDetails from './screens/TrabajadorClientes';
 import NuevoTrabajador from './screens/NuevoTrabajador';
@@ -123,7 +122,6 @@ function AdminTabs() {
             <Tab.Screen name="Add Worker" component={NuevoTrabajador} options={{ headerShown: false }} />
             <Tab.Screen name="AgregarProductos" component={AgregarProducto} options={{ headerShown: false }} />
             <Tab.Screen name="VerJoyeria" component={VerJoyeria} options={{ headerShown: false }} />
-            <Tab.Screen name="Statistics" component={EstadisticasScreen} options={{ headerShown: false }} />
             
         </Tab.Navigator>
     );
@@ -154,7 +152,6 @@ export default function App() {
                 <Stack.Screen name="WorkerDashboard" component={WorkerTabs} options={{ headerShown: false }} />
                 <Stack.Screen name="Detalles del cliente" component={ClienteDetails} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469' }} />
                 <Stack.Screen name="TrabajadorClientes" component={TrabajadoresDetails} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: 'Lista de clientes' , headerShown: true  }} />
-                <Stack.Screen name="EstadisticasTablas" component={EstadisticasScreen} options={{ title: 'Estadísticas' }} />
                 <Stack.Screen name="EditarTrabajador" component={EditarTrabajador} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: 'Editar Trabajador' }} />
                 <Stack.Screen name="EditarClientes" component={EditarClientes} options={{ headerStyle: { backgroundColor: '#0d0d0d' }, headerTintColor: '#f5c469', title: `Editar cliente` }} />
                 <Stack.Screen name="Productos" component={ListaProductos} />
