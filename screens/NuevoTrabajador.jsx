@@ -23,17 +23,34 @@ const NuevoTrabajador = ({ navigation }) => {
     }, []);
 
     const handleAddTrabajador = async () => {
-        if (!nombre || !apellidos || !email || !password) {
+        if (!nombre || !apellidos || !email || !password || !role) {
             Alert.alert("Error", "Por favor, complete todos los campos");
             return;
         }
         setIsLoading(true);
-
+    
         try {
-            const config = { headers: { Authorization: `Bearer ${token.current}` } };
-            const data = { nombre, apellidos, email, password, role };
-            const response = await axios.post('http://192.168.1.15:3000/api/trabajadores/agregar', data, config);
-
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token.current}`,
+                    'Content-Type': 'application/json'
+                }
+            };
+    
+            const data = {
+                nombre,
+                apellidos,
+                email,
+                password,
+                rol: role // Asegúrate de usar "rol" si así lo requiere tu backend.
+            };
+    
+            const response = await axios.post(
+                'https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/trabajadores/agregar',
+                data,
+                config
+            );
+    
             if (response.status === 201) {
                 Alert.alert('Éxito', 'Trabajador agregado exitosamente');
                 navigation.goBack();
@@ -41,7 +58,9 @@ const NuevoTrabajador = ({ navigation }) => {
                 Alert.alert('Error', 'Error al agregar el trabajador');
             }
         } catch (error) {
-            const errorMessage = error.response?.status === 400 ? 'Correo ya registrado' : 'Ocurrió un error';
+            const errorMessage = error.response?.status === 400 
+                ? 'Correo ya registrado' 
+                : 'Ocurrió un error inesperado';
             Alert.alert('Error', errorMessage);
         } finally {
             setIsLoading(false);

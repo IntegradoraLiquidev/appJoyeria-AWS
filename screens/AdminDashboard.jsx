@@ -15,9 +15,13 @@ const AdminDashboard = ({ navigation }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (token) {
-                const response = await axios.get('http://192.168.1.15:3000/api/trabajadores/conteo', {
-                    headers: { Authorization: `Bearer ${token}` },
+                const response = await axios.get('https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/trabajadores', {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
                 });
+                
 
                 if (Array.isArray(response.data)) {
                     setTrabajadores(response.data);

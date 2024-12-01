@@ -24,7 +24,7 @@ const EditarClientes = ({ route }) => {
                 return;
             }
 
-            const response = await fetch(`http://192.168.1.15:3000/api/clientes/${cliente.id_cliente}`, {
+            const response = await fetch(`https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/clientes/editar?id_cliente=${cliente.id_cliente}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

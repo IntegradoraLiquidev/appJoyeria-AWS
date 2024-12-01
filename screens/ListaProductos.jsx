@@ -18,7 +18,7 @@ const ListaProductos = ({ route }) => {
         setLoading(true);
         try {
             const response = await axios.get(
-                `http://192.168.1.15:3000/api/productos/productoCategoria?id_categoria=${id_categoria}`
+                `https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/productos/productoCategoria?id_categoria=${id_categoria}`
             );
             setProductos(response.data);
         } catch (error) {
@@ -68,7 +68,7 @@ const ListaProductos = ({ route }) => {
 
     const handleDelete = async (productoId) => {
         try {
-            await axios.delete(`http://192.168.1.15:3000/api/productos/${productoId}/eliminarProducto`);
+            await axios.delete(`https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/productos/eliminar?id_producto=${productoId}`);
             fetchProductos();
         } catch (error) {
             console.error('Error al eliminar producto:', error.response?.data || error.message);

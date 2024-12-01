@@ -33,7 +33,7 @@ const TrabajadorClientes = ({ route }) => {
     // Fetch inicial de los clientes
     const fetchClientes = async () => {
         try {
-            const response = await axios.get(`http://192.168.1.15:3000/api/clientes/clientes/${id}`);
+            const response = await axios.get(`https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/clientes/clientetrabajador?id_trabajador=${id}`);
             const clientesPendientes = response.data.sort(
                 (a, b) => new Date(a.fecha_proximo_pago) - new Date(b.fecha_proximo_pago)
             );
@@ -102,13 +102,13 @@ const TrabajadorClientes = ({ route }) => {
 
     // Clientes atrasados (fecha de pago es anterior a hoy y aún deben dinero)
     const clientesAtrasados = filteredClientes.filter((cliente) => {
-        const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
+        const proximoPago = new Date(cliente.fecha_proximo_pago);
         return (
-            proximoPago < today &&
-            parseFloat(cliente.monto_actual) > 0 // Asegurarse de que aún deben dinero
+            proximoPago < new Date() && // Comparación directa de objetos Date
+            parseFloat(cliente.monto_actual) > 0
         );
     });
-
+    
     const clientesMontoCero = filteredClientes.filter(
         (cliente) => parseFloat(cliente.monto_actual) === 0
     );
@@ -122,7 +122,7 @@ const TrabajadorClientes = ({ route }) => {
         try {
             const token = await AsyncStorage.getItem('token');
             if (token) {
-                const response = await axios.delete(`http://192.168.1.15:3000/api/clientes/${clienteId}`, {
+                const response = await axios.delete(`https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/clientes/eliminar?id_cliente=${clienteId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },

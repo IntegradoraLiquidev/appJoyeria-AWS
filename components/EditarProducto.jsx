@@ -10,7 +10,7 @@ const EditarProducto = ({ route, navigation }) => {
     useEffect(() => {
         const fetchProducto = async () => {
             try {
-                const response = await axios.get(`http://192.168.1.15:3000/api/productos/${id_producto}`);
+                const response = await axios.get(`https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/productos/id_producto?id=${id_producto}`);
                 setProducto(response.data);
             } catch (error) {
                 console.error('Error al obtener el producto:', error.response?.data || error.message);
@@ -24,7 +24,7 @@ const EditarProducto = ({ route, navigation }) => {
 
     const handleSave = async () => {
         try {
-            await axios.put(`http://192.168.1.15:3000/api/productos/${id_producto}`, producto);
+            await axios.put(`https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/productos/editar?id_producto=${id_producto}`, producto);
             alert('Producto actualizado con éxito');
             if (onGoBack) onGoBack(); // Llamar al callback para actualizar la lista
             navigation.goBack();

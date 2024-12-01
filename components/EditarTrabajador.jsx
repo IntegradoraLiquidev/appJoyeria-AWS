@@ -13,23 +13,28 @@ const EditarTrabajador = ({ route, navigation }) => {
         { label: 'Trabajador', value: 'Trabajador' }
     ]);
 
-    const handleSaveChanges = () => {
-        axios.put(`http://192.168.1.15:3000/api/trabajadores/editar/${trabajador.id_usuario}`, {
-            ...editedTrabajador,
-            rol: role
-        })
-            .then(response => {
-                if (response.status === 200) {
-                    Alert.alert("Éxito", "Trabajador actualizado correctamente");
-                    onEdit({ ...editedTrabajador, rol: role });
-                    navigation.goBack();
-                }
-            })
-            .catch(error => {
-                const errorMessage = error.response?.data?.message || 'Error desconocido al actualizar el trabajador';
-                Alert.alert("Error", errorMessage);
-            });
-    };
+   const handleSaveChanges = () => {
+    // Construir la URL correctamente con el ID del trabajador en el query string
+    const url = `https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/trabajadores/editar?id=${trabajador.id_usuario}`;
+    
+    axios.put(url, {
+        ...editedTrabajador,  // Los datos a actualizar
+        rol: role  // El rol que se quiere asignar
+    })
+    .then(response => {
+        if (response.status === 200) {
+            Alert.alert("Éxito", "Trabajador actualizado correctamente");
+            onEdit({ ...editedTrabajador, rol: role });  // Actualizar el estado en el componente padre
+            navigation.goBack();  // Regresar a la pantalla anterior
+        }
+    })
+    .catch(error => {
+        // Si hay un error, mostramos el mensaje correspondiente
+        const errorMessage = error.response?.data?.message || 'Error desconocido al actualizar el trabajador';
+        Alert.alert("Error", errorMessage);
+    });
+};
+
 
     return (
         <View style={styles.container}>

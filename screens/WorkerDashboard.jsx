@@ -28,7 +28,7 @@ const WorkerDashboard = ({ navigation }) => {
         const fetchClientes = async () => {
             try {
                 const token = await AsyncStorage.getItem('token');
-                const response = await axios.get('http://192.168.1.15:3000/api/clientes/', {
+                const response = await axios.get('https://8oj4qmf2y4.execute-api.us-east-1.amazonaws.com/clientes', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -85,22 +85,27 @@ const WorkerDashboard = ({ navigation }) => {
     };
 
     const today = new Date().toLocaleDateString('es-ES');
+
+    // Filtrar clientes con pago hoy
     const clientesConPagoHoy = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
         return (
             proximoPago === today &&
-            new Date(cliente.fecha_proximo_pago) < new Date() &&
             parseFloat(cliente.monto_actual) > 0 // Excluir clientes con monto_actual 0
         );
     });
-    // Clientes atrasados (fecha de pago es anterior a hoy y aún deben dinero)
+    
+    // Filtrar clientes atrasados excluyendo los que tienen pago hoy
     const clientesAtrasados = filteredClientes.filter((cliente) => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
         return (
-            proximoPago < today &&
-            parseFloat(cliente.monto_actual) > 0 // Asegurarse de que aún deben dinero
+            proximoPago !== today && // Excluir clientes que deben pagar hoy
+            new Date(cliente.fecha_proximo_pago) < new Date() && // Fecha anterior a hoy
+            parseFloat(cliente.monto_actual) > 0
         );
     });
+    
+    
 
     const clientesSinPagoHoy = filteredClientes.filter(cliente => {
         const proximoPago = new Date(cliente.fecha_proximo_pago).toLocaleDateString('es-ES');
@@ -108,17 +113,20 @@ const WorkerDashboard = ({ navigation }) => {
     });
 
     const renderClienteList = (clientes) => (
+        
         <FlatList
             data={clientes}
             keyExtractor={(item) => item.id_cliente.toString()}
-            renderItem={({ item }) => (
-                <ClienteCard
-                    cliente={item}
-                    onPress={() =>
-                        navigation.navigate('Detalles del cliente', { id: item.id_cliente })
-                    }
-                />
-            )}
+            renderItem={({ item }) => {
+                return (
+                    <ClienteCard
+                        cliente={item}
+                        onPress={() =>
+                            navigation.navigate('Detalles del cliente', { id: item.id_cliente })
+                        }
+                    />
+                );
+            }}
             ListEmptyComponent={
                 <Text style={styles.emptyMessage}>No hay clientes disponibles.</Text>
             }
