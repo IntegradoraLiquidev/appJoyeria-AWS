@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "frontend",
+    "name": "Joyeria App",
     "slug": "frontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,25 +12,26 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ontiveroshtml.joyeriaapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ontiveroshtml.frontend"
+      "package": "com.ontiveroshtml.joyeriaapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-font"
-    ],
     "extra": {
       "eas": {
         "projectId": "6c197a11-02a4-4436-a531-8d0c6ec3fcfb"
       }
-    }
+    },
+    "plugins": [
+      "expo-font"
+    ]
   }
 }
